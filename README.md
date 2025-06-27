@@ -249,7 +249,7 @@ Backend/Telepesa_Development.postman_environment.json
 | Notification Service | 🚧 **PLANNED** | Ready for implementation | - |
 
 ### Architecture Documentation
-- [Backend Architecture](Backend/docs/README.md)
+- [Backend Overview](Backend/README.md)
 - [Security Implementation](Backend/docs/SECURITY_IMPLEMENTATION.md)
 - [Testing Guidelines](Backend/user-service/README-TESTING.md)
 - [API Testing Guide](Backend/docs/API_TESTING_GUIDE.md)
