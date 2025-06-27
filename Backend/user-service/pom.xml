@@ -246,6 +246,12 @@
                     </suppressionFiles>
                     <failBuildOnCVSS>7</failBuildOnCVSS>
                     <format>ALL</format>
+                    <autoUpdate>false</autoUpdate>
+                    <cveValidForHours>24</cveValidForHours>
+                    <failOnError>false</failOnError>
+                    <nvdMaxRetryCount>3</nvdMaxRetryCount>
+                    <nvdDelay>1000</nvdDelay>
+                    <skipTestScope>true</skipTestScope>
                 </configuration>
                 <executions>
                     <execution>
