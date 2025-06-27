@@ -1,7 +1,7 @@
 # Telepesa: Fintech Platform for African Cooperatives and MFIs
 
 ## Overview
-This project is a fintech platform designed to empower African cooperatives and microfinance institutions (MFIs) by digitizing savings and loan management. It offers mobile money integration, offline capabilities, and robust security, competing with platforms like Wakandi Group. The platform aims to enhance financial inclusion with a user-friendly, scalable, and compliant solution.
+This project is a fintech platform designed to empower African cooperatives and microfinance institutions (MFIs) by digitizing savings and loan management. It offers mobile money integration, offline capabilities, and robust security. The platform aims to enhance financial inclusion with a user-friendly, scalable, and compliant solution.
 
 ## Technology Stack
 - **Frontend**:
