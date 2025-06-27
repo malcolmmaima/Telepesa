@@ -4,6 +4,7 @@ import com.maelcolium.telepesa.models.BaseEntity;
 import com.maelcolium.telepesa.models.enums.UserStatus;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -46,18 +47,23 @@ public class User extends BaseEntity {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
+    @Builder.Default
     private UserStatus status = UserStatus.PENDING_VERIFICATION;
 
     @Column(name = "email_verified", nullable = false)
+    @Builder.Default
     private Boolean emailVerified = false;
 
     @Column(name = "phone_verified", nullable = false)
+    @Builder.Default
     private Boolean phoneVerified = false;
 
     @Column(name = "failed_login_attempts", nullable = false)
+    @Builder.Default
     private Integer failedLoginAttempts = 0;
 
     @Column(name = "account_locked", nullable = false)
+    @Builder.Default
     private Boolean accountLocked = false;
 
     @Column(name = "password_reset_token")
