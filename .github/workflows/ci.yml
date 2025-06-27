@@ -451,16 +451,27 @@ jobs:
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v3
 
+    - name: Check Docker Hub credentials
+      id: docker-check
+      run: |
+        if [ -z "${{ secrets.DOCKER_USERNAME }}" ]; then
+          echo "has_credentials=false" >> $GITHUB_OUTPUT
+          echo "🔍 No Docker Hub credentials found - will build locally only"
+        else
+          echo "has_credentials=true" >> $GITHUB_OUTPUT
+          echo "🔍 Docker Hub credentials found - will build and push"
+        fi
+
     - name: Log in to Docker Hub
+      if: steps.docker-check.outputs.has_credentials == 'true'
       uses: docker/login-action@v3
-      if: ${{ secrets.DOCKER_USERNAME != '' }}
       with:
         username: ${{ secrets.DOCKER_USERNAME }}
         password: ${{ secrets.DOCKER_PASSWORD }}
 
     - name: Extract metadata
       id: meta
-      if: ${{ secrets.DOCKER_USERNAME != '' }}
+      if: steps.docker-check.outputs.has_credentials == 'true'
       uses: docker/metadata-action@v5
       with:
         images: ${{ secrets.DOCKER_USERNAME }}/telepesa-user-service
@@ -470,7 +481,7 @@ jobs:
           type=sha
 
     - name: Build Docker image (with push)
-      if: ${{ secrets.DOCKER_USERNAME != '' }}
+      if: steps.docker-check.outputs.has_credentials == 'true'
       uses: docker/build-push-action@v5
       with:
         context: Backend/user-service
@@ -481,7 +492,7 @@ jobs:
         cache-to: type=gha,mode=max
 
     - name: Build Docker image (local only)
-      if: ${{ secrets.DOCKER_USERNAME == '' }}
+      if: steps.docker-check.outputs.has_credentials == 'false'
       uses: docker/build-push-action@v5
       with:
         context: Backend/user-service
@@ -492,7 +503,7 @@ jobs:
 
     - name: Docker build status
       run: |
-        if [ "${{ secrets.DOCKER_USERNAME }}" != "" ]; then
+        if [ "${{ steps.docker-check.outputs.has_credentials }}" == "true" ]; then
           echo "🐳 Docker image built and pushed to Docker Hub successfully!"
           echo "📦 Image: ${{ secrets.DOCKER_USERNAME }}/telepesa-user-service"
         else
@@ -521,11 +532,7 @@ jobs:
         echo "✅ Security scan completed"
         echo "✅ Quality gate passed"
         echo "✅ Coverage requirements met (80%+ line, 35%+ branch)"
-        if [ "${{ secrets.DOCKER_USERNAME }}" != "" ]; then
-          echo "🐳 Docker image built and pushed to registry"
-        else
-          echo "🐳 Docker image built (local only - configure Docker Hub secrets for push)"
-        fi
+        echo "🐳 Docker build completed (check Docker build job for details)"
 
     - name: Notify Failure
       if: needs.test-and-coverage.result == 'failure' || needs.build-and-package.result == 'failure'
