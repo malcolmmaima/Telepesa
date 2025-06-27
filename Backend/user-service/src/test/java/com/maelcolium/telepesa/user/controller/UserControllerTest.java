@@ -20,6 +20,7 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.LocalDateTime;
@@ -37,6 +38,11 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * Tests REST endpoints with security features and validation
  */
 @WebMvcTest(UserController.class)
+@TestPropertySource(properties = {
+    "spring.jpa.hibernate.ddl-auto=none",
+    "spring.datasource.url=",
+    "spring.autoconfigure.exclude=org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration,org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration,org.springframework.boot.autoconfigure.data.jpa.JpaRepositoriesAutoConfiguration"
+})
 class UserControllerTest {
 
     @Autowired
@@ -97,7 +103,7 @@ class UserControllerTest {
                 .thenReturn(userDto);
 
         // When & Then
-        mockMvc.perform(post("/api/v1/users/register")
+        mockMvc.perform(post("/api/users/register")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(createUserRequest)))
                 .andExpect(status().isCreated())
@@ -119,7 +125,7 @@ class UserControllerTest {
                 .build();
 
         // When & Then
-        mockMvc.perform(post("/api/v1/users/register")
+        mockMvc.perform(post("/api/users/register")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(invalidRequest)))
                 .andExpect(status().isBadRequest());
@@ -132,7 +138,7 @@ class UserControllerTest {
                 .thenThrow(new DuplicateUserException("Username already exists"));
 
         // When & Then
-        mockMvc.perform(post("/api/v1/users/register")
+        mockMvc.perform(post("/api/users/register")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(createUserRequest)))
                 .andExpect(status().isConflict())
@@ -149,7 +155,7 @@ class UserControllerTest {
                 .thenReturn(loginResponse);
 
         // When & Then
-        mockMvc.perform(post("/api/v1/users/login")
+        mockMvc.perform(post("/api/users/login")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(loginRequest)))
                 .andExpect(status().isOk())
@@ -171,7 +177,7 @@ class UserControllerTest {
                 .thenThrow(new RuntimeException("Invalid credentials"));
 
         // When & Then
-        mockMvc.perform(post("/api/v1/users/login")
+        mockMvc.perform(post("/api/users/login")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(invalidLogin)))
                 .andExpect(status().isInternalServerError());
@@ -186,7 +192,7 @@ class UserControllerTest {
                 .build();
 
         // When & Then
-        mockMvc.perform(post("/api/v1/users/login")
+        mockMvc.perform(post("/api/users/login")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(invalidLogin)))
                 .andExpect(status().isBadRequest());
@@ -202,7 +208,7 @@ class UserControllerTest {
         when(userService.getUser(userId)).thenReturn(userDto);
 
         // When & Then
-        mockMvc.perform(get("/api/v1/users/{id}", userId))
+        mockMvc.perform(get("/api/users/{id}", userId))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.id").value(1L))
@@ -218,7 +224,7 @@ class UserControllerTest {
         when(userService.getUser(userId)).thenThrow(new UserNotFoundException("User not found"));
 
         // When & Then
-        mockMvc.perform(get("/api/v1/users/{id}", userId))
+        mockMvc.perform(get("/api/users/{id}", userId))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.error").value("User Not Found"))
                 .andExpect(jsonPath("$.message").value("User not found"));
@@ -232,7 +238,7 @@ class UserControllerTest {
         when(userService.getUsers(any(PageRequest.class))).thenReturn(userPage);
 
         // When & Then
-        mockMvc.perform(get("/api/v1/users")
+        mockMvc.perform(get("/api/users")
                         .param("page", "0")
                         .param("size", "10"))
                 .andExpect(status().isOk())
@@ -247,14 +253,14 @@ class UserControllerTest {
     @WithMockUser(roles = "USER")
     void getUsers_WithUserRole_ShouldReturnForbidden() throws Exception {
         // When & Then
-        mockMvc.perform(get("/api/v1/users"))
+        mockMvc.perform(get("/api/users"))
                 .andExpect(status().isForbidden());
     }
 
     @Test
     void getUsers_WithoutAuthentication_ShouldReturnUnauthorized() throws Exception {
         // When & Then
-        mockMvc.perform(get("/api/v1/users"))
+        mockMvc.perform(get("/api/users"))
                 .andExpect(status().isUnauthorized());
     }
 
@@ -284,7 +290,7 @@ class UserControllerTest {
         when(userService.updateUser(eq(userId), any(CreateUserRequest.class))).thenReturn(updatedUser);
 
         // When & Then
-        mockMvc.perform(put("/api/v1/users/{id}", userId)
+        mockMvc.perform(put("/api/users/{id}", userId)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(updateRequest)))
                 .andExpect(status().isOk())
@@ -302,7 +308,7 @@ class UserControllerTest {
                 .thenThrow(new UserNotFoundException("User not found"));
 
         // When & Then
-        mockMvc.perform(put("/api/v1/users/{id}", userId)
+        mockMvc.perform(put("/api/users/{id}", userId)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(createUserRequest)))
                 .andExpect(status().isNotFound());
@@ -317,7 +323,7 @@ class UserControllerTest {
         Long userId = 1L;
 
         // When & Then
-        mockMvc.perform(delete("/api/v1/users/{id}", userId))
+        mockMvc.perform(delete("/api/users/{id}", userId))
                 .andExpect(status().isNoContent());
     }
 
@@ -329,7 +335,7 @@ class UserControllerTest {
         doThrow(new UserNotFoundException("User not found")).when(userService).deleteUser(userId);
 
         // When & Then
-        mockMvc.perform(delete("/api/v1/users/{id}", userId))
+        mockMvc.perform(delete("/api/users/{id}", userId))
                 .andExpect(status().isNotFound());
     }
 
@@ -337,7 +343,7 @@ class UserControllerTest {
     @WithMockUser(roles = "USER")
     void deleteUser_WithUserRole_ShouldReturnForbidden() throws Exception {
         // When & Then
-        mockMvc.perform(delete("/api/v1/users/1"))
+        mockMvc.perform(delete("/api/users/1"))
                 .andExpect(status().isForbidden());
     }
 
@@ -350,7 +356,7 @@ class UserControllerTest {
         doNothing().when(userService).verifyEmail(token);
 
         // When & Then
-        mockMvc.perform(get("/api/v1/users/verify-email")
+        mockMvc.perform(get("/api/users/verify-email")
                         .param("token", token))
                 .andExpect(status().isOk())
                 .andExpect(content().string("Email verified successfully"));
@@ -363,7 +369,7 @@ class UserControllerTest {
         doThrow(new IllegalArgumentException("Invalid token")).when(userService).verifyEmail(token);
 
         // When & Then
-        mockMvc.perform(get("/api/v1/users/verify-email")
+        mockMvc.perform(get("/api/users/verify-email")
                         .param("token", token))
                 .andExpect(status().isBadRequest());
     }
@@ -378,7 +384,7 @@ class UserControllerTest {
         doNothing().when(userService).lockUserAccount(userId);
 
         // When & Then
-        mockMvc.perform(post("/api/v1/users/{id}/lock", userId))
+        mockMvc.perform(post("/api/users/{id}/lock", userId))
                 .andExpect(status().isOk())
                 .andExpect(content().string("Account locked successfully"));
     }
@@ -391,7 +397,7 @@ class UserControllerTest {
         doNothing().when(userService).unlockUserAccount(userId);
 
         // When & Then
-        mockMvc.perform(post("/api/v1/users/{id}/unlock", userId))
+        mockMvc.perform(post("/api/users/{id}/unlock", userId))
                 .andExpect(status().isOk())
                 .andExpect(content().string("Account unlocked successfully"));
     }
@@ -400,7 +406,7 @@ class UserControllerTest {
     @WithMockUser(roles = "USER")
     void lockAccount_WithUserRole_ShouldReturnForbidden() throws Exception {
         // When & Then
-        mockMvc.perform(post("/api/v1/users/1/lock"))
+        mockMvc.perform(post("/api/users/1/lock"))
                 .andExpect(status().isForbidden());
     }
 
@@ -409,7 +415,7 @@ class UserControllerTest {
     @Test
     void register_WithInvalidContentType_ShouldReturnUnsupportedMediaType() throws Exception {
         // When & Then
-        mockMvc.perform(post("/api/v1/users/register")
+        mockMvc.perform(post("/api/users/register")
                         .contentType(MediaType.TEXT_PLAIN)
                         .content("invalid content"))
                 .andExpect(status().isUnsupportedMediaType());
@@ -418,7 +424,7 @@ class UserControllerTest {
     @Test
     void register_WithMalformedJson_ShouldReturnBadRequest() throws Exception {
         // When & Then
-        mockMvc.perform(post("/api/v1/users/register")
+        mockMvc.perform(post("/api/users/register")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{ invalid json"))
                 .andExpect(status().isBadRequest());
@@ -429,7 +435,7 @@ class UserControllerTest {
     @Test
     void allEndpoints_ShouldIncludeSecurityHeaders() throws Exception {
         // When & Then
-        mockMvc.perform(post("/api/v1/users/register")
+        mockMvc.perform(post("/api/users/register")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(createUserRequest)))
                 .andExpect(header().string("X-Frame-Options", "DENY"))
