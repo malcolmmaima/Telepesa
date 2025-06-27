@@ -5,11 +5,13 @@ on:
     branches: [ main, develop ]
     paths:
       - 'Backend/user-service/**'
+      - 'Backend/shared-libraries/**'
       - '.github/workflows/ci.yml'
   pull_request:
     branches: [ main, develop ]
     paths:
       - 'Backend/user-service/**'
+      - 'Backend/shared-libraries/**'
 
 jobs:
   test-and-coverage:
@@ -48,6 +50,19 @@ jobs:
         key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
         restore-keys: |
           ${{ runner.os }}-maven-
+
+    - name: Build and install shared libraries
+      working-directory: Backend/shared-libraries
+      run: |
+        echo "Building common-exceptions..."
+        cd common-exceptions && mvn clean install -DskipTests
+        cd ..
+        echo "Building common-models..."
+        cd common-models && mvn clean install -DskipTests
+        cd ..
+        echo "Building security-utils..."
+        cd security-utils && mvn clean install -DskipTests
+        cd ..
 
     - name: Wait for PostgreSQL
       run: |
@@ -108,6 +123,19 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-maven-
 
+    - name: Build and install shared libraries
+      working-directory: Backend/shared-libraries
+      run: |
+        echo "Building common-exceptions..."
+        cd common-exceptions && mvn clean install -DskipTests
+        cd ..
+        echo "Building common-models..."
+        cd common-models && mvn clean install -DskipTests
+        cd ..
+        echo "Building security-utils..."
+        cd security-utils && mvn clean install -DskipTests
+        cd ..
+
     - name: Build application
       working-directory: Backend/user-service
       run: mvn clean compile
@@ -144,6 +172,19 @@ jobs:
         key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
         restore-keys: |
           ${{ runner.os }}-maven-
+
+    - name: Build and install shared libraries
+      working-directory: Backend/shared-libraries
+      run: |
+        echo "Building common-exceptions..."
+        cd common-exceptions && mvn clean install -DskipTests
+        cd ..
+        echo "Building common-models..."
+        cd common-models && mvn clean install -DskipTests
+        cd ..
+        echo "Building security-utils..."
+        cd security-utils && mvn clean install -DskipTests
+        cd ..
 
     - name: Run OWASP Dependency Check
       working-directory: Backend/user-service
@@ -196,6 +237,19 @@ jobs:
         key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
         restore-keys: |
           ${{ runner.os }}-maven-
+
+    - name: Build and install shared libraries
+      working-directory: Backend/shared-libraries
+      run: |
+        echo "Building common-exceptions..."
+        cd common-exceptions && mvn clean install -DskipTests
+        cd ..
+        echo "Building common-models..."
+        cd common-models && mvn clean install -DskipTests
+        cd ..
+        echo "Building security-utils..."
+        cd security-utils && mvn clean install -DskipTests
+        cd ..
 
     - name: Wait for PostgreSQL
       run: |
