@@ -25,26 +25,19 @@ import java.time.LocalDateTime;
  * @version 1.0.0
  */
 @Entity
-@Table(name = "accounts", 
-       indexes = {
-           @Index(name = "idx_account_number", columnList = "accountNumber", unique = true),
-           @Index(name = "idx_user_id", columnList = "userId"),
-           @Index(name = "idx_account_status", columnList = "status"),
-           @Index(name = "idx_account_type", columnList = "accountType"),
-           @Index(name = "idx_created_at", columnList = "createdAt")
-       })
-@EntityListeners(AuditingEntityListener.class)
+@Table(name = "accounts", indexes = {
+    @Index(name = "idx_account_number", columnList = "accountNumber", unique = true),
+    @Index(name = "idx_user_id", columnList = "userId"),
+    @Index(name = "idx_account_status", columnList = "status"),
+    @Index(name = "idx_account_type", columnList = "accountType")
+})
 @Data
 @SuperBuilder
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = true)
-@ToString(exclude = {"transactions"})
+@ToString(callSuper = true)
 public class Account extends BaseEntity {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
 
     /**
      * Unique account number generated for each account
@@ -213,20 +206,6 @@ public class Account extends BaseEntity {
     @Size(max = 1000, message = "Notes cannot exceed 1000 characters")
     private String notes;
 
-    /**
-     * Account creation timestamp
-     */
-    @CreatedDate
-    @Column(name = "created_at", nullable = false, updatable = false)
-    private LocalDateTime createdAt;
-
-    /**
-     * Last modification timestamp
-     */
-    @LastModifiedDate
-    @Column(name = "updated_at")
-    private LocalDateTime updatedAt;
-
     // Business Methods
 
     /**
@@ -322,6 +301,5 @@ public class Account extends BaseEntity {
     public void updateKycStatus(boolean verified, int verificationLevel) {
         this.kycVerified = verified;
         this.verificationLevel = verificationLevel;
-        this.updatedAt = LocalDateTime.now();
     }
 } 
