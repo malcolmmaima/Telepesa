@@ -11,6 +11,8 @@ import com.maelcolium.telepesa.user.exception.UserNotFoundException;
 import com.maelcolium.telepesa.user.mapper.UserMapper;
 import com.maelcolium.telepesa.user.model.User;
 import com.maelcolium.telepesa.user.repository.UserRepository;
+import com.maelcolium.telepesa.user.service.AuditLogService;
+import com.maelcolium.telepesa.user.service.DeviceFingerprintService;
 import com.maelcolium.telepesa.user.service.UserService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -25,6 +27,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import jakarta.servlet.http.HttpServletRequest;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -41,6 +44,8 @@ public class UserServiceImpl implements UserService {
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenUtil jwtTokenUtil;
     private final UserDetailsService userDetailsService;
+    private final AuditLogService auditLogService;
+    private final DeviceFingerprintService deviceFingerprintService;
 
     @Value("${app.user.max-failed-attempts:5}")
     private int maxFailedAttempts;
@@ -52,12 +57,16 @@ public class UserServiceImpl implements UserService {
                           UserMapper userMapper,
                           PasswordEncoder passwordEncoder,
                           JwtTokenUtil jwtTokenUtil,
-                          UserDetailsService userDetailsService) {
+                          UserDetailsService userDetailsService,
+                          AuditLogService auditLogService,
+                          DeviceFingerprintService deviceFingerprintService) {
         this.userRepository = userRepository;
         this.userMapper = userMapper;
         this.passwordEncoder = passwordEncoder;
         this.jwtTokenUtil = jwtTokenUtil;
         this.userDetailsService = userDetailsService;
+        this.auditLogService = auditLogService;
+        this.deviceFingerprintService = deviceFingerprintService;
     }
 
     @Override
@@ -136,6 +145,97 @@ public class UserServiceImpl implements UserService {
             .tokenType("Bearer")
             .user(userMapper.toDto(user))
             .build();
+    }
+
+    @Override
+    public UserDto createUserWithSecurity(CreateUserRequest request, HttpServletRequest httpRequest) {
+        String ipAddress = getClientIpAddress(httpRequest);
+        log.info("Creating new user with username: {} from IP: {}", request.getUsername(), ipAddress);
+
+        try {
+            UserDto user = createUser(request);
+            
+            // Log successful registration
+            auditLogService.logUserRegistration(
+                request.getUsername(), 
+                request.getEmail(), 
+                ipAddress, 
+                true, 
+                "User registration successful"
+            );
+            
+            // Generate and analyze device fingerprint
+            String deviceFingerprint = deviceFingerprintService.generateDeviceFingerprint(httpRequest);
+            deviceFingerprintService.analyzeDevice(deviceFingerprint, request.getUsername(), ipAddress);
+            
+            return user;
+        } catch (Exception e) {
+            // Log failed registration
+            auditLogService.logUserRegistration(
+                request.getUsername(), 
+                request.getEmail(), 
+                ipAddress, 
+                false, 
+                "Registration failed: " + e.getMessage()
+            );
+            throw e;
+        }
+    }
+
+    @Override
+    public LoginResponse authenticateUserWithSecurity(LoginRequest request, HttpServletRequest httpRequest) {
+        String ipAddress = getClientIpAddress(httpRequest);
+        log.info("Authenticating user: {} from IP: {}", request.getUsernameOrEmail(), ipAddress);
+
+        try {
+            // Generate device fingerprint
+            String deviceFingerprint = deviceFingerprintService.generateDeviceFingerprint(httpRequest);
+            
+            // Perform authentication
+            LoginResponse response = authenticateUser(request);
+            String username = response.getUser().getUsername();
+            
+            // Analyze device for suspicious patterns
+            DeviceFingerprintService.DeviceAnalysisResult deviceAnalysis = 
+                deviceFingerprintService.analyzeDevice(deviceFingerprint, username, ipAddress);
+            
+            // Log successful authentication
+            auditLogService.logAuthenticationAttempt(username, ipAddress, true, "Authentication successful");
+            
+            // Handle suspicious device activity
+            if (deviceAnalysis.isSuspicious()) {
+                auditLogService.logSuspiciousActivity(
+                    username, 
+                    ipAddress, 
+                    "SUSPICIOUS_DEVICE", 
+                    deviceAnalysis.getSuspiciousReason()
+                );
+                
+                // In production, you might want to:
+                // 1. Require additional authentication (MFA)
+                // 2. Send security alert email
+                // 3. Temporarily restrict account
+                // 4. Force device verification
+            }
+            
+            if (deviceAnalysis.isNewDevice()) {
+                log.info("New device detected for user: {} - Device fingerprint: {}", 
+                    username, deviceFingerprint);
+                // In production, send new device notification email
+            }
+            
+            return response;
+            
+        } catch (Exception e) {
+            // Log failed authentication
+            auditLogService.logAuthenticationAttempt(
+                request.getUsernameOrEmail(), 
+                ipAddress, 
+                false, 
+                "Authentication failed: " + e.getMessage()
+            );
+            throw e;
+        }
     }
 
     @Override
@@ -333,5 +433,22 @@ public class UserServiceImpl implements UserService {
      */
     private String generateToken() {
         return UUID.randomUUID().toString();
+    }
+
+    /**
+     * Extract client IP address from HTTP request with proxy support
+     */
+    private String getClientIpAddress(HttpServletRequest request) {
+        String xForwardedFor = request.getHeader("X-Forwarded-For");
+        if (xForwardedFor != null && !xForwardedFor.isEmpty()) {
+            return xForwardedFor.split(",")[0].trim();
+        }
+        
+        String xRealIp = request.getHeader("X-Real-IP");
+        if (xRealIp != null && !xRealIp.isEmpty()) {
+            return xRealIp;
+        }
+        
+        return request.getRemoteAddr();
     }
 } 

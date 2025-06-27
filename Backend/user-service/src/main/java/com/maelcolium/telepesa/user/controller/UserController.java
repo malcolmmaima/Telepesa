@@ -10,6 +10,7 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -42,9 +43,10 @@ public class UserController {
         @ApiResponse(responseCode = "409", description = "User already exists")
     })
     @PostMapping("/register")
-    public ResponseEntity<UserDto> registerUser(@Valid @RequestBody CreateUserRequest request) {
+    public ResponseEntity<UserDto> registerUser(@Valid @RequestBody CreateUserRequest request,
+                                               HttpServletRequest httpRequest) {
         log.info("Registration request received for username: {}", request.getUsername());
-        UserDto createdUser = userService.createUser(request);
+        UserDto createdUser = userService.createUserWithSecurity(request, httpRequest);
         return ResponseEntity.status(HttpStatus.CREATED).body(createdUser);
     }
 
@@ -55,9 +57,10 @@ public class UserController {
         @ApiResponse(responseCode = "423", description = "Account locked")
     })
     @PostMapping("/login")
-    public ResponseEntity<LoginResponse> login(@Valid @RequestBody LoginRequest request) {
+    public ResponseEntity<LoginResponse> login(@Valid @RequestBody LoginRequest request,
+                                             HttpServletRequest httpRequest) {
         log.info("Login request received for: {}", request.getUsernameOrEmail());
-        LoginResponse response = userService.authenticateUser(request);
+        LoginResponse response = userService.authenticateUserWithSecurity(request, httpRequest);
         return ResponseEntity.ok(response);
     }
 

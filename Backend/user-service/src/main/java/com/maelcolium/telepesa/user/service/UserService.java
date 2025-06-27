@@ -7,6 +7,8 @@ import com.maelcolium.telepesa.user.dto.LoginResponse;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
+import jakarta.servlet.http.HttpServletRequest;
+
 /**
  * Service interface for user management operations
  */
@@ -18,9 +20,19 @@ public interface UserService {
     UserDto createUser(CreateUserRequest request);
 
     /**
+     * Create a new user account with enhanced security features
+     */
+    UserDto createUserWithSecurity(CreateUserRequest request, HttpServletRequest httpRequest);
+
+    /**
      * Authenticate user and return JWT token
      */
     LoginResponse authenticateUser(LoginRequest request);
+
+    /**
+     * Authenticate user with enhanced security features (device fingerprinting, audit logging)
+     */
+    LoginResponse authenticateUserWithSecurity(LoginRequest request, HttpServletRequest httpRequest);
 
     /**
      * Get user by ID
