@@ -1,0 +1,227 @@
+version: '3.8'
+
+services:
+  # Infrastructure Services
+  postgres:
+    image: postgres:15-alpine
+    container_name: telepesa-postgres
+    environment:
+      POSTGRES_DB: telepesa_db
+      POSTGRES_USER: telepesa_user
+      POSTGRES_PASSWORD: telepesa_password
+      POSTGRES_MULTIPLE_DATABASES: user_db,account_db,transaction_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init-scripts:/docker-entrypoint-initdb.d
+    networks:
+      - telepesa-network
+
+  mongodb:
+    image: mongo:6.0
+    container_name: telepesa-mongodb
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: telepesa_admin
+      MONGO_INITDB_ROOT_PASSWORD: telepesa_password
+      MONGO_INITDB_DATABASE: notification_db
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - telepesa-network
+
+  redis:
+    image: redis:7-alpine
+    container_name: telepesa-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes --requirepass telepesa_redis_password
+    networks:
+      - telepesa-network
+
+  zipkin:
+    image: openzipkin/zipkin:latest
+    container_name: telepesa-zipkin
+    ports:
+      - "9411:9411"
+    networks:
+      - telepesa-network
+
+  # Message Queue
+  kafka:
+    image: confluentinc/cp-kafka:latest
+    container_name: telepesa-kafka
+    depends_on:
+      - zookeeper
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:29092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    ports:
+      - "29092:29092"
+    networks:
+      - telepesa-network
+
+  zookeeper:
+    image: confluentinc/cp-zookeeper:latest
+    container_name: telepesa-zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    ports:
+      - "2181:2181"
+    networks:
+      - telepesa-network
+
+  # Microservices
+  api-gateway:
+    build:
+      context: ../api-gateway
+      dockerfile: Dockerfile
+    container_name: telepesa-api-gateway
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      ZIPKIN_BASE_URL: http://zipkin:9411
+      REDIS_HOST: redis
+      REDIS_PASSWORD: telepesa_redis_password
+    depends_on:
+      - redis
+      - zipkin
+    networks:
+      - telepesa-network
+
+  user-service:
+    build:
+      context: ../user-service
+      dockerfile: Dockerfile
+    container_name: telepesa-user-service
+    ports:
+      - "8081:8081"
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/user_db
+      SPRING_DATASOURCE_USERNAME: telepesa_user
+      SPRING_DATASOURCE_PASSWORD: telepesa_password
+      ZIPKIN_BASE_URL: http://zipkin:9411
+      REDIS_HOST: redis
+      REDIS_PASSWORD: telepesa_redis_password
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+    depends_on:
+      - postgres
+      - redis
+      - kafka
+      - zipkin
+    networks:
+      - telepesa-network
+
+  account-service:
+    build:
+      context: ../account-service
+      dockerfile: Dockerfile
+    container_name: telepesa-account-service
+    ports:
+      - "8082:8082"
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/account_db
+      SPRING_DATASOURCE_USERNAME: telepesa_user
+      SPRING_DATASOURCE_PASSWORD: telepesa_password
+      ZIPKIN_BASE_URL: http://zipkin:9411
+      REDIS_HOST: redis
+      REDIS_PASSWORD: telepesa_redis_password
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+    depends_on:
+      - postgres
+      - redis
+      - kafka
+      - zipkin
+    networks:
+      - telepesa-network
+
+  transaction-service:
+    build:
+      context: ../transaction-service
+      dockerfile: Dockerfile
+    container_name: telepesa-transaction-service
+    ports:
+      - "8083:8083"
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/transaction_db
+      SPRING_DATASOURCE_USERNAME: telepesa_user
+      SPRING_DATASOURCE_PASSWORD: telepesa_password
+      ZIPKIN_BASE_URL: http://zipkin:9411
+      REDIS_HOST: redis
+      REDIS_PASSWORD: telepesa_redis_password
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+    depends_on:
+      - postgres
+      - redis
+      - kafka
+      - zipkin
+    networks:
+      - telepesa-network
+
+  loan-service:
+    build:
+      context: ../loan-service
+      dockerfile: Dockerfile
+    container_name: telepesa-loan-service
+    ports:
+      - "8085:8085"
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/loan_db
+      SPRING_DATASOURCE_USERNAME: telepesa_user
+      SPRING_DATASOURCE_PASSWORD: telepesa_password
+      ZIPKIN_BASE_URL: http://zipkin:9411
+      REDIS_HOST: redis
+      REDIS_PASSWORD: telepesa_redis_password
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+    depends_on:
+      - postgres
+      - redis
+      - kafka
+      - zipkin
+    networks:
+      - telepesa-network
+
+  notification-service:
+    build:
+      context: ../notification-service
+      dockerfile: Dockerfile
+    container_name: telepesa-notification-service
+    ports:
+      - "8084:8084"
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATA_MONGODB_URI: mongodb://telepesa_admin:telepesa_password@mongodb:27017/notification_db?authSource=admin
+      ZIPKIN_BASE_URL: http://zipkin:9411
+      REDIS_HOST: redis
+      REDIS_PASSWORD: telepesa_redis_password
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+    depends_on:
+      - mongodb
+      - redis
+      - kafka
+      - zipkin
+    networks:
+      - telepesa-network
+
+volumes:
+  postgres_data:
+  mongodb_data:
+  redis_data:
+
+networks:
+  telepesa-network:
+    driver: bridge 
