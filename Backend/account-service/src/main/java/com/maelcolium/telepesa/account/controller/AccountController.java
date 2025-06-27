@@ -1,6 +1,7 @@
 package com.maelcolium.telepesa.account.controller;
 
 import com.maelcolium.telepesa.account.dto.*;
+import com.maelcolium.telepesa.account.exception.AccountOperationException;
 import com.maelcolium.telepesa.account.service.AccountService;
 import com.maelcolium.telepesa.models.enums.AccountStatus;
 import com.maelcolium.telepesa.models.enums.AccountType;
@@ -341,8 +342,10 @@ public class AccountController {
         @Valid @RequestBody CreditDebitRequest request) {
         
         log.info("Crediting account: {} with amount: {}", accountId, request.getAmount());
-        AccountDto account = accountService.creditAccount(accountId, request);
-        return ResponseEntity.ok(account);
+        // First get the account to get the account number
+        AccountDto account = accountService.getAccount(accountId);
+        AccountDto updatedAccount = accountService.creditAccount(account.getAccountNumber(), request.getAmount(), request.getDescription());
+        return ResponseEntity.ok(updatedAccount);
     }
 
     @Operation(summary = "Debit account", description = "Withdraw funds from an account")
@@ -358,8 +361,10 @@ public class AccountController {
         @Valid @RequestBody CreditDebitRequest request) {
         
         log.info("Debiting account: {} with amount: {}", accountId, request.getAmount());
-        AccountDto account = accountService.debitAccount(accountId, request);
-        return ResponseEntity.ok(account);
+        // First get the account to get the account number
+        AccountDto account = accountService.getAccount(accountId);
+        AccountDto updatedAccount = accountService.debitAccount(account.getAccountNumber(), request.getAmount(), request.getDescription());
+        return ResponseEntity.ok(updatedAccount);
     }
 
     @Operation(summary = "Transfer between accounts", description = "Transfer funds from one account to another")
@@ -376,8 +381,21 @@ public class AccountController {
         
         log.info("Transferring from account: {} to account: {} amount: {}", 
                 fromAccountId, request.getToAccountId(), request.getAmount());
-        AccountDto account = accountService.transferBetweenAccounts(fromAccountId, request);
-        return ResponseEntity.ok(account);
+        
+        // Check if transferring to same account
+        if (fromAccountId.equals(request.getToAccountId())) {
+            throw new AccountOperationException("Cannot transfer to the same account");
+        }
+        
+        // Get both accounts to get their account numbers
+        AccountDto fromAccount = accountService.getAccount(fromAccountId);
+        AccountDto toAccount = accountService.getAccount(request.getToAccountId());
+        
+        accountService.transferFunds(fromAccount.getAccountNumber(), toAccount.getAccountNumber(), 
+                                   request.getAmount(), request.getDescription());
+        
+        // Return the updated source account
+        return ResponseEntity.ok(accountService.getAccount(fromAccountId));
     }
 
     @Operation(summary = "Get account balance by ID", description = "Get account balance information by account ID")
@@ -391,7 +409,9 @@ public class AccountController {
         @PathVariable Long accountId) {
         
         log.debug("Getting balance for account ID: {}", accountId);
-        AccountBalanceDto balance = accountService.getAccountBalanceById(accountId);
+        // First get the account to get the account number
+        AccountDto account = accountService.getAccount(accountId);
+        AccountBalanceDto balance = accountService.getAccountBalance(account.getAccountNumber());
         return ResponseEntity.ok(balance);
     }
 } 
