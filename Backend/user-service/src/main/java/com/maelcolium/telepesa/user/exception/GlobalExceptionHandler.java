@@ -4,13 +4,16 @@ import com.maelcolium.telepesa.exceptions.ErrorResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.validation.FieldError;
+import org.springframework.web.HttpMediaTypeNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.context.request.WebRequest;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 
 import java.time.LocalDateTime;
 import java.util.HashMap;
@@ -30,7 +33,7 @@ public class GlobalExceptionHandler {
         
         ErrorResponse errorResponse = ErrorResponse.builder()
             .status(HttpStatus.NOT_FOUND.value())
-            .error("Not Found")
+            .error("User Not Found")
             .message(ex.getMessage())
             .path(getPath(request))
             .timestamp(LocalDateTime.now())
@@ -46,7 +49,7 @@ public class GlobalExceptionHandler {
         
         ErrorResponse errorResponse = ErrorResponse.builder()
             .status(HttpStatus.CONFLICT.value())
-            .error("Conflict")
+            .error("Duplicate User")
             .message(ex.getMessage())
             .path(getPath(request))
             .timestamp(LocalDateTime.now())
@@ -112,6 +115,54 @@ public class GlobalExceptionHandler {
             .status(HttpStatus.BAD_REQUEST.value())
             .error("Bad Request")
             .message(ex.getMessage())
+            .path(getPath(request))
+            .timestamp(LocalDateTime.now())
+            .build();
+        
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
+    }
+
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<ErrorResponse> handleAccessDeniedException(
+            AccessDeniedException ex, WebRequest request) {
+        log.error("Access denied: {}", ex.getMessage());
+        
+        ErrorResponse errorResponse = ErrorResponse.builder()
+            .status(HttpStatus.FORBIDDEN.value())
+            .error("Forbidden")
+            .message("Access denied")
+            .path(getPath(request))
+            .timestamp(LocalDateTime.now())
+            .build();
+        
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorResponse);
+    }
+
+    @ExceptionHandler(HttpMediaTypeNotSupportedException.class)
+    public ResponseEntity<ErrorResponse> handleMediaTypeNotSupported(
+            HttpMediaTypeNotSupportedException ex, WebRequest request) {
+        log.error("Unsupported media type: {}", ex.getMessage());
+        
+        ErrorResponse errorResponse = ErrorResponse.builder()
+            .status(HttpStatus.UNSUPPORTED_MEDIA_TYPE.value())
+            .error("Unsupported Media Type")
+            .message("Content type not supported")
+            .path(getPath(request))
+            .timestamp(LocalDateTime.now())
+            .build();
+        
+        return ResponseEntity.status(HttpStatus.UNSUPPORTED_MEDIA_TYPE).body(errorResponse);
+    }
+
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<ErrorResponse> handleMessageNotReadable(
+            HttpMessageNotReadableException ex, WebRequest request) {
+        log.error("Malformed JSON: {}", ex.getMessage());
+        
+        ErrorResponse errorResponse = ErrorResponse.builder()
+            .status(HttpStatus.BAD_REQUEST.value())
+            .error("Bad Request")
+            .message("Malformed JSON request")
             .path(getPath(request))
             .timestamp(LocalDateTime.now())
             .build();

@@ -218,11 +218,11 @@ public class UserController {
     })
     @PostMapping("/{id}/lock")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Void> lockUser(
+    public ResponseEntity<String> lockUser(
             @Parameter(description = "User ID") @PathVariable Long id) {
         log.info("Lock user request for ID: {}", id);
         userService.lockUserAccount(id);
-        return ResponseEntity.ok().build();
+        return ResponseEntity.ok("Account locked successfully");
     }
 
     @Operation(summary = "Unlock user account")
@@ -232,10 +232,10 @@ public class UserController {
     })
     @PostMapping("/{id}/unlock")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Void> unlockUser(
+    public ResponseEntity<String> unlockUser(
             @Parameter(description = "User ID") @PathVariable Long id) {
         log.info("Unlock user request for ID: {}", id);
         userService.unlockUserAccount(id);
-        return ResponseEntity.ok().build();
+        return ResponseEntity.ok("Account unlocked successfully");
     }
 } 

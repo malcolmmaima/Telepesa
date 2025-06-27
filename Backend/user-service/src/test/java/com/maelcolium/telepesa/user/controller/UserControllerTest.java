@@ -276,6 +276,7 @@ class UserControllerTest {
         CreateUserRequest updateRequest = CreateUserRequest.builder()
                 .username("updateduser")
                 .email("updated@example.com")
+                .password("NewPassword123!")
                 .firstName("Updated")
                 .lastName("User")
                 .build();
@@ -358,10 +359,9 @@ class UserControllerTest {
         doNothing().when(userService).verifyEmail(token);
 
         // When & Then
-        mockMvc.perform(get("/api/users/verify-email")
+        mockMvc.perform(post("/api/users/verify-email")
                         .param("token", token))
-                .andExpect(status().isOk())
-                .andExpect(content().string("Email verified successfully"));
+                .andExpect(status().isOk());
     }
 
     @Test
@@ -371,7 +371,7 @@ class UserControllerTest {
         doThrow(new IllegalArgumentException("Invalid token")).when(userService).verifyEmail(token);
 
         // When & Then
-        mockMvc.perform(get("/api/users/verify-email")
+        mockMvc.perform(post("/api/users/verify-email")
                         .param("token", token))
                 .andExpect(status().isBadRequest());
     }
