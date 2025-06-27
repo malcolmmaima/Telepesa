@@ -13,7 +13,8 @@ import jakarta.servlet.http.HttpServletRequest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -37,11 +38,12 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * Unit tests for UserController
  * Tests REST endpoints with security features and validation
  */
-@WebMvcTest(UserController.class)
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK)
+@AutoConfigureMockMvc
 @TestPropertySource(properties = {
-    "spring.jpa.hibernate.ddl-auto=none",
-    "spring.datasource.url=",
-    "spring.autoconfigure.exclude=org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration,org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration,org.springframework.boot.autoconfigure.data.jpa.JpaRepositoriesAutoConfiguration"
+    "spring.datasource.url=jdbc:h2:mem:testdb",
+    "spring.jpa.hibernate.ddl-auto=create-drop",
+    "spring.jpa.database-platform=org.hibernate.dialect.H2Dialect"
 })
 class UserControllerTest {
 
