@@ -327,4 +327,71 @@ public class AccountController {
         AccountStatisticsDto statistics = accountService.getAccountStatistics();
         return ResponseEntity.ok(statistics);
     }
+
+    @Operation(summary = "Credit account", description = "Add funds to an account")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Account credited successfully"),
+        @ApiResponse(responseCode = "404", description = "Account not found"),
+        @ApiResponse(responseCode = "400", description = "Invalid amount or account not active")
+    })
+    @PostMapping("/{accountId}/credit")
+    public ResponseEntity<AccountDto> creditAccount(
+        @Parameter(description = "Account ID", example = "1")
+        @PathVariable Long accountId,
+        @Valid @RequestBody CreditDebitRequest request) {
+        
+        log.info("Crediting account: {} with amount: {}", accountId, request.getAmount());
+        AccountDto account = accountService.creditAccount(accountId, request);
+        return ResponseEntity.ok(account);
+    }
+
+    @Operation(summary = "Debit account", description = "Withdraw funds from an account")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Account debited successfully"),
+        @ApiResponse(responseCode = "404", description = "Account not found"),
+        @ApiResponse(responseCode = "400", description = "Insufficient balance or account not active")
+    })
+    @PostMapping("/{accountId}/debit")
+    public ResponseEntity<AccountDto> debitAccount(
+        @Parameter(description = "Account ID", example = "1")
+        @PathVariable Long accountId,
+        @Valid @RequestBody CreditDebitRequest request) {
+        
+        log.info("Debiting account: {} with amount: {}", accountId, request.getAmount());
+        AccountDto account = accountService.debitAccount(accountId, request);
+        return ResponseEntity.ok(account);
+    }
+
+    @Operation(summary = "Transfer between accounts", description = "Transfer funds from one account to another")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Transfer completed successfully"),
+        @ApiResponse(responseCode = "404", description = "Account not found"),
+        @ApiResponse(responseCode = "400", description = "Insufficient balance, invalid amount, or same account")
+    })
+    @PostMapping("/{fromAccountId}/transfer")
+    public ResponseEntity<AccountDto> transferBetweenAccounts(
+        @Parameter(description = "Source account ID", example = "1")
+        @PathVariable Long fromAccountId,
+        @Valid @RequestBody TransferRequest request) {
+        
+        log.info("Transferring from account: {} to account: {} amount: {}", 
+                fromAccountId, request.getToAccountId(), request.getAmount());
+        AccountDto account = accountService.transferBetweenAccounts(fromAccountId, request);
+        return ResponseEntity.ok(account);
+    }
+
+    @Operation(summary = "Get account balance by ID", description = "Get account balance information by account ID")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Balance retrieved successfully"),
+        @ApiResponse(responseCode = "404", description = "Account not found")
+    })
+    @GetMapping("/{accountId}/balance")
+    public ResponseEntity<AccountBalanceDto> getAccountBalanceById(
+        @Parameter(description = "Account ID", example = "1")
+        @PathVariable Long accountId) {
+        
+        log.debug("Getting balance for account ID: {}", accountId);
+        AccountBalanceDto balance = accountService.getAccountBalanceById(accountId);
+        return ResponseEntity.ok(balance);
+    }
 } 
