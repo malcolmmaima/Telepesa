@@ -66,7 +66,7 @@ class UserServiceTest {
     private DeviceFingerprintService deviceFingerprintService;
 
     @Mock
-    private HttpServletRequest httpRequest;
+    private HttpServletRequest httpServletRequest;
 
     @Mock
     private UserDetails userDetails;
@@ -171,7 +171,7 @@ class UserServiceTest {
     @Test
     void createUserWithSecurity_WithValidRequest_ShouldLogAuditAndAnalyzeDevice() {
         // Given
-        when(httpRequest.getHeader("X-Forwarded-For")).thenReturn("192.168.1.100");
+        when(httpServletRequest.getHeader("X-Forwarded-For")).thenReturn("192.168.1.100");
         when(userRepository.existsByUsername(createUserRequest.getUsername())).thenReturn(false);
         when(userRepository.existsByEmail(createUserRequest.getEmail())).thenReturn(false);
         when(userRepository.existsByPhoneNumber(createUserRequest.getPhoneNumber())).thenReturn(false);
@@ -179,14 +179,14 @@ class UserServiceTest {
         when(passwordEncoder.encode(createUserRequest.getPassword())).thenReturn("encoded-password");
         when(userRepository.save(any(User.class))).thenReturn(testUser);
         when(userMapper.toDto(testUser)).thenReturn(testUserDto);
-        when(deviceFingerprintService.generateDeviceFingerprint(httpRequest)).thenReturn("device-fingerprint-123");
+        when(deviceFingerprintService.generateDeviceFingerprint(httpServletRequest)).thenReturn("device-fingerprint-123");
 
         DeviceFingerprintService.DeviceAnalysisResult analysisResult = 
             new DeviceFingerprintService.DeviceAnalysisResult("device-fingerprint-123", true, false, null, null);
         when(deviceFingerprintService.analyzeDevice(anyString(), anyString(), anyString())).thenReturn(analysisResult);
 
         // When
-        UserDto result = userService.createUserWithSecurity(createUserRequest, httpRequest);
+        UserDto result = userService.createUserWithSecurity(createUserRequest, httpServletRequest);
 
         // Then
         assertThat(result).isNotNull();
@@ -256,20 +256,20 @@ class UserServiceTest {
     @Test
     void authenticateUserWithSecurity_WithValidCredentials_ShouldLogAuditAndAnalyzeDevice() {
         // Given
-        when(httpRequest.getHeader("X-Forwarded-For")).thenReturn("192.168.1.100");
+        when(httpServletRequest.getHeader("X-Forwarded-For")).thenReturn("192.168.1.100");
         when(userRepository.findByUsernameOrEmail(loginRequest.getUsernameOrEmail()))
             .thenReturn(Optional.of(testUser));
         when(passwordEncoder.matches(loginRequest.getPassword(), testUser.getPassword())).thenReturn(true);
         when(userDetailsService.loadUserByUsername(testUser.getUsername())).thenReturn(userDetails);
         when(jwtTokenUtil.generateToken(userDetails)).thenReturn("jwt-token-123");
-        when(deviceFingerprintService.generateDeviceFingerprint(httpRequest)).thenReturn("device-fingerprint-123");
+        when(deviceFingerprintService.generateDeviceFingerprint(httpServletRequest)).thenReturn("device-fingerprint-123");
 
         DeviceFingerprintService.DeviceAnalysisResult analysisResult = 
             new DeviceFingerprintService.DeviceAnalysisResult("device-fingerprint-123", false, false, null, null);
         when(deviceFingerprintService.analyzeDevice(anyString(), anyString(), anyString())).thenReturn(analysisResult);
 
         // When
-        LoginResponse result = userService.authenticateUserWithSecurity(loginRequest, httpRequest);
+        LoginResponse result = userService.authenticateUserWithSecurity(loginRequest, httpServletRequest);
 
         // Then
         assertThat(result).isNotNull();
@@ -286,20 +286,20 @@ class UserServiceTest {
     @Test
     void authenticateUserWithSecurity_WithSuspiciousDevice_ShouldLogSuspiciousActivity() {
         // Given
-        when(httpRequest.getHeader("X-Forwarded-For")).thenReturn("192.168.1.100");
+        when(httpServletRequest.getHeader("X-Forwarded-For")).thenReturn("192.168.1.100");
         when(userRepository.findByUsernameOrEmail(loginRequest.getUsernameOrEmail()))
             .thenReturn(Optional.of(testUser));
         when(passwordEncoder.matches(loginRequest.getPassword(), testUser.getPassword())).thenReturn(true);
         when(userDetailsService.loadUserByUsername(testUser.getUsername())).thenReturn(userDetails);
         when(jwtTokenUtil.generateToken(userDetails)).thenReturn("jwt-token-123");
-        when(deviceFingerprintService.generateDeviceFingerprint(httpRequest)).thenReturn("device-fingerprint-123");
+        when(deviceFingerprintService.generateDeviceFingerprint(httpServletRequest)).thenReturn("device-fingerprint-123");
 
         DeviceFingerprintService.DeviceAnalysisResult analysisResult = 
             new DeviceFingerprintService.DeviceAnalysisResult("device-fingerprint-123", false, true, "Device sharing detected", null);
         when(deviceFingerprintService.analyzeDevice(anyString(), anyString(), anyString())).thenReturn(analysisResult);
 
         // When
-        LoginResponse result = userService.authenticateUserWithSecurity(loginRequest, httpRequest);
+        LoginResponse result = userService.authenticateUserWithSecurity(loginRequest, httpServletRequest);
 
         // Then
         assertThat(result).isNotNull();
@@ -492,5 +492,56 @@ class UserServiceTest {
 
         // Then
         verify(userRepository).unlockUserAccount(userId);
+    }
+
+    @Test
+    void authenticateUserWithSecurity_WithValidCredentials_ShouldReturnLoginResponse() {
+        // Given
+        LoginRequest request = LoginRequest.builder()
+            .email("test@example.com")
+            .password("password123")
+            .build();
+
+        User user = User.builder()
+            .id(1L)
+            .username("testuser")
+            .email("test@example.com")
+            .password("encoded-password")
+            .status(UserStatus.ACTIVE)
+            .build();
+
+        LoginResponse expectedResponse = LoginResponse.builder()
+            .token("jwt-token")
+            .username("testuser")
+            .email("test@example.com")
+            .build();
+
+        DeviceFingerprintService.DeviceAnalysisResult deviceAnalysis = 
+            new DeviceFingerprintService.DeviceAnalysisResult(
+                "device-123", false, false, null, 0.9, "Normal"
+            );
+
+        // Mock HttpServletRequest
+        when(httpServletRequest.getRemoteAddr()).thenReturn("192.168.1.100");
+        when(httpServletRequest.getHeader("User-Agent")).thenReturn("Mozilla/5.0");
+
+        when(userRepository.findByEmail(request.getEmail())).thenReturn(Optional.of(user));
+        when(passwordEncoder.matches(request.getPassword(), user.getPassword())).thenReturn(true);
+        when(jwtTokenUtil.generateToken(any())).thenReturn("jwt-token");
+        when(deviceFingerprintService.generateFingerprint(any())).thenReturn("device-123");
+        when(deviceFingerprintService.analyzeDevice(anyString(), anyString(), anyString()))
+            .thenReturn(deviceAnalysis);
+
+        // When
+        LoginResponse result = userService.authenticateUserWithSecurity(request, httpServletRequest);
+
+        // Then
+        assertThat(result).isNotNull();
+        assertThat(result.getToken()).isEqualTo("jwt-token");
+        assertThat(result.getUsername()).isEqualTo("testuser");
+        assertThat(result.getEmail()).isEqualTo("test@example.com");
+        
+        verify(auditLogService).logAuthenticationAttempt(eq("test@example.com"), eq(true), eq("192.168.1.100"));
+        verify(deviceFingerprintService).analyzeDevice(eq("device-123"), eq("testuser"), eq("192.168.1.100"));
     }
 } 
