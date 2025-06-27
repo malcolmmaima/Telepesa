@@ -147,3 +147,8 @@ financial-reports/
 compliance-reports/
 *.pgp
 *.gpg
+
+# API Testing (Always track these for team collaboration)
+!**/*postman*.json
+!Backend/Telepesa_API_Collection.postman_collection.json
+!Backend/Telepesa_Development.postman_environment.json
