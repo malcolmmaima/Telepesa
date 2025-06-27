@@ -475,7 +475,7 @@ class UserServiceTest {
     void lockUserAccount_WithValidId_ShouldLockAccount() {
         // Given
         Long userId = 1L;
-        when(userRepository.findById(userId)).thenReturn(Optional.of(testUser));
+        when(userRepository.existsById(userId)).thenReturn(true);
 
         // When
         userService.lockUserAccount(userId);
@@ -488,7 +488,7 @@ class UserServiceTest {
     void unlockUserAccount_WithValidId_ShouldUnlockAccount() {
         // Given
         Long userId = 1L;
-        when(userRepository.findById(userId)).thenReturn(Optional.of(testUser));
+        when(userRepository.existsById(userId)).thenReturn(true);
 
         // When
         userService.unlockUserAccount(userId);
