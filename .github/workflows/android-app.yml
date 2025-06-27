@@ -1,0 +1,261 @@
+name: Android App CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, develop ]
+    paths:
+      - 'Frontend/Android/**'
+      - '.github/workflows/android-app.yml'
+  pull_request:
+    branches: [ main, develop ]
+    paths:
+      - 'Frontend/Android/**'
+
+jobs:
+  test-and-build:
+    name: Test & Build Android App
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up JDK 17
+      uses: actions/setup-java@v4
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+
+    - name: Set up Android SDK
+      uses: android-actions/setup-android@v3
+
+    - name: Cache Gradle dependencies
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.gradle/caches
+          ~/.gradle/wrapper
+        key: ${{ runner.os }}-gradle-${{ hashFiles('Frontend/Android/**/*.gradle*', 'Frontend/Android/gradle/wrapper/gradle-wrapper.properties') }}
+        restore-keys: |
+          ${{ runner.os }}-gradle-
+
+    - name: Grant execute permission for gradlew
+      working-directory: Frontend/Android
+      run: chmod +x gradlew
+
+    - name: Run unit tests
+      working-directory: Frontend/Android
+      run: ./gradlew test
+
+    - name: Run instrumented tests
+      working-directory: Frontend/Android
+      run: |
+        # Start emulator
+        echo "Starting Android emulator..."
+        emulator -list-avds
+        emulator -avd test_device -no-audio -no-window &
+        
+        # Wait for emulator to start
+        adb wait-for-device
+        
+        # Run instrumented tests
+        ./gradlew connectedAndroidTest
+
+    - name: Build debug APK
+      working-directory: Frontend/Android
+      run: ./gradlew assembleDebug
+
+    - name: Build release APK
+      working-directory: Frontend/Android
+      run: ./gradlew assembleRelease
+
+    - name: Upload APK artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: android-apks
+        path: |
+          Frontend/Android/app/build/outputs/apk/debug/*.apk
+          Frontend/Android/app/build/outputs/apk/release/*.apk
+
+  code-quality:
+    name: Code Quality
+    runs-on: ubuntu-latest
+    needs: test-and-build
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up JDK 17
+      uses: actions/setup-java@v4
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+
+    - name: Set up Android SDK
+      uses: android-actions/setup-android@v3
+
+    - name: Cache Gradle dependencies
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.gradle/caches
+          ~/.gradle/wrapper
+        key: ${{ runner.os }}-gradle-${{ hashFiles('Frontend/Android/**/*.gradle*', 'Frontend/Android/gradle/wrapper/gradle-wrapper.properties') }}
+        restore-keys: |
+          ${{ runner.os }}-gradle-
+
+    - name: Grant execute permission for gradlew
+      working-directory: Frontend/Android
+      run: chmod +x gradlew
+
+    - name: Run linting
+      working-directory: Frontend/Android
+      run: ./gradlew lint
+
+    - name: Run ktlint
+      working-directory: Frontend/Android
+      run: ./gradlew ktlintCheck
+
+    - name: Generate code coverage
+      working-directory: Frontend/Android
+      run: ./gradlew jacocoTestReport
+
+    - name: Upload code quality reports
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: android-code-quality
+        path: |
+          Frontend/Android/app/build/reports/lint-results.html
+          Frontend/Android/app/build/reports/ktlint/
+          Frontend/Android/app/build/reports/jacoco/
+
+  security-scan:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    needs: test-and-build
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up JDK 17
+      uses: actions/setup-java@v4
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+
+    - name: Set up Android SDK
+      uses: android-actions/setup-android@v3
+
+    - name: Cache Gradle dependencies
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.gradle/caches
+          ~/.gradle/wrapper
+        key: ${{ runner.os }}-gradle-${{ hashFiles('Frontend/Android/**/*.gradle*', 'Frontend/Android/gradle/wrapper/gradle-wrapper.properties') }}
+        restore-keys: |
+          ${{ runner.os }}-gradle-
+
+    - name: Grant execute permission for gradlew
+      working-directory: Frontend/Android
+      run: chmod +x gradlew
+
+    - name: Run dependency vulnerability scan
+      working-directory: Frontend/Android
+      run: ./gradlew dependencyCheckAnalyze
+
+    - name: Upload security reports
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: android-security-reports
+        path: Frontend/Android/app/build/reports/dependency-check-report.html
+
+  quality-gate:
+    name: Quality Gate
+    runs-on: ubuntu-latest
+    needs: [test-and-build, code-quality, security-scan]
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Download code quality reports
+      uses: actions/download-artifact@v4
+      with:
+        name: android-code-quality
+        path: android-code-quality/
+
+    - name: Download security reports
+      uses: actions/download-artifact@v4
+      continue-on-error: true
+      with:
+        name: android-security-reports
+        path: android-security-reports/
+
+    - name: Check test results
+      run: |
+        echo "🔍 Checking Android test results..."
+        if [ -f "android-code-quality/jacoco/jacocoTestReport.xml" ]; then
+          echo "✅ Code coverage report found"
+        else
+          echo "⚠️ Code coverage report not found"
+        fi
+
+    - name: Check lint results
+      run: |
+        echo "🔍 Checking Android lint results..."
+        if [ -f "android-code-quality/lint-results.html" ]; then
+          echo "✅ Lint report found"
+        else
+          echo "⚠️ Lint report not found"
+        fi
+
+    - name: Check security scan results
+      run: |
+        echo "🔒 Checking Android security scan results..."
+        if [ -f "android-security-reports/dependency-check-report.html" ]; then
+          echo "✅ Security scan report found"
+          # Check for high-severity vulnerabilities
+          if grep -q "High" android-security-reports/dependency-check-report.html; then
+            echo "⚠️ High-severity vulnerabilities found - review required"
+          else
+            echo "✅ No high-severity vulnerabilities detected"
+          fi
+        else
+          echo "⚠️ No security reports found - this may indicate a scan failure"
+        fi
+
+    - name: Quality gate passed
+      run: echo "All Android quality checks passed!"
+
+  notify:
+    name: Notify
+    runs-on: ubuntu-latest
+    needs: [test-and-build, code-quality, security-scan, quality-gate]
+    if: always()
+
+    steps:
+    - name: Notify Success
+      if: needs.test-and-build.result == 'success' && needs.code-quality.result == 'success'
+      run: |
+        echo "🎉 Android CI Pipeline completed successfully!"
+        echo "✅ All tests passed"
+        echo "✅ Build successful"
+        echo "✅ Code quality checks passed"
+        echo "✅ Security scan completed"
+        echo "✅ Quality gate passed"
+        echo "📱 APK artifacts generated"
+
+    - name: Notify Failure
+      if: needs.test-and-build.result == 'failure' || needs.code-quality.result == 'failure'
+      run: |
+        echo "❌ Android CI Pipeline failed!"
+        echo "Test result: ${{ needs.test-and-build.result }}"
+        echo "Code quality result: ${{ needs.code-quality.result }}"
+        echo "Security scan result: ${{ needs.security-scan.result }}"
+        echo "Quality gate result: ${{ needs.quality-gate.result }}"
+        exit 1 

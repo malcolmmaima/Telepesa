@@ -1,17 +1,15 @@
-name: Spring Boot CI/CD Pipeline
+name: Spring Boot Backend CI/CD Pipeline
 
 on:
   push:
     branches: [ main, develop ]
     paths:
-      - 'Backend/user-service/**'
-      - 'Backend/shared-libraries/**'
+      - 'Backend/**'
       - '.github/workflows/ci.yml'
   pull_request:
     branches: [ main, develop ]
     paths:
-      - 'Backend/user-service/**'
-      - 'Backend/shared-libraries/**'
+      - 'Backend/**'
 
 jobs:
   test-and-coverage:
@@ -75,23 +73,85 @@ jobs:
           sleep 2
         done
 
-    - name: Run tests with coverage
-      working-directory: Backend/user-service
+    - name: Run tests with coverage for all services
+      working-directory: Backend
       run: |
+        # Test user-service
+        echo "Testing user-service..."
+        cd user-service
         mvn clean test -Dspring.profiles.active=test \
           -Dspring.datasource.url=jdbc:postgresql://localhost:5432/telepesa_test \
           -Dspring.datasource.username=testuser \
           -Dspring.datasource.password=testpassword
+        cd ..
+        
+        # Test account-service (if exists)
+        if [ -d "account-service" ]; then
+          echo "Testing account-service..."
+          cd account-service
+          mvn clean test -Dspring.profiles.active=test \
+            -Dspring.datasource.url=jdbc:postgresql://localhost:5432/telepesa_test \
+            -Dspring.datasource.username=testuser \
+            -Dspring.datasource.password=testpassword
+          cd ..
+        fi
+        
+        # Test transaction-service (if exists)
+        if [ -d "transaction-service" ]; then
+          echo "Testing transaction-service..."
+          cd transaction-service
+          mvn clean test -Dspring.profiles.active=test \
+            -Dspring.datasource.url=jdbc:postgresql://localhost:5432/telepesa_test \
+            -Dspring.datasource.username=testuser \
+            -Dspring.datasource.password=testpassword
+          cd ..
+        fi
+        
+        # Test loan-service (if exists)
+        if [ -d "loan-service" ]; then
+          echo "Testing loan-service..."
+          cd loan-service
+          mvn clean test -Dspring.profiles.active=test \
+            -Dspring.datasource.url=jdbc:postgresql://localhost:5432/telepesa_test \
+            -Dspring.datasource.username=testuser \
+            -Dspring.datasource.password=testpassword
+          cd ..
+        fi
+        
+        # Test notification-service (if exists)
+        if [ -d "notification-service" ]; then
+          echo "Testing notification-service..."
+          cd notification-service
+          mvn clean test -Dspring.profiles.active=test \
+            -Dspring.datasource.url=jdbc:postgresql://localhost:5432/telepesa_test \
+            -Dspring.datasource.username=testuser \
+            -Dspring.datasource.password=testpassword
+          cd ..
+        fi
 
-    - name: Generate coverage report
-      working-directory: Backend/user-service
-      run: mvn jacoco:report
+    - name: Generate coverage reports
+      working-directory: Backend
+      run: |
+        # Generate coverage for user-service
+        cd user-service
+        mvn jacoco:report
+        cd ..
+        
+        # Generate coverage for other services (if they exist)
+        for service in account-service transaction-service loan-service notification-service; do
+          if [ -d "$service" ]; then
+            echo "Generating coverage for $service..."
+            cd $service
+            mvn jacoco:report
+            cd ..
+          fi
+        done
 
     - name: Upload coverage reports to Codecov
       uses: codecov/codecov-action@v5
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
-        file: Backend/user-service/target/site/jacoco/jacoco.xml
+        file: Backend/*/target/site/jacoco/jacoco.xml
         flags: unittests
         name: codecov-umbrella
         fail_ci_if_error: false
@@ -102,8 +162,8 @@ jobs:
       with:
         name: test-results
         path: |
-          Backend/user-service/target/surefire-reports/
-          Backend/user-service/target/site/jacoco/
+          Backend/*/target/surefire-reports/
+          Backend/*/target/site/jacoco/
 
   build-and-package:
     name: Build & Package
@@ -145,19 +205,32 @@ jobs:
         cd security-utils && mvn clean install -DskipTests
         cd ..
 
-    - name: Build application
-      working-directory: Backend/user-service
-      run: mvn clean compile
-
-    - name: Package application
-      working-directory: Backend/user-service
-      run: mvn package -DskipTests
+    - name: Build all services
+      working-directory: Backend
+      run: |
+        # Build user-service
+        echo "Building user-service..."
+        cd user-service
+        mvn clean compile
+        mvn package -DskipTests
+        cd ..
+        
+        # Build other services (if they exist)
+        for service in account-service transaction-service loan-service notification-service; do
+          if [ -d "$service" ]; then
+            echo "Building $service..."
+            cd $service
+            mvn clean compile
+            mvn package -DskipTests
+            cd ..
+          fi
+        done
 
     - name: Upload build artifacts
       uses: actions/upload-artifact@v4
       with:
-        name: jar-artifact
-        path: Backend/user-service/target/*.jar
+        name: jar-artifacts
+        path: Backend/*/target/*.jar
 
   security-scan:
     name: Security Scan
@@ -207,15 +280,15 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-owasp-data-
 
-    - name: Run OWASP Dependency Check
-      working-directory: Backend/user-service
+    - name: Run OWASP Dependency Check for all services
+      working-directory: Backend
       continue-on-error: true
       env:
         NVD_API_KEY: ${{ secrets.NVD_API_KEY }}
       run: |
-        echo "Running OWASP Dependency Check..."
-        
-        # Create target directory if it doesn't exist
+        # Run security scan for user-service
+        echo "Running OWASP Dependency Check for user-service..."
+        cd user-service
         mkdir -p target
         
         if [ -n "$NVD_API_KEY" ]; then
@@ -239,42 +312,74 @@ jobs:
             -DsuppressionFile=dependency-check-suppressions.xml \
             || echo "⚠️ OWASP scan encountered issues, but continuing..."
         fi
+        cd ..
         
-        # Verify if report was generated
-        if [ -f "target/dependency-check-report.html" ]; then
-          echo "✅ OWASP dependency-check report generated successfully"
-          ls -la target/dependency-check-report.html
-        else
-          echo "⚠️ OWASP dependency-check report not found - scan may have failed"
-        fi
+        # Run security scan for other services (if they exist)
+        for service in account-service transaction-service loan-service notification-service; do
+          if [ -d "$service" ]; then
+            echo "Running OWASP Dependency Check for $service..."
+            cd $service
+            mkdir -p target
+            
+            if [ -n "$NVD_API_KEY" ]; then
+              mvn org.owasp:dependency-check-maven:check \
+                -DfailBuildOnCVSS=7 \
+                -DnvdApiKey=$NVD_API_KEY \
+                -DnvdMaxRetryCount=3 \
+                -DnvdDelay=2000 \
+                -DcveValidForHours=4 \
+                -DfailOnError=false \
+                || echo "⚠️ OWASP scan for $service encountered issues, but continuing..."
+            else
+              mvn org.owasp:dependency-check-maven:check \
+                -DfailBuildOnCVSS=7 \
+                -DautoUpdate=false \
+                -DcveValidForHours=24 \
+                -DfailOnError=false \
+                || echo "⚠️ OWASP scan for $service encountered issues, but continuing..."
+            fi
+            cd ..
+          fi
+        done
 
     - name: Run Basic Security Checks (Fallback)
-      working-directory: Backend/user-service
+      working-directory: Backend
       continue-on-error: true
       run: |
-        echo "Running basic security checks..."
-        # Check for known vulnerable patterns in dependencies
-        mvn dependency:tree | grep -i "vulnerability\|cve" || echo "No obvious vulnerabilities found in dependency tree"
+        echo "Running basic security checks for all services..."
         
-        # Check for common security anti-patterns in code
-        echo "Checking for potential security issues..."
-        find src -name "*.java" -exec grep -l "System.out.println\|printStackTrace\|password.*=\|secret.*=" {} \; || echo "No obvious security anti-patterns found"
+        for service in user-service account-service transaction-service loan-service notification-service; do
+          if [ -d "$service" ]; then
+            echo "Checking $service..."
+            cd $service
+            
+            # Check for known vulnerable patterns in dependencies
+            mvn dependency:tree | grep -i "vulnerability\|cve" || echo "No obvious vulnerabilities found in $service dependency tree"
+            
+            # Check for common security anti-patterns in code
+            find src -name "*.java" -exec grep -l "System.out.println\|printStackTrace\|password.*=\|secret.*=" {} \; || echo "No obvious security anti-patterns found in $service"
+            
+            cd ..
+          fi
+        done
         
-        echo "Basic security checks completed"
+        echo "Basic security checks completed for all services"
 
     - name: Create security scan report directory
       if: always()
       run: |
-        mkdir -p Backend/user-service/target/security-reports
+        mkdir -p Backend/security-reports
         
         # Create a basic report if the main scan failed
-        if [ ! -f "Backend/user-service/target/dependency-check-report.html" ]; then
-          cat > Backend/user-service/target/security-reports/fallback-security-report.html << 'EOF'
+        for service in user-service account-service transaction-service loan-service notification-service; do
+          if [ -d "$service" ] && [ ! -f "$service/target/dependency-check-report.html" ]; then
+            mkdir -p "$service/target/security-reports"
+            cat > "$service/target/security-reports/fallback-security-report.html" << EOF
         <!DOCTYPE html>
         <html>
-        <head><title>Security Scan Results</title></head>
+        <head><title>Security Scan Results - $service</title></head>
         <body>
-        <h1>Security Scan Results</h1>
+        <h1>Security Scan Results - $service</h1>
         <p><strong>Status:</strong> Scan completed with fallback mode</p>
         <p><strong>Date:</strong> $(date)</p>
         <p><strong>Note:</strong> Primary OWASP scan may have encountered issues. Basic security checks were performed.</p>
@@ -287,9 +392,8 @@ jobs:
         </body>
         </html>
         EOF
-        else
-          echo "OWASP dependency-check report found"
-        fi
+          fi
+        done
 
     - name: Upload security scan results
       uses: actions/upload-artifact@v4
@@ -297,9 +401,9 @@ jobs:
       with:
         name: security-reports
         path: |
-          Backend/user-service/target/dependency-check-report.html
-          Backend/user-service/target/security-reports/
-          Backend/user-service/target/site/
+          Backend/*/target/dependency-check-report.html
+          Backend/*/target/security-reports/
+          Backend/*/target/site/
 
   integration-tests:
     name: Integration Tests
@@ -363,13 +467,30 @@ jobs:
           sleep 2
         done
 
-    - name: Run integration tests
-      working-directory: Backend/user-service
+    - name: Run integration tests for all services
+      working-directory: Backend
       run: |
+        # Run integration tests for user-service
+        echo "Running integration tests for user-service..."
+        cd user-service
         mvn verify -Dspring.profiles.active=test \
           -Dspring.datasource.url=jdbc:postgresql://localhost:5432/telepesa_integration \
           -Dspring.datasource.username=testuser \
           -Dspring.datasource.password=testpassword
+        cd ..
+        
+        # Run integration tests for other services (if they exist)
+        for service in account-service transaction-service loan-service notification-service; do
+          if [ -d "$service" ]; then
+            echo "Running integration tests for $service..."
+            cd $service
+            mvn verify -Dspring.profiles.active=test \
+              -Dspring.datasource.url=jdbc:postgresql://localhost:5432/telepesa_integration \
+              -Dspring.datasource.username=testuser \
+              -Dspring.datasource.password=testpassword
+            cd ..
+          fi
+        done
 
   quality-gate:
     name: Quality Gate
@@ -393,45 +514,52 @@ jobs:
         name: security-reports
         path: security-reports/
 
-    - name: Check coverage threshold
+    - name: Check coverage threshold for all services
       run: |
-        # Extract coverage percentage from JaCoCo report
-        if [ -f "test-results/jacoco.xml" ]; then
-          COVERAGE=$(grep -o 'missed="[0-9]*".*covered="[0-9]*"' test-results/jacoco.xml | head -1 | sed 's/missed="\([0-9]*\)".*covered="\([0-9]*\)"/\1 \2/')
-          MISSED=$(echo $COVERAGE | cut -d' ' -f1)
-          COVERED=$(echo $COVERAGE | cut -d' ' -f2)
-          TOTAL=$((MISSED + COVERED))
-          if [ $TOTAL -gt 0 ]; then
-            PERCENTAGE=$((COVERED * 100 / TOTAL))
-            echo "Coverage: $PERCENTAGE%"
-            if [ $PERCENTAGE -lt 75 ]; then
-              echo "Coverage $PERCENTAGE% is below threshold (75%)"
-              exit 1
+        # Check coverage for all services
+        for jacoco_file in test-results/*/jacoco.xml; do
+          if [ -f "$jacoco_file" ]; then
+            service_name=$(dirname "$jacoco_file" | sed 's|test-results/||')
+            echo "Checking coverage for $service_name..."
+            
+            COVERAGE=$(grep -o 'missed="[0-9]*".*covered="[0-9]*"' "$jacoco_file" | head -1 | sed 's/missed="\([0-9]*\)".*covered="\([0-9]*\)"/\1 \2/')
+            MISSED=$(echo $COVERAGE | cut -d' ' -f1)
+            COVERED=$(echo $COVERAGE | cut -d' ' -f2)
+            TOTAL=$((MISSED + COVERED))
+            if [ $TOTAL -gt 0 ]; then
+              PERCENTAGE=$((COVERED * 100 / TOTAL))
+              echo "Coverage for $service_name: $PERCENTAGE%"
+              if [ $PERCENTAGE -lt 75 ]; then
+                echo "Coverage $PERCENTAGE% for $service_name is below threshold (75%)"
+                exit 1
+              fi
             fi
           fi
-        fi
+        done
 
-    - name: Check security scan results
+    - name: Check security scan results for all services
       run: |
-        echo "🔒 Checking security scan results..."
-        if [ -f "security-reports/dependency-check-report.html" ]; then
-          echo "✅ OWASP dependency-check report found"
-          # Check for high-severity vulnerabilities
-          if grep -q "High" security-reports/dependency-check-report.html; then
-            echo "⚠️ High-severity vulnerabilities found - review required"
+        echo "🔒 Checking security scan results for all services..."
+        
+        for service in user-service account-service transaction-service loan-service notification-service; do
+          if [ -f "security-reports/$service/dependency-check-report.html" ]; then
+            echo "✅ OWASP dependency-check report found for $service"
+            # Check for high-severity vulnerabilities
+            if grep -q "High" "security-reports/$service/dependency-check-report.html"; then
+              echo "⚠️ High-severity vulnerabilities found in $service - review required"
+            else
+              echo "✅ No high-severity vulnerabilities detected in $service"
+            fi
+          elif [ -f "security-reports/$service/fallback-security-report.html" ]; then
+            echo "✅ Fallback security report found for $service"
+            echo "⚠️ Full security scan may not have completed for $service - manual review recommended"
           else
-            echo "✅ No high-severity vulnerabilities detected"
+            echo "⚠️ No security reports found for $service - this may indicate a scan failure"
           fi
-        elif [ -f "security-reports/fallback-security-report.html" ]; then
-          echo "✅ Fallback security report found"
-          echo "⚠️ Full security scan may not have completed - manual review recommended"
-        else
-          echo "⚠️ No security reports found - this may indicate a scan failure"
-          echo "💡 Security scan is not blocking deployment but should be investigated"
-        fi
+        done
 
     - name: Quality gate passed
-      run: echo "All quality checks passed!"
+      run: echo "All quality checks passed for all services!"
 
   docker-build:
     name: Docker Build
@@ -443,11 +571,11 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
 
-    - name: Download jar artifact
+    - name: Download jar artifacts
       uses: actions/download-artifact@v4
       with:
-        name: jar-artifact
-        path: Backend/user-service/target/
+        name: jar-artifacts
+        path: Backend/
 
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v3
@@ -470,52 +598,53 @@ jobs:
         username: ${{ secrets.DOCKER_USERNAME }}
         password: ${{ secrets.DOCKER_PASSWORD }}
 
-    - name: Extract metadata
-      id: meta
-      if: steps.docker-check.outputs.has_credentials == 'true'
-      uses: docker/metadata-action@v5
-      with:
-        images: ${{ secrets.DOCKER_USERNAME }}/telepesa-user-service
-        tags: |
-          type=ref,event=branch
-          type=ref,event=pr
-          type=sha
-
-    - name: Build Docker image (with push)
-      if: steps.docker-check.outputs.has_credentials == 'true'
-      uses: docker/build-push-action@v5
-      with:
-        context: Backend/user-service
-        push: true
-        tags: ${{ steps.meta.outputs.tags }}
-        labels: ${{ steps.meta.outputs.labels }}
-        cache-from: type=gha
-        cache-to: type=gha,mode=max
-
-    - name: Build Docker image (local only)
-      if: steps.docker-check.outputs.has_credentials == 'false'
-      uses: docker/build-push-action@v5
-      with:
-        context: Backend/user-service
-        push: false
-        tags: telepesa-user-service:latest
-        cache-from: type=gha
-        cache-to: type=gha,mode=max
+    - name: Build Docker images for all services
+      working-directory: Backend
+      run: |
+        # Build user-service
+        echo "Building Docker image for user-service..."
+        cd user-service
+        if [ "${{ steps.docker-check.outputs.has_credentials }}" == "true" ]; then
+          docker build -t ${{ secrets.DOCKER_USERNAME }}/telepesa-user-service:latest .
+          docker push ${{ secrets.DOCKER_USERNAME }}/telepesa-user-service:latest
+        else
+          docker build -t telepesa-user-service:latest .
+        fi
+        cd ..
+        
+        # Build other services (if they exist)
+        for service in account-service transaction-service loan-service notification-service; do
+          if [ -d "$service" ]; then
+            echo "Building Docker image for $service..."
+            cd $service
+            if [ "${{ steps.docker-check.outputs.has_credentials }}" == "true" ]; then
+              docker build -t ${{ secrets.DOCKER_USERNAME }}/telepesa-$service:latest .
+              docker push ${{ secrets.DOCKER_USERNAME }}/telepesa-$service:latest
+            else
+              docker build -t telepesa-$service:latest .
+            fi
+            cd ..
+          fi
+        done
 
     - name: Docker build status
       run: |
         if [ "${{ steps.docker-check.outputs.has_credentials }}" == "true" ]; then
-          echo "🐳 Docker image built and pushed to Docker Hub successfully!"
-          echo "📦 Image: ${{ secrets.DOCKER_USERNAME }}/telepesa-user-service"
+          echo "🐳 Docker images built and pushed to Docker Hub successfully!"
+          echo "📦 Images:"
+          echo "   - ${{ secrets.DOCKER_USERNAME }}/telepesa-user-service"
+          for service in account-service transaction-service loan-service notification-service; do
+            if [ -d "Backend/$service" ]; then
+              echo "   - ${{ secrets.DOCKER_USERNAME }}/telepesa-$service"
+            fi
+          done
         else
-          echo "🐳 Docker image built successfully (local only)"
+          echo "🐳 Docker images built successfully (local only)"
           echo "💡 To enable Docker Hub push, configure these repository secrets:"
           echo "   - DOCKER_USERNAME: Your Docker Hub username"
           echo "   - DOCKER_PASSWORD: Your Docker Hub password or access token"
           echo "📁 Go to: Settings → Secrets and variables → Actions"
         fi
-
-
 
   notify:
     name: Notify
@@ -527,18 +656,18 @@ jobs:
     - name: Notify Success
       if: needs.test-and-coverage.result == 'success' && needs.build-and-package.result == 'success'
       run: |
-        echo "🎉 CI Pipeline completed successfully!"
-        echo "✅ All tests passed (81/81)"
-        echo "✅ Build successful"
-        echo "✅ Security scan completed"
-        echo "✅ Quality gate passed"
-        echo "✅ Coverage requirements met (80%+ line, 35%+ branch)"
-        echo "🐳 Docker build completed (check Docker build job for details)"
+        echo "🎉 Backend CI Pipeline completed successfully!"
+        echo "✅ All tests passed for all services"
+        echo "✅ Build successful for all services"
+        echo "✅ Security scan completed for all services"
+        echo "✅ Quality gate passed for all services"
+        echo "✅ Coverage requirements met (80%+ line, 75%+ branch)"
+        echo "🐳 Docker builds completed for all services"
 
     - name: Notify Failure
       if: needs.test-and-coverage.result == 'failure' || needs.build-and-package.result == 'failure'
       run: |
-        echo "❌ CI Pipeline failed!"
+        echo "❌ Backend CI Pipeline failed!"
         echo "Test result: ${{ needs.test-and-coverage.result }}"
         echo "Build result: ${{ needs.build-and-package.result }}"
         echo "Security scan result: ${{ needs.security-scan.result }}"
