@@ -1,26 +1,4 @@
-# Multi-stage build for Telepesa User Service
-FROM maven:3.9.6-eclipse-temurin-17 AS build
-
-# Set working directory
-WORKDIR /app
-
-# Copy parent pom.xml first for better layer caching
-COPY ../pom.xml ./parent-pom.xml
-
-# Copy shared libraries
-COPY ../shared-libraries ./shared-libraries
-
-# Copy user service source
-COPY pom.xml .
-COPY src ./src
-
-# Build shared libraries first
-RUN cd shared-libraries && mvn clean install -DskipTests
-
-# Build the application
-RUN mvn clean package -DskipTests
-
-# Runtime stage
+# Runtime stage for CI/CD (JAR already built)
 FROM eclipse-temurin:17-jre-alpine
 
 # Install security updates and required packages
@@ -32,8 +10,8 @@ RUN apk update && apk upgrade && \
 # Set working directory
 WORKDIR /app
 
-# Copy the JAR file from build stage
-COPY --from=build /app/target/user-service-*.jar app.jar
+# Copy the pre-built JAR file from CI/CD artifacts
+COPY target/user-service-*.jar app.jar
 
 # Change ownership to telepesa user
 RUN chown -R telepesa:telepesa /app
