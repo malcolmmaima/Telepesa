@@ -109,7 +109,7 @@ public class TransactionServiceImpl implements TransactionService {
     @Override
     @Transactional(readOnly = true)
     public Page<TransactionDto> getTransactionsByDateRange(Long userId, LocalDateTime startDate, LocalDateTime endDate, Pageable pageable) {
-        Page<Transaction> transactions = transactionRepository.findByUserIdAndDateRange(userId, startDate, endDate, pageable);
+        Page<Transaction> transactions = transactionRepository.findByUserIdAndProcessedAtBetween(userId, startDate, endDate, pageable);
         return transactions.map(transactionMapper::toDto);
     }
 
@@ -132,7 +132,7 @@ public class TransactionServiceImpl implements TransactionService {
     @Override
     @Transactional(readOnly = true)
     public List<TransactionDto> getAccountTransactionHistory(Long accountId) {
-        List<Transaction> transactions = transactionRepository.findAllByAccountId(accountId);
+        List<Transaction> transactions = transactionRepository.findByFromAccountIdOrToAccountIdOrderByProcessedAtDesc(accountId, accountId);
         return transactions.stream()
                 .map(transactionMapper::toDto)
                 .toList();
@@ -141,26 +141,20 @@ public class TransactionServiceImpl implements TransactionService {
     @Override
     @Transactional(readOnly = true)
     public BigDecimal getAccountBalance(Long accountId) {
-        BigDecimal totalCredits = transactionRepository.getTotalCreditsByAccountId(accountId, LocalDateTime.now().minusYears(10));
-        BigDecimal totalDebits = transactionRepository.getTotalDebitsByAccountId(accountId, LocalDateTime.now().minusYears(10));
-
-        if (totalCredits == null) totalCredits = BigDecimal.ZERO;
-        if (totalDebits == null) totalDebits = BigDecimal.ZERO;
-
-        return totalCredits.subtract(totalDebits);
+        return transactionRepository.calculateAccountBalance(accountId);
     }
 
     @Override
     @Transactional(readOnly = true)
     public BigDecimal getTotalDebitsByAccountId(Long accountId, LocalDateTime since) {
-        BigDecimal total = transactionRepository.getTotalDebitsByAccountId(accountId, since);
+        BigDecimal total = transactionRepository.getTotalDebitsByAccountIdSince(accountId, since);
         return total != null ? total : BigDecimal.ZERO;
     }
 
     @Override
     @Transactional(readOnly = true)
     public BigDecimal getTotalCreditsByAccountId(Long accountId, LocalDateTime since) {
-        BigDecimal total = transactionRepository.getTotalCreditsByAccountId(accountId, since);
+        BigDecimal total = transactionRepository.getTotalCreditsByAccountIdSince(accountId, since);
         return total != null ? total : BigDecimal.ZERO;
     }
 
