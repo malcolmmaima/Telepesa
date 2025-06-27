@@ -37,7 +37,6 @@ public class TransactionMapper {
         }
 
         return Transaction.builder()
-                .id(transactionDto.getId())
                 .transactionId(transactionDto.getTransactionId())
                 .fromAccountId(transactionDto.getFromAccountId())
                 .toAccountId(transactionDto.getToAccountId())
