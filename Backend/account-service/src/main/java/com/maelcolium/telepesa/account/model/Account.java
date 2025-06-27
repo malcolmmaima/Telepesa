@@ -6,21 +6,23 @@ import com.maelcolium.telepesa.models.enums.AccountType;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import lombok.*;
-import org.springframework.data.annotation.CreatedDate;
-import org.springframework.data.annotation.LastModifiedDate;
-import org.springframework.data.jpa.domain.support.AuditingEntityListener;
+import lombok.experimental.SuperBuilder;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 /**
- * Banking Account entity representing customer accounts in the Telepesa platform.
+ * Account entity representing a bank account in the Telepesa system.
  * 
  * This entity handles:
- * - Account identification and ownership
- * - Balance management and tracking
- * - Account status and type management
- * - Audit trail and compliance requirements
+ * - Account creation and management
+ * - Balance tracking with precision
+ * - Account status management
+ * - Account types (Savings, Checking, Business, etc.)
+ * - User association and ownership
+ * 
+ * @author Telepesa Development Team
+ * @version 1.0.0
  */
 @Entity
 @Table(name = "accounts", 
@@ -33,7 +35,7 @@ import java.time.LocalDateTime;
        })
 @EntityListeners(AuditingEntityListener.class)
 @Data
-@Builder
+@SuperBuilder
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = true)
@@ -45,25 +47,26 @@ public class Account extends BaseEntity {
     private Long id;
 
     /**
-     * Unique account number generated for this account
+     * Unique account number generated for each account
      */
     @Column(name = "account_number", unique = true, nullable = false, length = 20)
     @NotBlank(message = "Account number is required")
-    @Size(min = 10, max = 20, message = "Account number must be between 10 and 20 characters")
+    @Size(max = 20, message = "Account number must not exceed 20 characters")
     private String accountNumber;
 
     /**
-     * User ID that owns this account (references user-service)
+     * User ID who owns this account
      */
     @Column(name = "user_id", nullable = false)
     @NotNull(message = "User ID is required")
+    @Positive(message = "User ID must be positive")
     private Long userId;
 
     /**
-     * Type of account (SAVINGS, CHECKING, BUSINESS, etc.)
+     * Type of account (SAVINGS, CHECKING, BUSINESS, FIXED_DEPOSIT)
      */
     @Enumerated(EnumType.STRING)
-    @Column(name = "account_type", nullable = false, length = 20)
+    @Column(name = "account_type", nullable = false)
     @NotNull(message = "Account type is required")
     private AccountType accountType;
 
@@ -71,15 +74,15 @@ public class Account extends BaseEntity {
      * Current account status
      */
     @Enumerated(EnumType.STRING)
-    @Column(name = "status", nullable = false, length = 20)
+    @Column(name = "status", nullable = false)
     @NotNull(message = "Account status is required")
     @Builder.Default
     private AccountStatus status = AccountStatus.PENDING;
 
     /**
-     * Current account balance
+     * Current account balance with 2 decimal precision
      */
-    @Column(name = "balance", nullable = false, precision = 15, scale = 2)
+    @Column(name = "balance", nullable = false, precision = 19, scale = 2)
     @NotNull(message = "Balance is required")
     @DecimalMin(value = "0.00", message = "Balance cannot be negative")
     @Builder.Default
@@ -88,71 +91,104 @@ public class Account extends BaseEntity {
     /**
      * Available balance (balance minus holds/pending transactions)
      */
-    @Column(name = "available_balance", nullable = false, precision = 15, scale = 2)
+    @Column(name = "available_balance", nullable = false, precision = 19, scale = 2)
     @NotNull(message = "Available balance is required")
     @DecimalMin(value = "0.00", message = "Available balance cannot be negative")
     @Builder.Default
     private BigDecimal availableBalance = BigDecimal.ZERO;
 
     /**
-     * Minimum balance required for this account
+     * Minimum balance required for this account type
      */
-    @Column(name = "minimum_balance", nullable = false, precision = 15, scale = 2)
+    @Column(name = "minimum_balance", nullable = false, precision = 19, scale = 2)
     @NotNull(message = "Minimum balance is required")
     @DecimalMin(value = "0.00", message = "Minimum balance cannot be negative")
     @Builder.Default
     private BigDecimal minimumBalance = BigDecimal.ZERO;
 
     /**
-     * Daily transaction limit for this account
+     * Daily transaction limit
      */
-    @Column(name = "daily_limit", precision = 15, scale = 2)
+    @Column(name = "daily_limit", precision = 19, scale = 2)
     @DecimalMin(value = "0.00", message = "Daily limit cannot be negative")
     private BigDecimal dailyLimit;
 
     /**
-     * Monthly transaction limit for this account
+     * Monthly transaction limit
      */
-    @Column(name = "monthly_limit", precision = 15, scale = 2)
+    @Column(name = "monthly_limit", precision = 19, scale = 2)
     @DecimalMin(value = "0.00", message = "Monthly limit cannot be negative")
     private BigDecimal monthlyLimit;
 
     /**
-     * Currency code for this account (KES, USD, etc.)
+     * Currency code (e.g., KES, USD, EUR)
      */
     @Column(name = "currency_code", nullable = false, length = 3)
     @NotBlank(message = "Currency code is required")
-    @Size(min = 3, max = 3, message = "Currency code must be 3 characters")
+    @Size(min = 3, max = 3, message = "Currency code must be exactly 3 characters")
     @Builder.Default
     private String currencyCode = "KES";
 
     /**
-     * Interest rate for savings accounts (if applicable)
+     * Account nickname or alias
+     */
+    @Column(name = "account_name", length = 100)
+    @Size(max = 100, message = "Account name must not exceed 100 characters")
+    private String accountName;
+
+    /**
+     * Account description
+     */
+    @Column(name = "description", length = 255)
+    @Size(max = 255, message = "Description must not exceed 255 characters")
+    private String description;
+
+    /**
+     * Interest rate for savings accounts (percentage)
      */
     @Column(name = "interest_rate", precision = 5, scale = 4)
     @DecimalMin(value = "0.0000", message = "Interest rate cannot be negative")
-    @DecimalMax(value = "1.0000", message = "Interest rate cannot exceed 100%")
+    @DecimalMax(value = "100.0000", message = "Interest rate cannot exceed 100%")
     private BigDecimal interestRate;
 
     /**
-     * Account opening date
+     * Whether the account is frozen/locked
      */
-    @Column(name = "opened_at", nullable = false)
-    @NotNull(message = "Account opening date is required")
+    @Column(name = "is_frozen", nullable = false)
     @Builder.Default
-    private LocalDateTime openedAt = LocalDateTime.now();
+    private Boolean isFrozen = false;
 
     /**
-     * Account closure date (if closed)
+     * Whether the account allows overdrafts
+     */
+    @Column(name = "overdraft_allowed", nullable = false)
+    @Builder.Default
+    private Boolean overdraftAllowed = false;
+
+    /**
+     * Overdraft limit if allowed
+     */
+    @Column(name = "overdraft_limit", precision = 19, scale = 2)
+    @DecimalMin(value = "0.00", message = "Overdraft limit cannot be negative")
+    private BigDecimal overdraftLimit;
+
+    /**
+     * Last transaction date
+     */
+    @Column(name = "last_transaction_date")
+    private LocalDateTime lastTransactionDate;
+
+    /**
+     * Account activation date
+     */
+    @Column(name = "activated_at")
+    private LocalDateTime activatedAt;
+
+    /**
+     * Account closure date
      */
     @Column(name = "closed_at")
     private LocalDateTime closedAt;
-
-    /**
-     * Last transaction date for activity tracking
-     */
-    @Column(name = "last_transaction_at")
-    private LocalDateTime lastTransactionAt;
 
     /**
      * KYC verification status
@@ -194,90 +230,90 @@ public class Account extends BaseEntity {
     // Business Methods
 
     /**
-     * Checks if the account is active and can perform transactions
+     * Check if account is active and can perform transactions
      */
     public boolean isActive() {
-        return AccountStatus.ACTIVE.equals(this.status);
+        return AccountStatus.ACTIVE.equals(this.status) && !this.isFrozen;
     }
 
     /**
-     * Checks if the account is frozen
+     * Check if account can debit specified amount
      */
-    public boolean isFrozen() {
-        return AccountStatus.FROZEN.equals(this.status);
+    public boolean canDebit(BigDecimal amount) {
+        if (!isActive()) {
+            return false;
+        }
+        
+        BigDecimal newBalance = this.availableBalance.subtract(amount);
+        
+        if (this.overdraftAllowed && this.overdraftLimit != null) {
+            return newBalance.compareTo(this.overdraftLimit.negate()) >= 0;
+        }
+        
+        return newBalance.compareTo(this.minimumBalance) >= 0;
     }
 
     /**
-     * Checks if the account is closed
+     * Check if account can credit specified amount
      */
-    public boolean isClosed() {
-        return AccountStatus.CLOSED.equals(this.status);
+    public boolean canCredit(BigDecimal amount) {
+        return isActive() && amount.compareTo(BigDecimal.ZERO) > 0;
     }
 
     /**
-     * Checks if sufficient balance is available for a transaction
-     */
-    public boolean hasSufficientBalance(BigDecimal amount) {
-        return this.availableBalance.compareTo(amount) >= 0;
-    }
-
-    /**
-     * Checks if the account meets minimum balance requirements
-     */
-    public boolean meetsMinimumBalance() {
-        return this.balance.compareTo(this.minimumBalance) >= 0;
-    }
-
-    /**
-     * Credits the account with the specified amount
+     * Credit account with specified amount
      */
     public void credit(BigDecimal amount) {
-        if (amount.compareTo(BigDecimal.ZERO) <= 0) {
-            throw new IllegalArgumentException("Credit amount must be positive");
+        if (!canCredit(amount)) {
+            throw new IllegalArgumentException("Cannot credit account: " + accountNumber);
         }
+        
         this.balance = this.balance.add(amount);
         this.availableBalance = this.availableBalance.add(amount);
-        this.lastTransactionAt = LocalDateTime.now();
+        this.lastTransactionDate = LocalDateTime.now();
     }
 
     /**
-     * Debits the account with the specified amount
+     * Debit account with specified amount
      */
     public void debit(BigDecimal amount) {
-        if (amount.compareTo(BigDecimal.ZERO) <= 0) {
-            throw new IllegalArgumentException("Debit amount must be positive");
+        if (!canDebit(amount)) {
+            throw new IllegalArgumentException("Cannot debit account: " + accountNumber);
         }
-        if (!hasSufficientBalance(amount)) {
-            throw new IllegalArgumentException("Insufficient balance");
-        }
+        
         this.balance = this.balance.subtract(amount);
         this.availableBalance = this.availableBalance.subtract(amount);
-        this.lastTransactionAt = LocalDateTime.now();
+        this.lastTransactionDate = LocalDateTime.now();
     }
 
     /**
-     * Freezes the account
-     */
-    public void freeze() {
-        this.status = AccountStatus.FROZEN;
-        this.updatedAt = LocalDateTime.now();
-    }
-
-    /**
-     * Activates the account
+     * Activate the account
      */
     public void activate() {
         this.status = AccountStatus.ACTIVE;
-        this.updatedAt = LocalDateTime.now();
+        this.activatedAt = LocalDateTime.now();
     }
 
     /**
-     * Closes the account
+     * Close the account
      */
     public void close() {
         this.status = AccountStatus.CLOSED;
         this.closedAt = LocalDateTime.now();
-        this.updatedAt = LocalDateTime.now();
+    }
+
+    /**
+     * Freeze the account
+     */
+    public void freeze() {
+        this.isFrozen = true;
+    }
+
+    /**
+     * Unfreeze the account
+     */
+    public void unfreeze() {
+        this.isFrozen = false;
     }
 
     /**
