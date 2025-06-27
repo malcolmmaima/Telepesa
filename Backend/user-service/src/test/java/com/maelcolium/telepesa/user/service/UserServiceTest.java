@@ -210,6 +210,7 @@ class UserServiceTest {
         when(passwordEncoder.matches(loginRequest.getPassword(), testUser.getPassword())).thenReturn(true);
         when(userDetailsService.loadUserByUsername(testUser.getUsername())).thenReturn(userDetails);
         when(jwtTokenUtil.generateToken(userDetails)).thenReturn("jwt-token-123");
+        when(userMapper.toDto(testUser)).thenReturn(testUserDto); // Add missing mock
 
         // When
         LoginResponse result = userService.authenticateUser(loginRequest);
@@ -262,6 +263,7 @@ class UserServiceTest {
         when(passwordEncoder.matches(loginRequest.getPassword(), testUser.getPassword())).thenReturn(true);
         when(userDetailsService.loadUserByUsername(testUser.getUsername())).thenReturn(userDetails);
         when(jwtTokenUtil.generateToken(userDetails)).thenReturn("jwt-token-123");
+        when(userMapper.toDto(testUser)).thenReturn(testUserDto); // Add missing mock
         when(deviceFingerprintService.generateDeviceFingerprint(httpServletRequest)).thenReturn("device-fingerprint-123");
 
         DeviceFingerprintService.DeviceAnalysisResult analysisResult = 
@@ -292,6 +294,7 @@ class UserServiceTest {
         when(passwordEncoder.matches(loginRequest.getPassword(), testUser.getPassword())).thenReturn(true);
         when(userDetailsService.loadUserByUsername(testUser.getUsername())).thenReturn(userDetails);
         when(jwtTokenUtil.generateToken(userDetails)).thenReturn("jwt-token-123");
+        when(userMapper.toDto(testUser)).thenReturn(testUserDto); // Add missing mock
         when(deviceFingerprintService.generateDeviceFingerprint(httpServletRequest)).thenReturn("device-fingerprint-123");
 
         DeviceFingerprintService.DeviceAnalysisResult analysisResult = 
