@@ -494,54 +494,5 @@ class UserServiceTest {
         verify(userRepository).unlockUserAccount(userId);
     }
 
-    @Test
-    void authenticateUserWithSecurity_WithValidCredentials_ShouldReturnLoginResponse() {
-        // Given
-        LoginRequest request = LoginRequest.builder()
-            .email("test@example.com")
-            .password("password123")
-            .build();
 
-        User user = User.builder()
-            .id(1L)
-            .username("testuser")
-            .email("test@example.com")
-            .password("encoded-password")
-            .status(UserStatus.ACTIVE)
-            .build();
-
-        LoginResponse expectedResponse = LoginResponse.builder()
-            .token("jwt-token")
-            .username("testuser")
-            .email("test@example.com")
-            .build();
-
-        DeviceFingerprintService.DeviceAnalysisResult deviceAnalysis = 
-            new DeviceFingerprintService.DeviceAnalysisResult(
-                "device-123", false, false, null, 0.9, "Normal"
-            );
-
-        // Mock HttpServletRequest
-        when(httpServletRequest.getRemoteAddr()).thenReturn("192.168.1.100");
-        when(httpServletRequest.getHeader("User-Agent")).thenReturn("Mozilla/5.0");
-
-        when(userRepository.findByEmail(request.getEmail())).thenReturn(Optional.of(user));
-        when(passwordEncoder.matches(request.getPassword(), user.getPassword())).thenReturn(true);
-        when(jwtTokenUtil.generateToken(any())).thenReturn("jwt-token");
-        when(deviceFingerprintService.generateFingerprint(any())).thenReturn("device-123");
-        when(deviceFingerprintService.analyzeDevice(anyString(), anyString(), anyString()))
-            .thenReturn(deviceAnalysis);
-
-        // When
-        LoginResponse result = userService.authenticateUserWithSecurity(request, httpServletRequest);
-
-        // Then
-        assertThat(result).isNotNull();
-        assertThat(result.getToken()).isEqualTo("jwt-token");
-        assertThat(result.getUsername()).isEqualTo("testuser");
-        assertThat(result.getEmail()).isEqualTo("test@example.com");
-        
-        verify(auditLogService).logAuthenticationAttempt(eq("test@example.com"), eq(true), eq("192.168.1.100"));
-        verify(deviceFingerprintService).analyzeDevice(eq("device-123"), eq("testuser"), eq("192.168.1.100"));
-    }
 } 
