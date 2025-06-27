@@ -207,12 +207,6 @@ mvn verify
 - [Security Implementation](Backend/SECURITY_IMPLEMENTATION.md)
 - [Testing Guidelines](Backend/user-service/README-TESTING.md)
 
-### Development Guidelines
-- [Spring Boot Rules](Rules/springboot-cursor-rules.md)
-- [Android Development Rules](Rules/android-cursor-rules.md)
-- [iOS Development Rules](Rules/ios-cursor-rules.md)
-- [React Development Rules](Rules/react-cursor-rules.md)
-
 ## 🔧 Configuration
 
 ### Environment Variables
