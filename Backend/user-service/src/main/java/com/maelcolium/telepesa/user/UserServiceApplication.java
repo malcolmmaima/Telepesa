@@ -12,7 +12,7 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
  */
 @SpringBootApplication(scanBasePackages = "com.maelcolium.telepesa")
 @EnableJpaAuditing
-@EnableCaching
+// @EnableCaching
 @EnableFeignClients
 @EnableTransactionManagement
 public class UserServiceApplication {
