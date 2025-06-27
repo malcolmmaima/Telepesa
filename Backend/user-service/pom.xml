@@ -246,12 +246,16 @@
                     </suppressionFiles>
                     <failBuildOnCVSS>7</failBuildOnCVSS>
                     <format>ALL</format>
-                    <autoUpdate>false</autoUpdate>
-                    <cveValidForHours>24</cveValidForHours>
+                    <!-- Use API key if available, otherwise use local data -->
+                    <nvdApiKey>${env.NVD_API_KEY}</nvdApiKey>
+                    <autoUpdate>${env.NVD_API_KEY}</autoUpdate>
+                    <cveValidForHours>4</cveValidForHours>
                     <failOnError>false</failOnError>
                     <nvdMaxRetryCount>3</nvdMaxRetryCount>
-                    <nvdDelay>1000</nvdDelay>
+                    <nvdDelay>2000</nvdDelay>
                     <skipTestScope>true</skipTestScope>
+                    <!-- Fallback for when no API key is available -->
+                    <nvdDatafeedUrl>https://nvd.nist.gov/feeds/json/cve/1.1/</nvdDatafeedUrl>
                 </configuration>
                 <executions>
                     <execution>
