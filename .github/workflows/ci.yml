@@ -209,14 +209,29 @@ jobs:
     - name: Run OWASP Dependency Check
       working-directory: Backend/user-service
       continue-on-error: true
+      env:
+        NVD_API_KEY: ${{ secrets.NVD_API_KEY }}
       run: |
-        echo "Running OWASP Dependency Check..."
-        mvn org.owasp:dependency-check-maven:check \
-          -DfailBuildOnCVSS=7 \
-          -DautoUpdate=false \
-          -DcveValidForHours=24 \
-          -DfailOnError=false \
-          -DsuppressionFile=dependency-check-suppressions.xml || echo "OWASP scan completed with warnings"
+        echo "Running OWASP Dependency Check with NVD API key..."
+        if [ -n "$NVD_API_KEY" ]; then
+          echo "Using NVD API key for enhanced vulnerability data"
+          mvn org.owasp:dependency-check-maven:check \
+            -DfailBuildOnCVSS=7 \
+            -DnvdApiKey=$NVD_API_KEY \
+            -DnvdMaxRetryCount=3 \
+            -DnvdDelay=2000 \
+            -DcveValidForHours=4 \
+            -DfailOnError=false \
+            -DsuppressionFile=dependency-check-suppressions.xml
+        else
+          echo "No NVD API key found, using local data only"
+          mvn org.owasp:dependency-check-maven:check \
+            -DfailBuildOnCVSS=7 \
+            -DautoUpdate=false \
+            -DcveValidForHours=24 \
+            -DfailOnError=false \
+            -DsuppressionFile=dependency-check-suppressions.xml
+        fi
 
     - name: Run Basic Security Checks (Fallback)
       working-directory: Backend/user-service
