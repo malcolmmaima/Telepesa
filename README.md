@@ -33,7 +33,7 @@ The platform uses a microservices architecture with an API Gateway (Spring Cloud
 ## Setup Instructions
 1. **Clone the Repository**:
    ```bash
-   git clone <repository-url>
+   git clone https://github.com/malcolmmaima/Telepesa.git
    ```
 2. **Backend Setup**:
    - Install Java 17 and Maven

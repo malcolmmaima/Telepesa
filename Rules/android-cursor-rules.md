@@ -1027,6 +1027,510 @@ These rules are based on best practices from a well-structured Android project u
 - Implement reconnection logic
 - Manage WebSocket lifecycle with app state
 
+## Fintech UI Patterns & Design System
+
+### Financial Dashboard Components
+- Implement card-based layouts for account summaries
+- Create balance display components with proper formatting
+- Use consistent spacing and elevation for financial cards
+- Example:
+  ```kotlin
+  @Composable
+  fun AccountBalanceCard(
+      accountName: String,
+      balance: BigDecimal,
+      currency: String = "KES",
+      modifier: Modifier = Modifier
+  ) {
+      Card(
+          modifier = modifier.fillMaxWidth(),
+          elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+          colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+      ) {
+          Column(
+              modifier = Modifier.padding(16.dp)
+          ) {
+              Text(
+                  text = accountName,
+                  style = MaterialTheme.typography.bodyMedium,
+                  color = MaterialTheme.colorScheme.onSurfaceVariant
+              )
+              Spacer(modifier = Modifier.height(8.dp))
+              Text(
+                  text = "$currency ${balance.formatCurrency()}",
+                  style = MaterialTheme.typography.headlineMedium,
+                  fontWeight = FontWeight.Bold,
+                  color = MaterialTheme.colorScheme.onSurface
+              )
+          }
+      }
+  }
+  ```
+
+### Transaction List Components
+- Implement efficient list rendering for large transaction datasets
+- Create consistent transaction item layouts
+- Show transaction status with appropriate colors and icons
+- Example:
+  ```kotlin
+  @Composable
+  fun TransactionItem(
+      transaction: Transaction,
+      onClick: () -> Unit,
+      modifier: Modifier = Modifier
+  ) {
+      Row(
+          modifier = modifier
+              .fillMaxWidth()
+              .clickable { onClick() }
+              .padding(horizontal = 16.dp, vertical = 12.dp),
+          verticalAlignment = Alignment.CenterVertically
+      ) {
+          // Transaction type icon
+          TransactionTypeIcon(
+              type = transaction.type,
+              modifier = Modifier.size(40.dp)
+          )
+          
+          Spacer(modifier = Modifier.width(12.dp))
+          
+          // Transaction details
+          Column(modifier = Modifier.weight(1f)) {
+              Text(
+                  text = transaction.description,
+                  style = MaterialTheme.typography.bodyMedium,
+                  fontWeight = FontWeight.Medium
+              )
+              Text(
+                  text = transaction.date.formatDate(),
+                  style = MaterialTheme.typography.bodySmall,
+                  color = MaterialTheme.colorScheme.onSurfaceVariant
+              )
+          }
+          
+          // Amount
+          Text(
+              text = transaction.amount.formatCurrency(transaction.isDebit),
+              style = MaterialTheme.typography.bodyMedium,
+              fontWeight = FontWeight.Bold,
+              color = if (transaction.isDebit) 
+                  MaterialTheme.colorScheme.error 
+              else 
+                  Color(0xFF4CAF50)
+          )
+      }
+  }
+  ```
+
+### Payment Flow Components
+- Create step-by-step payment forms
+- Implement amount input with proper validation
+- Design recipient selection interfaces
+- Example:
+  ```kotlin
+  @Composable
+  fun AmountInputCard(
+      amount: String,
+      onAmountChange: (String) -> Unit,
+      currency: String = "KES",
+      error: String? = null,
+      modifier: Modifier = Modifier
+  ) {
+      Card(
+          modifier = modifier.fillMaxWidth(),
+          colors = CardDefaults.cardColors(
+              containerColor = MaterialTheme.colorScheme.surfaceVariant
+          )
+      ) {
+          Column(
+              modifier = Modifier.padding(24.dp),
+              horizontalAlignment = Alignment.CenterHorizontally
+          ) {
+              Text(
+                  text = "Enter Amount",
+                  style = MaterialTheme.typography.titleMedium,
+                  color = MaterialTheme.colorScheme.onSurfaceVariant
+              )
+              
+              Spacer(modifier = Modifier.height(16.dp))
+              
+              Row(
+                  verticalAlignment = Alignment.CenterVertically
+              ) {
+                  Text(
+                      text = currency,
+                      style = MaterialTheme.typography.headlineLarge,
+                      color = MaterialTheme.colorScheme.primary
+                  )
+                  Spacer(modifier = Modifier.width(8.dp))
+                  BasicTextField(
+                      value = amount,
+                      onValueChange = onAmountChange,
+                      textStyle = MaterialTheme.typography.headlineLarge.copy(
+                          color = MaterialTheme.colorScheme.onSurface,
+                          textAlign = TextAlign.Center
+                      ),
+                      keyboardOptions = KeyboardOptions(
+                          keyboardType = KeyboardType.Decimal,
+                          imeAction = ImeAction.Done
+                      ),
+                      singleLine = true,
+                      decorationBox = { innerTextField ->
+                          if (amount.isEmpty()) {
+                              Text(
+                                  text = "0.00",
+                                  style = MaterialTheme.typography.headlineLarge,
+                                  color = MaterialTheme.colorScheme.onSurfaceVariant
+                              )
+                          }
+                          innerTextField()
+                      }
+                  )
+              }
+              
+              error?.let {
+                  Spacer(modifier = Modifier.height(8.dp))
+                  Text(
+                      text = it,
+                      style = MaterialTheme.typography.bodySmall,
+                      color = MaterialTheme.colorScheme.error
+                  )
+              }
+          }
+      }
+  }
+  ```
+
+### Chart and Analytics Components
+- Implement responsive charts using compose-charts or similar
+- Create spending category breakdowns
+- Show transaction trends over time
+- Example:
+  ```kotlin
+  @Composable
+  fun SpendingCategoryChart(
+      categories: List<SpendingCategory>,
+      modifier: Modifier = Modifier
+  ) {
+      val total = categories.sumOf { it.amount }
+      
+      Card(
+          modifier = modifier.fillMaxWidth()
+      ) {
+          Column(
+              modifier = Modifier.padding(16.dp)
+          ) {
+              Text(
+                  text = "Spending Categories",
+                  style = MaterialTheme.typography.titleMedium,
+                  fontWeight = FontWeight.Bold
+              )
+              
+              Spacer(modifier = Modifier.height(16.dp))
+              
+              // Simple horizontal bar chart
+              categories.forEach { category ->
+                  CategoryBar(
+                      category = category,
+                      percentage = (category.amount.toFloat() / total.toFloat()),
+                      modifier = Modifier.fillMaxWidth()
+                  )
+                  Spacer(modifier = Modifier.height(8.dp))
+              }
+          }
+      }
+  }
+  
+  @Composable
+  fun CategoryBar(
+      category: SpendingCategory,
+      percentage: Float,
+      modifier: Modifier = Modifier
+  ) {
+      Row(
+          modifier = modifier,
+          verticalAlignment = Alignment.CenterVertically
+      ) {
+          Box(
+              modifier = Modifier
+                  .size(12.dp)
+                  .background(
+                      color = category.color,
+                      shape = CircleShape
+                  )
+          )
+          
+          Spacer(modifier = Modifier.width(8.dp))
+          
+          Text(
+              text = category.name,
+              style = MaterialTheme.typography.bodyMedium,
+              modifier = Modifier.weight(1f)
+          )
+          
+          Text(
+              text = "${(percentage * 100).toInt()}%",
+              style = MaterialTheme.typography.bodyMedium,
+              fontWeight = FontWeight.Medium
+          )
+      }
+      
+      Spacer(modifier = Modifier.height(4.dp))
+      
+      LinearProgressIndicator(
+          progress = { percentage },
+          modifier = Modifier
+              .fillMaxWidth()
+              .height(4.dp),
+          color = category.color,
+          trackColor = MaterialTheme.colorScheme.surfaceVariant
+      )
+  }
+  ```
+
+### Form Components for Financial Data
+- Create specialized input fields for financial data
+- Implement card number, expiry date, and CVV inputs
+- Add proper masking and validation
+- Example:
+  ```kotlin
+  @Composable
+  fun CardNumberField(
+      cardNumber: String,
+      onCardNumberChange: (String) -> Unit,
+      error: String? = null,
+      modifier: Modifier = Modifier
+  ) {
+      OutlinedTextField(
+          value = cardNumber,
+          onValueChange = { value ->
+              // Format card number with spaces
+              val digits = value.filter { it.isDigit() }
+              if (digits.length <= 16) {
+                  val formatted = digits.chunked(4).joinToString(" ")
+                  onCardNumberChange(formatted)
+              }
+          },
+          label = { Text("Card Number") },
+          placeholder = { Text("1234 5678 9012 3456") },
+          keyboardOptions = KeyboardOptions(
+              keyboardType = KeyboardType.Number,
+              imeAction = ImeAction.Next
+          ),
+          isError = error != null,
+          supportingText = error?.let { { Text(it) } },
+          leadingIcon = {
+              Icon(
+                  painter = painterResource(R.drawable.ic_credit_card),
+                  contentDescription = null
+              )
+          },
+          modifier = modifier.fillMaxWidth()
+      )
+  }
+  
+  @Composable
+  fun ExpiryDateField(
+      expiryDate: String,
+      onExpiryDateChange: (String) -> Unit,
+      error: String? = null,
+      modifier: Modifier = Modifier
+  ) {
+      OutlinedTextField(
+          value = expiryDate,
+          onValueChange = { value ->
+              val digits = value.filter { it.isDigit() }
+              if (digits.length <= 4) {
+                  val formatted = if (digits.length >= 2) {
+                      "${digits.take(2)}/${digits.drop(2)}"
+                  } else {
+                      digits
+                  }
+                  onExpiryDateChange(formatted)
+              }
+          },
+          label = { Text("MM/YY") },
+          placeholder = { Text("12/24") },
+          keyboardOptions = KeyboardOptions(
+              keyboardType = KeyboardType.Number,
+              imeAction = ImeAction.Next
+          ),
+          isError = error != null,
+          supportingText = error?.let { { Text(it) } },
+          modifier = modifier
+      )
+  }
+  ```
+
+### Status and Progress Components
+- Create payment status indicators
+- Implement loading states for transactions
+- Show verification badges and security indicators
+- Example:
+  ```kotlin
+  @Composable
+  fun TransactionStatusBadge(
+      status: TransactionStatus,
+      modifier: Modifier = Modifier
+  ) {
+      val (backgroundColor, textColor, text) = when (status) {
+          TransactionStatus.COMPLETED -> Triple(
+              Color(0xFF4CAF50),
+              Color.White,
+              "Completed"
+          )
+          TransactionStatus.PENDING -> Triple(
+              Color(0xFFFFC107),
+              Color.Black,
+              "Pending"
+          )
+          TransactionStatus.FAILED -> Triple(
+              MaterialTheme.colorScheme.error,
+              Color.White,
+              "Failed"
+          )
+      }
+      
+      Surface(
+          modifier = modifier,
+          shape = RoundedCornerShape(12.dp),
+          color = backgroundColor
+      ) {
+          Text(
+              text = text,
+              style = MaterialTheme.typography.labelSmall,
+              color = textColor,
+              modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+          )
+      }
+  }
+  
+  @Composable
+  fun SecurityIndicator(
+      isSecure: Boolean,
+      modifier: Modifier = Modifier
+  ) {
+      Row(
+          modifier = modifier,
+          verticalAlignment = Alignment.CenterVertically
+      ) {
+          Icon(
+              painter = painterResource(
+                  if (isSecure) R.drawable.ic_shield_check else R.drawable.ic_shield_alert
+              ),
+              contentDescription = null,
+              tint = if (isSecure) Color(0xFF4CAF50) else MaterialTheme.colorScheme.error,
+              modifier = Modifier.size(16.dp)
+          )
+          Spacer(modifier = Modifier.width(4.dp))
+          Text(
+              text = if (isSecure) "Secured" else "Not Secure",
+              style = MaterialTheme.typography.labelSmall,
+              color = if (isSecure) Color(0xFF4CAF50) else MaterialTheme.colorScheme.error
+          )
+      }
+  }
+  ```
+
+### Navigation Components
+- Implement bottom navigation for main sections
+- Create drawer navigation for secondary features
+- Design tab layouts for categorized content
+- Example:
+  ```kotlin
+  @Composable
+  fun FinanceBottomNavigation(
+      selectedTab: BottomNavTab,
+      onTabSelected: (BottomNavTab) -> Unit,
+      modifier: Modifier = Modifier
+  ) {
+      NavigationBar(
+          modifier = modifier,
+          containerColor = MaterialTheme.colorScheme.surface,
+          tonalElevation = 8.dp
+      ) {
+          BottomNavTab.values().forEach { tab ->
+              NavigationBarItem(
+                  icon = {
+                      Icon(
+                          painter = painterResource(tab.icon),
+                          contentDescription = tab.title
+                      )
+                  },
+                  label = { Text(tab.title) },
+                  selected = selectedTab == tab,
+                  onClick = { onTabSelected(tab) },
+                  colors = NavigationBarItemDefaults.colors(
+                      selectedIconColor = MaterialTheme.colorScheme.primary,
+                      selectedTextColor = MaterialTheme.colorScheme.primary,
+                      indicatorColor = MaterialTheme.colorScheme.primaryContainer
+                  )
+              )
+          }
+      }
+  }
+  
+  enum class BottomNavTab(
+      val title: String,
+      @DrawableRes val icon: Int,
+      val route: String
+  ) {
+      HOME("Home", R.drawable.ic_home, "home"),
+      TRANSACTIONS("Transactions", R.drawable.ic_list, "transactions"),
+      TRANSFER("Transfer", R.drawable.ic_send, "transfer"),
+      CARDS("Cards", R.drawable.ic_credit_card, "cards"),
+      PROFILE("Profile", R.drawable.ic_person, "profile")
+  }
+  ```
+
+### Utility Extensions for Financial Formatting
+- Create formatting extensions for currency and numbers
+- Implement date formatting for transactions
+- Add validation helpers for financial data
+- Example:
+  ```kotlin
+  // Extensions for financial formatting
+  fun BigDecimal.formatCurrency(
+      isDebit: Boolean = false,
+      currency: String = "KES"
+  ): String {
+      val formatter = NumberFormat.getCurrencyInstance(Locale("en", "KE"))
+      formatter.currency = Currency.getInstance(currency)
+      val formatted = formatter.format(this)
+      return if (isDebit) "-$formatted" else formatted
+  }
+  
+  fun LocalDateTime.formatDate(): String {
+      val now = LocalDateTime.now()
+      return when {
+          this.toLocalDate() == now.toLocalDate() -> "Today"
+          this.toLocalDate() == now.minusDays(1).toLocalDate() -> "Yesterday"
+          this.year == now.year -> this.format(DateTimeFormatter.ofPattern("MMM dd"))
+          else -> this.format(DateTimeFormatter.ofPattern("MMM dd, yyyy"))
+      }
+  }
+  
+  fun String.isValidCardNumber(): Boolean {
+      val digits = this.filter { it.isDigit() }
+      return digits.length in 13..19 && luhnCheck(digits)
+  }
+  
+  private fun luhnCheck(cardNumber: String): Boolean {
+      var sum = 0
+      var alternate = false
+      for (i in cardNumber.length - 1 downTo 0) {
+          var n = cardNumber[i].toString().toInt()
+          if (alternate) {
+              n *= 2
+              if (n > 9) n = (n % 10) + 1
+          }
+          sum += n
+          alternate = !alternate
+      }
+      return sum % 10 == 0
+  }
+  ```
+
 ## Dependency Management
 
 ### Dependency Updates
