@@ -179,7 +179,8 @@ class TransactionRepositoryTest {
         // Given
         Transaction transaction = createTestTransaction();
         transaction.setUserId(10L);
-        transaction.setCreatedAt(LocalDateTime.now());
+        transaction.setFromAccountId(10L); // Set the account to match the user query logic
+        transaction.setProcessedAt(LocalDateTime.now()); // Set processedAt instead of createdAt
         transaction.setReferenceNumber("REF-1234-10");
         entityManager.persistAndFlush(transaction);
 
