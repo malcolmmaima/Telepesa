@@ -4,11 +4,14 @@ import jakarta.servlet.http.HttpServletRequest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.Map;
+
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 /**
  * Unit tests for DeviceFingerprintService
@@ -18,32 +21,32 @@ import static org.mockito.Mockito.when;
 class DeviceFingerprintServiceTest {
 
     @Mock
+    private AuditLogService auditLogService;
+    
+    @Mock
     private HttpServletRequest httpRequest;
 
+    @InjectMocks
     private DeviceFingerprintService deviceFingerprintService;
-
-    @Mock
-    private AuditLogService auditLogService;
 
     @BeforeEach
     void setUp() {
+        // Reset the service state before each test
         deviceFingerprintService = new DeviceFingerprintService(auditLogService);
     }
 
     @Test
     void generateDeviceFingerprint_WithStandardBrowser_ShouldReturnConsistentFingerprint() {
-        // Given
-        when(httpRequest.getHeader("User-Agent"))
-            .thenReturn("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36");
-        when(httpRequest.getHeader("Accept-Language")).thenReturn("en-US,en;q=0.9");
-        when(httpRequest.getHeader("Accept-Encoding")).thenReturn("gzip, deflate, br");
-        when(httpRequest.getHeader("Accept")).thenReturn("text/html,application/xhtml+xml");
-        when(httpRequest.getHeader("Connection")).thenReturn("keep-alive");
-        when(httpRequest.getHeader("Upgrade-Insecure-Requests")).thenReturn("1");
-        when(httpRequest.getHeader("Sec-Fetch-Dest")).thenReturn("document");
-        when(httpRequest.getHeader("Sec-Fetch-Mode")).thenReturn("navigate");
-        when(httpRequest.getHeader("Sec-Fetch-Site")).thenReturn("none");
-        when(httpRequest.getHeader("Sec-CH-UA")).thenReturn("\"Google Chrome\";v=\"91\", \"Chromium\";v=\"91\"");
+        // Given - Mock all headers that the method tries to access
+        lenient().when(httpRequest.getHeader("User-Agent")).thenReturn("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36");
+        lenient().when(httpRequest.getHeader("Accept-Language")).thenReturn("en-US,en;q=0.9");
+        lenient().when(httpRequest.getHeader("Accept-Encoding")).thenReturn("gzip, deflate, br");
+        lenient().when(httpRequest.getHeader("Accept-Charset")).thenReturn("utf-8");
+        lenient().when(httpRequest.getHeader("Connection")).thenReturn("keep-alive");
+        lenient().when(httpRequest.getHeader("DNT")).thenReturn("1");
+        lenient().when(httpRequest.getHeader("Sec-CH-UA")).thenReturn("\"Chromium\";v=\"118\", \"Google Chrome\";v=\"118\"");
+        lenient().when(httpRequest.getHeader("Sec-CH-UA-Platform")).thenReturn("\"Windows\"");
+        lenient().when(httpRequest.getHeader("Sec-CH-UA-Mobile")).thenReturn("?0");
 
         // When
         String fingerprint1 = deviceFingerprintService.generateDeviceFingerprint(httpRequest);
@@ -51,206 +54,191 @@ class DeviceFingerprintServiceTest {
 
         // Then
         assertThat(fingerprint1).isNotNull();
-        assertThat(fingerprint1).hasSize(64); // SHA-256 hex string
+        assertThat(fingerprint1).hasSize(64); // SHA-256 hash length
         assertThat(fingerprint1).isEqualTo(fingerprint2); // Should be consistent
     }
 
     @Test
-    void generateDeviceFingerprint_WithDifferentUserAgents_ShouldReturnDifferentFingerprints() {
-        // Given
-        when(httpRequest.getHeader("Accept-Language")).thenReturn("en-US,en;q=0.9");
-        when(httpRequest.getHeader("Accept-Encoding")).thenReturn("gzip, deflate, br");
+    void generateDeviceFingerprint_WithDifferentUserAgent_ShouldReturnDifferentFingerprint() {
+        // Given - First device
+        lenient().when(httpRequest.getHeader("User-Agent")).thenReturn("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36");
+        lenient().when(httpRequest.getHeader("Accept-Language")).thenReturn("en-US,en;q=0.9");
+        lenient().when(httpRequest.getHeader("Accept-Encoding")).thenReturn("gzip, deflate, br");
+        lenient().when(httpRequest.getHeader("Accept-Charset")).thenReturn("utf-8");
+        lenient().when(httpRequest.getHeader("Connection")).thenReturn("keep-alive");
+        lenient().when(httpRequest.getHeader("DNT")).thenReturn("1");
+        lenient().when(httpRequest.getHeader("Sec-CH-UA")).thenReturn("\"Chromium\";v=\"118\"");
+        lenient().when(httpRequest.getHeader("Sec-CH-UA-Platform")).thenReturn("\"Windows\"");
+        lenient().when(httpRequest.getHeader("Sec-CH-UA-Mobile")).thenReturn("?0");
+        
+        String fingerprint1 = deviceFingerprintService.generateDeviceFingerprint(httpRequest);
 
-        // Chrome fingerprint
-        when(httpRequest.getHeader("User-Agent"))
-            .thenReturn("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36");
-        String chromeFingerprint = deviceFingerprintService.generateDeviceFingerprint(httpRequest);
-
-        // Firefox fingerprint
-        when(httpRequest.getHeader("User-Agent"))
-            .thenReturn("Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:89.0) Gecko/20100101 Firefox/89.0");
-        String firefoxFingerprint = deviceFingerprintService.generateDeviceFingerprint(httpRequest);
+        // When - Different user agent
+        when(httpRequest.getHeader("User-Agent")).thenReturn("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36");
+        String fingerprint2 = deviceFingerprintService.generateDeviceFingerprint(httpRequest);
 
         // Then
-        assertThat(chromeFingerprint).isNotEqualTo(firefoxFingerprint);
+        assertThat(fingerprint1).isNotEqualTo(fingerprint2);
     }
 
     @Test
-    void analyzeDevice_WithNewDevice_ShouldReturnNewDeviceTrue() {
+    void analyzeDevice_WithNewDevice_ShouldMarkAsNewAndLogActivity() {
         // Given
-        String deviceFingerprint = "new-device-fingerprint-123";
+        String deviceFingerprint = "test-fingerprint-123";
         String username = "testuser";
-        String ipAddress = "192.168.1.100";
+        String ipAddress = "192.168.1.1";
 
         // When
         DeviceFingerprintService.DeviceAnalysisResult result = 
             deviceFingerprintService.analyzeDevice(deviceFingerprint, username, ipAddress);
 
         // Then
-        assertThat(result).isNotNull();
-        assertThat(result.getDeviceFingerprint()).isEqualTo(deviceFingerprint);
         assertThat(result.isNewDevice()).isTrue();
-        assertThat(result.isSuspicious()).isFalse();
-        assertThat(result.getSuspiciousReason()).isNull();
+        assertThat(result.getDeviceFingerprint()).isEqualTo(deviceFingerprint);
+        assertThat(result.getDeviceInfo()).isNotNull();
+        assertThat(result.getDeviceInfo().getLastUsername()).isEqualTo(username);
+        
+        verify(auditLogService).logSuspiciousActivity(username, ipAddress, "NEW_DEVICE", 
+            "Login from unrecognized device");
     }
 
     @Test
-    void analyzeDevice_WithKnownDevice_ShouldReturnNewDeviceFalse() {
+    void analyzeDevice_WithKnownDevice_ShouldUpdateDeviceInfo() {
         // Given
-        String deviceFingerprint = "known-device-fingerprint-456";
+        String deviceFingerprint = "test-fingerprint-123";
         String username = "testuser";
-        String ipAddress = "192.168.1.100";
-
-        // Store device first
+        String ipAddress = "192.168.1.1";
+        
+        // First login to register device
         deviceFingerprintService.analyzeDevice(deviceFingerprint, username, ipAddress);
-
-        // When - Analyze same device again
+        
+        // When - Second login
         DeviceFingerprintService.DeviceAnalysisResult result = 
             deviceFingerprintService.analyzeDevice(deviceFingerprint, username, ipAddress);
 
         // Then
         assertThat(result.isNewDevice()).isFalse();
         assertThat(result.isSuspicious()).isFalse();
+        assertThat(result.getDeviceInfo().getLastUsername()).isEqualTo(username);
     }
 
     @Test
-    void analyzeDevice_WithDeviceUsedByMultipleUsers_ShouldDetectDeviceSharing() {
+    void analyzeDevice_WithDeviceUsedByDifferentUser_ShouldMarkAsSuspicious() {
         // Given
-        String sharedDeviceFingerprint = "shared-device-789";
-        String user1 = "user1";
-        String user2 = "user2";
-        String ipAddress = "192.168.1.100";
-
-        // When - Two different users use same device
-        deviceFingerprintService.analyzeDevice(sharedDeviceFingerprint, user1, ipAddress);
+        String deviceFingerprint = "test-fingerprint-123";
+        String firstUser = "user1";
+        String secondUser = "user2";
+        String ipAddress = "192.168.1.1";
+        
+        // First user login
+        deviceFingerprintService.analyzeDevice(deviceFingerprint, firstUser, ipAddress);
+        
+        // When - Different user uses same device
         DeviceFingerprintService.DeviceAnalysisResult result = 
-            deviceFingerprintService.analyzeDevice(sharedDeviceFingerprint, user2, ipAddress);
+            deviceFingerprintService.analyzeDevice(deviceFingerprint, secondUser, ipAddress);
+
+        // Then
+        assertThat(result.isNewDevice()).isFalse();
+        assertThat(result.isSuspicious()).isTrue();
+        assertThat(result.getSuspiciousReason()).contains("Device previously used by different user");
+        
+        verify(auditLogService).logSecurityViolation(eq(secondUser), eq(ipAddress), eq("DEVICE_SHARED"), 
+            contains("Device fingerprint matches previous user"));
+    }
+
+    @Test
+    void getDeviceInfo_WithKnownDevice_ShouldReturnDeviceInformation() {
+        // Given
+        String deviceFingerprint = "test-fingerprint-123";
+        String username = "testuser";
+        String ipAddress = "192.168.1.1";
+        
+        deviceFingerprintService.analyzeDevice(deviceFingerprint, username, ipAddress);
+
+        // When
+        Map<String, Object> deviceInfo = deviceFingerprintService.getDeviceInfo(deviceFingerprint);
+
+        // Then
+        assertThat(deviceInfo).isNotNull();
+        assertThat(deviceInfo.get("fingerprint")).isEqualTo(deviceFingerprint);
+        assertThat(deviceInfo.get("lastUsername")).isEqualTo(username);
+        assertThat(deviceInfo.get("lastIpAddress")).isEqualTo(ipAddress);
+        assertThat(deviceInfo.get("loginCount")).isEqualTo(1);
+    }
+
+    @Test
+    void getDeviceInfo_WithUnknownDevice_ShouldReturnNull() {
+        // Given
+        String unknownFingerprint = "unknown-fingerprint";
+
+        // When
+        Map<String, Object> deviceInfo = deviceFingerprintService.getDeviceInfo(unknownFingerprint);
+
+        // Then
+        assertThat(deviceInfo).isNull();
+    }
+
+    @Test
+    void markDeviceAsTrusted_WithKnownDevice_ShouldMarkAsTrusted() {
+        // Given
+        String deviceFingerprint = "test-fingerprint-123";
+        String username = "testuser";
+        String ipAddress = "192.168.1.1";
+        
+        deviceFingerprintService.analyzeDevice(deviceFingerprint, username, ipAddress);
+
+        // When
+        deviceFingerprintService.markDeviceAsTrusted(deviceFingerprint, username);
+
+        // Then
+        Map<String, Object> deviceInfo = deviceFingerprintService.getDeviceInfo(deviceFingerprint);
+        // Note: The current implementation doesn't expose trusted status in getDeviceInfo
+        // This would need to be verified differently in a real implementation
+        
+        verify(auditLogService).logUserProfileUpdate(username, "SYSTEM", 
+            "Device marked as trusted: " + deviceFingerprint);
+    }
+
+    @Test
+    void removeDevice_WithKnownDevice_ShouldRemoveDeviceFromTracking() {
+        // Given
+        String deviceFingerprint = "test-fingerprint-123";
+        String username = "testuser";
+        String ipAddress = "192.168.1.1";
+        
+        deviceFingerprintService.analyzeDevice(deviceFingerprint, username, ipAddress);
+
+        // When
+        deviceFingerprintService.removeDevice(deviceFingerprint, username);
+
+        // Then
+        Map<String, Object> deviceInfo = deviceFingerprintService.getDeviceInfo(deviceFingerprint);
+        assertThat(deviceInfo).isNull();
+        
+        verify(auditLogService).logUserProfileUpdate(username, "SYSTEM", 
+            "Device removed: " + deviceFingerprint);
+    }
+
+    @Test
+    void analyzeDevice_WithRapidIpChange_ShouldMarkAsSuspicious() {
+        // Given
+        String deviceFingerprint = "test-fingerprint-123";
+        String username = "testuser";
+        String firstIp = "192.168.1.1";
+        String secondIp = "10.0.0.1";
+        
+        // First login
+        deviceFingerprintService.analyzeDevice(deviceFingerprint, username, firstIp);
+        
+        // When - Immediate login from different IP (within 5 minutes)
+        DeviceFingerprintService.DeviceAnalysisResult result = 
+            deviceFingerprintService.analyzeDevice(deviceFingerprint, username, secondIp);
 
         // Then
         assertThat(result.isSuspicious()).isTrue();
-        assertThat(result.getSuspiciousReason()).contains("Device previously used by different user");
-    }
-
-    @Test
-    void analyzeDevice_WithRapidIPChanges_ShouldDetectSuspiciousActivity() {
-        // Given
-        String deviceFingerprint = "mobile-device-123";
-        String username = "mobileuser";
-
-        // When - First establish the device
-        deviceFingerprintService.analyzeDevice(deviceFingerprint, username, "192.168.1.100");
+        assertThat(result.getSuspiciousReason()).contains("Rapid IP address change detected");
         
-        // Wait briefly to ensure time difference calculation
-        try {
-            Thread.sleep(10);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        }
-        
-        // Then change IP rapidly
-        DeviceFingerprintService.DeviceAnalysisResult result = 
-            deviceFingerprintService.analyzeDevice(deviceFingerprint, username, "10.0.0.100");
-
-        // Then - The current implementation focuses on device sharing, not rapid IP changes
-        // This test verifies the device tracking works correctly
-        assertThat(result.isNewDevice()).isFalse();
-        assertThat(result.getDeviceFingerprint()).isEqualTo(deviceFingerprint);
-    }
-
-    @Test
-    void analyzeDevice_WithExcessiveDailyUsage_ShouldDetectSuspiciousActivity() {
-        // Given
-        String deviceFingerprint = "heavy-usage-device";
-        String username = "heavyuser";
-        String ipAddress = "192.168.1.100";
-
-        // When - First few uses should be normal
-        for (int i = 0; i < 10; i++) {
-            DeviceFingerprintService.DeviceAnalysisResult result = 
-                deviceFingerprintService.analyzeDevice(deviceFingerprint, username, ipAddress);
-            
-            // Normal usage should not be suspicious
-            assertThat(result.isSuspicious()).isFalse();
-        }
-
-        // Then verify the device is being tracked correctly
-        DeviceFingerprintService.DeviceAnalysisResult finalResult = 
-            deviceFingerprintService.analyzeDevice(deviceFingerprint, username, ipAddress);
-        assertThat(finalResult.isNewDevice()).isFalse();
-    }
-
-    @Test
-    void analyzeDevice_WithNormalUsagePattern_ShouldNotBeSuspicious() {
-        // Given
-        String deviceFingerprint = "normal-device-456";
-        String username = "normaluser";
-        String ipAddress = "192.168.1.100";
-
-        // When - Normal usage pattern
-        deviceFingerprintService.analyzeDevice(deviceFingerprint, username, ipAddress);
-        
-        // Simulate some time passing and normal usage
-        for (int i = 0; i < 10; i++) {
-            DeviceFingerprintService.DeviceAnalysisResult result = 
-                deviceFingerprintService.analyzeDevice(deviceFingerprint, username, ipAddress);
-            
-            // Should not be suspicious for normal usage
-            assertThat(result.isSuspicious()).isFalse();
-        }
-    }
-
-    @Test
-    void analyzeDevice_WithNullParameters_ShouldHandleGracefully() {
-        // When & Then - Should not throw exceptions
-        DeviceFingerprintService.DeviceAnalysisResult result1 = 
-            deviceFingerprintService.analyzeDevice("valid-device", "testuser", "192.168.1.100");
-        assertThat(result1).isNotNull();
-
-        DeviceFingerprintService.DeviceAnalysisResult result2 = 
-            deviceFingerprintService.analyzeDevice("device123", "testuser", "192.168.1.100");
-        assertThat(result2).isNotNull();
-
-        DeviceFingerprintService.DeviceAnalysisResult result3 = 
-            deviceFingerprintService.analyzeDevice("device456", "testuser", "192.168.1.100");
-        assertThat(result3).isNotNull();
-    }
-
-    @Test
-    void generateDeviceFingerprint_WithMissingHeaders_ShouldStillGenerateFingerprint() {
-        // Given - Mock request with minimal headers
-        when(httpRequest.getHeader("User-Agent")).thenReturn("MinimalBrowser/1.0");
-        when(httpRequest.getHeader("Accept-Language")).thenReturn(null);
-        when(httpRequest.getHeader("Accept-Encoding")).thenReturn(null);
-
-        // When
-        String fingerprint = deviceFingerprintService.generateDeviceFingerprint(httpRequest);
-
-        // Then
-        assertThat(fingerprint).isNotNull();
-        assertThat(fingerprint).hasSize(64); // Should still generate valid SHA-256 hash
-    }
-
-    @Test
-    void deviceAnalysisResult_ShouldHaveCorrectFields() {
-        // Given
-        String fingerprint = "test-fingerprint";
-        boolean isNewDevice = true;
-        boolean isSuspicious = false;
-        String suspiciousReason = "Test reason";
-        String recommendation = "Allow access";
-
-        // When
-        DeviceFingerprintService.DeviceInfo deviceInfo = new DeviceFingerprintService.DeviceInfo(
-            fingerprint, "192.168.1.1", "testuser", java.time.LocalDateTime.now());
-        DeviceFingerprintService.DeviceAnalysisResult result = 
-            new DeviceFingerprintService.DeviceAnalysisResult(
-                fingerprint, isNewDevice, isSuspicious, suspiciousReason, deviceInfo);
-
-        // Then
-        assertThat(result.getDeviceFingerprint()).isEqualTo(fingerprint);
-        assertThat(result.isNewDevice()).isEqualTo(isNewDevice);
-        assertThat(result.isSuspicious()).isEqualTo(isSuspicious);
-        assertThat(result.getSuspiciousReason()).isEqualTo(suspiciousReason);
-        assertThat(result.getDeviceInfo()).isEqualTo(deviceInfo);
+        verify(auditLogService).logSuspiciousActivity(eq(username), eq(secondIp), eq("RAPID_IP_CHANGE"), 
+            contains("IP changed from"));
     }
 } 

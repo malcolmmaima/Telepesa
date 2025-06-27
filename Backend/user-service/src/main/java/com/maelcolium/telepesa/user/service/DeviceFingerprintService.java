@@ -90,6 +90,9 @@ public class DeviceFingerprintService {
             
         } else {
             // Known device - update info
+            String previousIpAddress = deviceInfo.getLastIpAddress(); // Store old IP before updating
+            LocalDateTime previousLastSeen = deviceInfo.getLastSeen(); // Store old timestamp before updating
+            
             deviceInfo.setLastSeen(LocalDateTime.now());
             deviceInfo.setLastIpAddress(ipAddress);
             int loginCount = deviceLoginCounts.getOrDefault(deviceFingerprint, 0) + 1;
@@ -104,13 +107,13 @@ public class DeviceFingerprintService {
             }
             
             // Check for rapid location changes (basic IP change detection)
-            if (!deviceInfo.getLastIpAddress().equals(ipAddress)) {
-                long timeDiff = java.time.Duration.between(deviceInfo.getLastSeen(), LocalDateTime.now()).toMinutes();
+            if (!previousIpAddress.equals(ipAddress)) {
+                long timeDiff = java.time.Duration.between(previousLastSeen, LocalDateTime.now()).toMinutes();
                 if (timeDiff < 5) { // Suspicious if IP changes within 5 minutes
                     isSuspicious = true;
                     suspiciousReason = "Rapid IP address change detected";
                     auditLogService.logSuspiciousActivity(username, ipAddress, "RAPID_IP_CHANGE", 
-                        "IP changed from " + deviceInfo.getLastIpAddress() + " within " + timeDiff + " minutes");
+                        "IP changed from " + previousIpAddress + " within " + timeDiff + " minutes");
                 }
             }
             

@@ -1,0 +1,50 @@
+spring:
+  # H2 In-Memory Database for Testing
+  datasource:
+    url: jdbc:h2:mem:testdb;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: 
+  
+  # JPA Configuration for Testing
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.H2Dialect
+        format_sql: false
+  
+  # H2 Console (for debugging if needed)
+  h2:
+    console:
+      enabled: false
+
+# JWT Configuration for Testing
+app:
+  jwt:
+    secret: test-secret-key-for-junit-testing-only-not-for-production-use
+    expiration: 86400 # 24 hours in seconds
+
+# Logging Configuration for Tests
+logging:
+  level:
+    com.maelcolium.telepesa: DEBUG
+    org.springframework.security: INFO
+    org.hibernate.SQL: INFO
+  pattern:
+    console: "%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
+
+# Rate Limiting Configuration for Tests
+rate-limiting:
+  enabled: true
+  login-attempts-per-minute: 10
+  registration-attempts-per-minute: 5
+  general-requests-per-minute: 100
+
+# Account Security Configuration for Tests
+account-security:
+  max-failed-attempts: 5
+  lockout-duration-minutes: 15 
+ 
