@@ -48,4 +48,25 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
     boolean existsByTransactionId(String transactionId);
 
     boolean existsByReferenceNumber(String referenceNumber);
+
+    // Additional methods expected by tests
+    @Query("SELECT t FROM Transaction t WHERE t.fromAccountId = :accountId OR t.toAccountId = :accountId ORDER BY t.processedAt DESC")
+    List<Transaction> findAllByAccountId(@Param("accountId") Long accountId);
+    
+    Page<Transaction> findByFromAccountId(Long fromAccountId, Pageable pageable);
+    
+    Page<Transaction> findByToAccountId(Long toAccountId, Pageable pageable);
+    
+    @Query("SELECT t FROM Transaction t WHERE (t.fromAccountId = :userId OR t.toAccountId = :userId) AND t.processedAt BETWEEN :startDate AND :endDate ORDER BY t.processedAt DESC")
+    Page<Transaction> findByUserIdAndDateRange(
+        @Param("userId") Long userId,
+        @Param("startDate") LocalDateTime startDate,
+        @Param("endDate") LocalDateTime endDate,
+        Pageable pageable);
+    
+    @Query("SELECT COALESCE(SUM(t.amount), 0) FROM Transaction t WHERE t.toAccountId = :accountId AND t.status = 'COMPLETED' AND t.processedAt >= :since")
+    BigDecimal getTotalCreditsByAccountId(@Param("accountId") Long accountId, @Param("since") LocalDateTime since);
+    
+    @Query("SELECT COALESCE(SUM(t.amount), 0) FROM Transaction t WHERE t.fromAccountId = :accountId AND t.status = 'COMPLETED' AND t.processedAt >= :since")
+    BigDecimal getTotalDebitsByAccountId(@Param("accountId") Long accountId, @Param("since") LocalDateTime since);
 } 
