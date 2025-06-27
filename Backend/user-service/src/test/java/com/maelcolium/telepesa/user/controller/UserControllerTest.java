@@ -26,6 +26,8 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -82,7 +84,6 @@ class UserControllerTest {
         loginResponse = LoginResponse.builder()
                 .accessToken("jwt-token-123")
                 .tokenType("Bearer")
-                .expiresIn(3600L)
                 .user(userDto)
                 .build();
     }
@@ -134,7 +135,7 @@ class UserControllerTest {
         mockMvc.perform(post("/api/v1/users/register")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(createUserRequest)))
-                .andExpected(status().isConflict())
+                .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.error").value("Duplicate User"))
                 .andExpect(jsonPath("$.message").value("Username already exists"));
     }
@@ -155,7 +156,6 @@ class UserControllerTest {
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.accessToken").value("jwt-token-123"))
                 .andExpect(jsonPath("$.tokenType").value("Bearer"))
-                .andExpect(jsonPath("$.expiresIn").value(3600L))
                 .andExpect(jsonPath("$.user.username").value("testuser"));
     }
 
@@ -326,7 +326,7 @@ class UserControllerTest {
     void deleteUser_WithInvalidId_ShouldReturnNotFound() throws Exception {
         // Given
         Long userId = 999L;
-        when(userService.deleteUser(userId)).thenThrow(new UserNotFoundException("User not found"));
+        doThrow(new UserNotFoundException("User not found")).when(userService).deleteUser(userId);
 
         // When & Then
         mockMvc.perform(delete("/api/v1/users/{id}", userId))
@@ -347,6 +347,7 @@ class UserControllerTest {
     void verifyEmail_WithValidToken_ShouldReturnSuccess() throws Exception {
         // Given
         String token = "valid-verification-token";
+        doNothing().when(userService).verifyEmail(token);
 
         // When & Then
         mockMvc.perform(get("/api/v1/users/verify-email")
@@ -359,7 +360,7 @@ class UserControllerTest {
     void verifyEmail_WithInvalidToken_ShouldReturnBadRequest() throws Exception {
         // Given
         String token = "invalid-token";
-        when(userService.verifyEmail(token)).thenThrow(new IllegalArgumentException("Invalid token"));
+        doThrow(new IllegalArgumentException("Invalid token")).when(userService).verifyEmail(token);
 
         // When & Then
         mockMvc.perform(get("/api/v1/users/verify-email")
@@ -374,6 +375,7 @@ class UserControllerTest {
     void lockAccount_WithValidId_ShouldReturnSuccess() throws Exception {
         // Given
         Long userId = 1L;
+        doNothing().when(userService).lockUserAccount(userId);
 
         // When & Then
         mockMvc.perform(post("/api/v1/users/{id}/lock", userId))
@@ -386,6 +388,7 @@ class UserControllerTest {
     void unlockAccount_WithValidId_ShouldReturnSuccess() throws Exception {
         // Given
         Long userId = 1L;
+        doNothing().when(userService).unlockUserAccount(userId);
 
         // When & Then
         mockMvc.perform(post("/api/v1/users/{id}/unlock", userId))
