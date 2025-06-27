@@ -1,265 +1,266 @@
-name: iOS App CI/CD Pipeline
-
-on:
-  push:
-    branches: [ main, develop ]
-    paths:
-      - 'Frontend/iOS/**'
-      - '.github/workflows/ios-app.yml'
-  pull_request:
-    branches: [ main, develop ]
-    paths:
-      - 'Frontend/iOS/**'
-
-jobs:
-  test-and-build:
-    name: Test & Build iOS App
-    runs-on: macos-latest
-
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-
-    - name: Set up Ruby
-      uses: ruby/setup-ruby@v1
-      with:
-        ruby-version: '3.0'
-        bundler-cache: true
-
-    - name: Install CocoaPods
-      run: |
-        sudo gem install cocoapods
-        pod --version
-
-    - name: Cache CocoaPods
-      uses: actions/cache@v4
-      with:
-        path: Frontend/iOS/Pods
-        key: ${{ runner.os }}-pods-${{ hashFiles('Frontend/iOS/Podfile.lock') }}
-        restore-keys: |
-          ${{ runner.os }}-pods-
-
-    - name: Install dependencies
-      working-directory: Frontend/iOS
-      run: |
-        pod install
-        pod update
-
-    - name: Build for testing
-      working-directory: Frontend/iOS
-      run: |
-        xcodebuild -workspace Telepesa.xcworkspace \
-          -scheme Telepesa \
-          -destination 'platform=iOS Simulator,name=iPhone 14,OS=latest' \
-          -derivedDataPath build \
-          build
-
-    - name: Run unit tests
-      working-directory: Frontend/iOS
-      run: |
-        xcodebuild -workspace Telepesa.xcworkspace \
-          -scheme Telepesa \
-          -destination 'platform=iOS Simulator,name=iPhone 14,OS=latest' \
-          -derivedDataPath build \
-          test
-
-    - name: Build for release
-      working-directory: Frontend/iOS
-      run: |
-        xcodebuild -workspace Telepesa.xcworkspace \
-          -scheme Telepesa \
-          -configuration Release \
-          -destination 'generic/platform=iOS' \
-          -derivedDataPath build \
-          build
-
-    - name: Archive app
-      working-directory: Frontend/iOS
-      run: |
-        xcodebuild -workspace Telepesa.xcworkspace \
-          -scheme Telepesa \
-          -configuration Release \
-          -destination 'generic/platform=iOS' \
-          -archivePath build/Telepesa.xcarchive \
-          archive
-
-    - name: Export IPA
-      working-directory: Frontend/iOS
-      run: |
-        xcodebuild -exportArchive \
-          -archivePath build/Telepesa.xcarchive \
-          -exportPath build/ipa \
-          -exportOptionsPlist exportOptions.plist
-
-    - name: Upload build artifacts
-      uses: actions/upload-artifact@v4
-      with:
-        name: ios-builds
-        path: |
-          Frontend/iOS/build/ipa/*.ipa
-          Frontend/iOS/build/Telepesa.xcarchive
-
-  code-quality:
-    name: Code Quality
-    runs-on: macos-latest
-    needs: test-and-build
-
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-
-    - name: Set up Ruby
-      uses: ruby/setup-ruby@v1
-      with:
-        ruby-version: '3.0'
-        bundler-cache: true
-
-    - name: Install SwiftLint
-      run: |
-        brew install swiftlint
-
-    - name: Install dependencies
-      working-directory: Frontend/iOS
-      run: |
-        pod install
-
-    - name: Run SwiftLint
-      working-directory: Frontend/iOS
-      run: |
-        swiftlint lint --reporter html > build/swiftlint-report.html || true
-
-    - name: Generate code coverage
-      working-directory: Frontend/iOS
-      run: |
-        xcodebuild -workspace Telepesa.xcworkspace \
-          -scheme Telepesa \
-          -destination 'platform=iOS Simulator,name=iPhone 14,OS=latest' \
-          -enableCodeCoverage YES \
-          -derivedDataPath build \
-          test
-
-    - name: Upload code quality reports
-      uses: actions/upload-artifact@v4
-      if: always()
-      with:
-        name: ios-code-quality
-        path: |
-          Frontend/iOS/build/swiftlint-report.html
-          Frontend/iOS/build/Logs/Test/*.xcresult
-
-  security-scan:
-    name: Security Scan
-    runs-on: macos-latest
-    needs: test-and-build
-
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-
-    - name: Set up Ruby
-      uses: ruby/setup-ruby@v1
-      with:
-        ruby-version: '3.0'
-        bundler-cache: true
-
-    - name: Install dependencies
-      working-directory: Frontend/iOS
-      run: |
-        pod install
-
-    - name: Run dependency vulnerability scan
-      working-directory: Frontend/iOS
-      run: |
-        # Check for known vulnerable dependencies
-        pod outdated || true
-        
-        # Run security analysis on dependencies
-        pod deintegrate
-        pod install --repo-update
-
-    - name: Upload security reports
-      uses: actions/upload-artifact@v4
-      if: always()
-      with:
-        name: ios-security-reports
-        path: Frontend/iOS/build/
-
-  quality-gate:
-    name: Quality Gate
-    runs-on: macos-latest
-    needs: [test-and-build, code-quality, security-scan]
-
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-
-    - name: Download code quality reports
-      uses: actions/download-artifact@v4
-      with:
-        name: ios-code-quality
-        path: ios-code-quality/
-
-    - name: Download security reports
-      uses: actions/download-artifact@v4
-      continue-on-error: true
-      with:
-        name: ios-security-reports
-        path: ios-security-reports/
-
-    - name: Check test results
-      run: |
-        echo "🔍 Checking iOS test results..."
-        if [ -d "ios-code-quality" ]; then
-          echo "✅ Test results found"
-        else
-          echo "⚠️ Test results not found"
-        fi
-
-    - name: Check SwiftLint results
-      run: |
-        echo "🔍 Checking iOS SwiftLint results..."
-        if [ -f "ios-code-quality/swiftlint-report.html" ]; then
-          echo "✅ SwiftLint report found"
-        else
-          echo "⚠️ SwiftLint report not found"
-        fi
-
-    - name: Check security scan results
-      run: |
-        echo "🔒 Checking iOS security scan results..."
-        if [ -d "ios-security-reports" ]; then
-          echo "✅ Security scan completed"
-        else
-          echo "⚠️ Security scan results not found"
-        fi
-
-    - name: Quality gate passed
-      run: echo "All iOS quality checks passed!"
-
-  notify:
-    name: Notify
-    runs-on: macos-latest
-    needs: [test-and-build, code-quality, security-scan, quality-gate]
-    if: always()
-
-    steps:
-    - name: Notify Success
-      if: needs.test-and-build.result == 'success' && needs.code-quality.result == 'success'
-      run: |
-        echo "🎉 iOS CI Pipeline completed successfully!"
-        echo "✅ All tests passed"
-        echo "✅ Build successful"
-        echo "✅ Code quality checks passed"
-        echo "✅ Security scan completed"
-        echo "✅ Quality gate passed"
-        echo "📱 IPA artifacts generated"
-
-    - name: Notify Failure
-      if: needs.test-and-build.result == 'failure' || needs.code-quality.result == 'failure'
-      run: |
-        echo "❌ iOS CI Pipeline failed!"
-        echo "Test result: ${{ needs.test-and-build.result }}"
-        echo "Code quality result: ${{ needs.code-quality.result }}"
-        echo "Security scan result: ${{ needs.security-scan.result }}"
-        echo "Quality gate result: ${{ needs.quality-gate.result }}"
-        exit 1 
+# DISABLED - Frontend work not started yet
+# name: iOS App CI/CD Pipeline
+# 
+# on:
+#   push:
+#     branches: [ main, develop ]
+#     paths:
+#       - 'Frontend/iOS/**'
+#       - '.github/workflows/ios-app.yml'
+#   pull_request:
+#     branches: [ main, develop ]
+#     paths:
+#       - 'Frontend/iOS/**'
+# 
+# jobs:
+#   test-and-build:
+#     name: Test & Build iOS App
+#     runs-on: macos-latest
+# 
+#     steps:
+#     - name: Checkout code
+#       uses: actions/checkout@v4
+# 
+#     - name: Set up Ruby
+#       uses: ruby/setup-ruby@v1
+#       with:
+#         ruby-version: '3.0'
+#         bundler-cache: true
+# 
+#     - name: Install CocoaPods
+#       run: |
+#         sudo gem install cocoapods
+#         pod --version
+# 
+#     - name: Cache CocoaPods
+#       uses: actions/cache@v4
+#       with:
+#         path: Frontend/iOS/Pods
+#         key: ${{ runner.os }}-pods-${{ hashFiles('Frontend/iOS/Podfile.lock') }}
+#         restore-keys: |
+#           ${{ runner.os }}-pods-
+# 
+#     - name: Install dependencies
+#       working-directory: Frontend/iOS
+#       run: |
+#         pod install
+#         pod update
+# 
+#     - name: Build for testing
+#       working-directory: Frontend/iOS
+#       run: |
+#         xcodebuild -workspace Telepesa.xcworkspace \
+#           -scheme Telepesa \
+#           -destination 'platform=iOS Simulator,name=iPhone 14,OS=latest' \
+#           -derivedDataPath build \
+#           build
+# 
+#     - name: Run unit tests
+#       working-directory: Frontend/iOS
+#       run: |
+#         xcodebuild -workspace Telepesa.xcworkspace \
+#           -scheme Telepesa \
+#           -destination 'platform=iOS Simulator,name=iPhone 14,OS=latest' \
+#           -derivedDataPath build \
+#           test
+# 
+#     - name: Build for release
+#       working-directory: Frontend/iOS
+#       run: |
+#         xcodebuild -workspace Telepesa.xcworkspace \
+#           -scheme Telepesa \
+#           -configuration Release \
+#           -destination 'generic/platform=iOS' \
+#           -derivedDataPath build \
+#           build
+# 
+#     - name: Archive app
+#       working-directory: Frontend/iOS
+#       run: |
+#         xcodebuild -workspace Telepesa.xcworkspace \
+#           -scheme Telepesa \
+#           -configuration Release \
+#           -destination 'generic/platform=iOS' \
+#           -archivePath build/Telepesa.xcarchive \
+#           archive
+# 
+#     - name: Export IPA
+#       working-directory: Frontend/iOS
+#       run: |
+#         xcodebuild -exportArchive \
+#           -archivePath build/Telepesa.xcarchive \
+#           -exportPath build/ipa \
+#           -exportOptionsPlist exportOptions.plist
+# 
+#     - name: Upload build artifacts
+#       uses: actions/upload-artifact@v4
+#       with:
+#         name: ios-builds
+#         path: |
+#           Frontend/iOS/build/ipa/*.ipa
+#           Frontend/iOS/build/Telepesa.xcarchive
+# 
+#   code-quality:
+#     name: Code Quality
+#     runs-on: macos-latest
+#     needs: test-and-build
+# 
+#     steps:
+#     - name: Checkout code
+#       uses: actions/checkout@v4
+# 
+#     - name: Set up Ruby
+#       uses: ruby/setup-ruby@v1
+#       with:
+#         ruby-version: '3.0'
+#         bundler-cache: true
+# 
+#     - name: Install SwiftLint
+#       run: |
+#         brew install swiftlint
+# 
+#     - name: Install dependencies
+#       working-directory: Frontend/iOS
+#       run: |
+#         pod install
+# 
+#     - name: Run SwiftLint
+#       working-directory: Frontend/iOS
+#       run: |
+#         swiftlint lint --reporter html > build/swiftlint-report.html || true
+# 
+#     - name: Generate code coverage
+#       working-directory: Frontend/iOS
+#       run: |
+#         xcodebuild -workspace Telepesa.xcworkspace \
+#           -scheme Telepesa \
+#           -destination 'platform=iOS Simulator,name=iPhone 14,OS=latest' \
+#           -enableCodeCoverage YES \
+#           -derivedDataPath build \
+#           test
+# 
+#     - name: Upload code quality reports
+#       uses: actions/upload-artifact@v4
+#       if: always()
+#       with:
+#         name: ios-code-quality
+#         path: |
+#           Frontend/iOS/build/swiftlint-report.html
+#           Frontend/iOS/build/Logs/Test/*.xcresult
+# 
+#   security-scan:
+#     name: Security Scan
+#     runs-on: macos-latest
+#     needs: test-and-build
+# 
+#     steps:
+#     - name: Checkout code
+#       uses: actions/checkout@v4
+# 
+#     - name: Set up Ruby
+#       uses: ruby/setup-ruby@v1
+#       with:
+#         ruby-version: '3.0'
+#         bundler-cache: true
+# 
+#     - name: Install dependencies
+#       working-directory: Frontend/iOS
+#       run: |
+#         pod install
+# 
+#     - name: Run dependency vulnerability scan
+#       working-directory: Frontend/iOS
+#       run: |
+#         # Check for known vulnerable dependencies
+#         pod outdated || true
+#         
+#         # Run security analysis on dependencies
+#         pod deintegrate
+#         pod install --repo-update
+# 
+#     - name: Upload security reports
+#       uses: actions/upload-artifact@v4
+#       if: always()
+#       with:
+#         name: ios-security-reports
+#         path: Frontend/iOS/build/
+# 
+#   quality-gate:
+#     name: Quality Gate
+#     runs-on: macos-latest
+#     needs: [test-and-build, code-quality, security-scan]
+# 
+#     steps:
+#     - name: Checkout code
+#       uses: actions/checkout@v4
+# 
+#     - name: Download code quality reports
+#       uses: actions/download-artifact@v4
+#       with:
+#         name: ios-code-quality
+#         path: ios-code-quality/
+# 
+#     - name: Download security reports
+#       uses: actions/download-artifact@v4
+#       continue-on-error: true
+#       with:
+#         name: ios-security-reports
+#         path: ios-security-reports/
+# 
+#     - name: Check test results
+#       run: |
+#         echo "🔍 Checking iOS test results..."
+#         if [ -d "ios-code-quality" ]; then
+#           echo "✅ Test results found"
+#         else
+#           echo "⚠️ Test results not found"
+#         fi
+# 
+#     - name: Check SwiftLint results
+#       run: |
+#         echo "🔍 Checking iOS SwiftLint results..."
+#         if [ -f "ios-code-quality/swiftlint-report.html" ]; then
+#           echo "✅ SwiftLint report found"
+#         else
+#           echo "⚠️ SwiftLint report not found"
+#         fi
+# 
+#     - name: Check security scan results
+#       run: |
+#         echo "🔒 Checking iOS security scan results..."
+#         if [ -d "ios-security-reports" ]; then
+#           echo "✅ Security scan completed"
+#         else
+#           echo "⚠️ Security scan results not found"
+#         fi
+# 
+#     - name: Quality gate passed
+#       run: echo "All iOS quality checks passed!"
+# 
+#   notify:
+#     name: Notify
+#     runs-on: macos-latest
+#     needs: [test-and-build, code-quality, security-scan, quality-gate]
+#     if: always()
+# 
+#     steps:
+#     - name: Notify Success
+#       if: needs.test-and-build.result == 'success' && needs.code-quality.result == 'success'
+#       run: |
+#         echo "🎉 iOS CI Pipeline completed successfully!"
+#         echo "✅ All tests passed"
+#         echo "✅ Build successful"
+#         echo "✅ Code quality checks passed"
+#         echo "✅ Security scan completed"
+#         echo "✅ Quality gate passed"
+#         echo "📱 IPA artifacts generated"
+# 
+#     - name: Notify Failure
+#       if: needs.test-and-build.result == 'failure' || needs.code-quality.result == 'failure'
+#       run: |
+#         echo "❌ iOS CI Pipeline failed!"
+#         echo "Test result: ${{ needs.test-and-build.result }}"
+#         echo "Code quality result: ${{ needs.code-quality.result }}"
+#         echo "Security scan result: ${{ needs.security-scan.result }}"
+#         echo "Quality gate result: ${{ needs.quality-gate.result }}"
+#         exit 1 
