@@ -51,9 +51,13 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-maven-
 
-    - name: Build and install shared libraries
-      working-directory: Backend/shared-libraries
+    - name: Build and install parent POM and shared libraries
+      working-directory: Backend
       run: |
+        echo "Installing parent POM..."
+        mvn clean install -N -DskipTests
+        echo "Building shared libraries..."
+        cd shared-libraries
         echo "Building common-exceptions..."
         cd common-exceptions && mvn clean install -DskipTests
         cd ..
@@ -123,9 +127,13 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-maven-
 
-    - name: Build and install shared libraries
-      working-directory: Backend/shared-libraries
+    - name: Build and install parent POM and shared libraries
+      working-directory: Backend
       run: |
+        echo "Installing parent POM..."
+        mvn clean install -N -DskipTests
+        echo "Building shared libraries..."
+        cd shared-libraries
         echo "Building common-exceptions..."
         cd common-exceptions && mvn clean install -DskipTests
         cd ..
@@ -173,9 +181,13 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-maven-
 
-    - name: Build and install shared libraries
-      working-directory: Backend/shared-libraries
+    - name: Build and install parent POM and shared libraries
+      working-directory: Backend
       run: |
+        echo "Installing parent POM..."
+        mvn clean install -N -DskipTests
+        echo "Building shared libraries..."
+        cd shared-libraries
         echo "Building common-exceptions..."
         cd common-exceptions && mvn clean install -DskipTests
         cd ..
@@ -238,9 +250,13 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-maven-
 
-    - name: Build and install shared libraries
-      working-directory: Backend/shared-libraries
+    - name: Build and install parent POM and shared libraries
+      working-directory: Backend
       run: |
+        echo "Installing parent POM..."
+        mvn clean install -N -DskipTests
+        echo "Building shared libraries..."
+        cd shared-libraries
         echo "Building common-exceptions..."
         cd common-exceptions && mvn clean install -DskipTests
         cd ..
