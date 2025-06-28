@@ -2,13 +2,14 @@ package com.maelcolium.telepesa.notification.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import com.maelcolium.telepesa.exceptions.ResourceNotFoundException;
 import com.maelcolium.telepesa.notification.dto.CreateNotificationRequest;
 import com.maelcolium.telepesa.notification.dto.NotificationDto;
-import com.maelcolium.telepesa.notification.service.NotificationService;
+import com.maelcolium.telepesa.notification.exception.GlobalExceptionHandler;
+import com.maelcolium.telepesa.notification.model.DeliveryMethod;
 import com.maelcolium.telepesa.notification.model.NotificationStatus;
 import com.maelcolium.telepesa.notification.model.NotificationType;
-import com.maelcolium.telepesa.notification.model.DeliveryMethod;
-import com.maelcolium.telepesa.exceptions.ResourceNotFoundException;
+import com.maelcolium.telepesa.notification.service.NotificationService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -18,13 +19,14 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.web.PageableHandlerMethodArgumentResolver;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -38,6 +40,7 @@ class NotificationControllerTest {
 
     @Mock
     private NotificationService notificationService;
+
     @InjectMocks
     private NotificationController notificationController;
 
@@ -49,18 +52,21 @@ class NotificationControllerTest {
 
     @BeforeEach
     void setUp() {
-        // Configure ObjectMapper with proper modules
         objectMapper = new ObjectMapper();
         objectMapper.registerModule(new JavaTimeModule());
         
-        // Configure MockMvc with proper Jackson configuration
         MappingJackson2HttpMessageConverter converter = new MappingJackson2HttpMessageConverter();
         converter.setObjectMapper(objectMapper);
-
+        
         mockMvc = MockMvcBuilders.standaloneSetup(notificationController)
+                .setControllerAdvice(new GlobalExceptionHandler())
                 .setMessageConverters(converter)
-                .setCustomArgumentResolvers(new PageableHandlerMethodArgumentResolver())
                 .build();
+
+        // Setup test data
+        Map<String, String> metadata = new HashMap<>();
+        metadata.put("priority", "high");
+        metadata.put("category", "banking");
 
         notificationDto = NotificationDto.builder()
                 .id(1L)
@@ -68,27 +74,20 @@ class NotificationControllerTest {
                 .userId(10L)
                 .title("Test Notification")
                 .message("This is a test notification")
-                .type(NotificationType.TRANSACTION_SUCCESS)
+                .type(NotificationType.ACCOUNT_UPDATE)
                 .status(NotificationStatus.PENDING)
                 .deliveryMethod(DeliveryMethod.EMAIL)
-                .recipientEmail("test@example.com")
-                .recipientPhone("+254700000000")
-                .metadata(Map.of("key", "value"))
-                .sentAt(null)
-                .readAt(null)
-                .retryCount(0)
-                .maxRetries(3)
+                .metadata(metadata)
+                .createdAt(LocalDateTime.now())
                 .build();
 
         createRequest = CreateNotificationRequest.builder()
                 .userId(10L)
                 .title("Test Notification")
                 .message("This is a test notification")
-                .type(NotificationType.TRANSACTION_SUCCESS)
+                .type(NotificationType.ACCOUNT_UPDATE)
                 .deliveryMethod(DeliveryMethod.EMAIL)
-                .recipientEmail("test@example.com")
-                .recipientPhone("+254700000000")
-                .metadata(Map.of("key", "value"))
+                .metadata(metadata)
                 .build();
     }
 
@@ -103,8 +102,8 @@ class NotificationControllerTest {
                         .content(objectMapper.writeValueAsString(createRequest)))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.notificationId").value("NOTIF-12345678"))
-                .andExpect(jsonPath("$.title").value("Test Notification"))
-                .andExpect(jsonPath("$.status").value("PENDING"));
+                .andExpect(jsonPath("$.userId").value(10))
+                .andExpect(jsonPath("$.title").value("Test Notification"));
 
         verify(notificationService).createNotification(any(CreateNotificationRequest.class));
     }
@@ -112,16 +111,15 @@ class NotificationControllerTest {
     @Test
     void createNotification_WithInvalidRequest_ShouldReturnBadRequest() throws Exception {
         // Given
-        CreateNotificationRequest invalidRequest = CreateNotificationRequest.builder()
-                .userId(null)
-                .title(null)
-                .build();
+        CreateNotificationRequest invalidRequest = CreateNotificationRequest.builder().build();
 
         // When & Then
         mockMvc.perform(post("/api/v1/notifications")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(invalidRequest)))
                 .andExpect(status().isBadRequest());
+
+        verify(notificationService, never()).createNotification(any(CreateNotificationRequest.class));
     }
 
     @Test
@@ -133,7 +131,7 @@ class NotificationControllerTest {
         mockMvc.perform(get("/api/v1/notifications/1"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.notificationId").value("NOTIF-12345678"))
-                .andExpect(jsonPath("$.title").value("Test Notification"));
+                .andExpect(jsonPath("$.userId").value(10));
 
         verify(notificationService).getNotification(1L);
     }
@@ -169,7 +167,7 @@ class NotificationControllerTest {
         // Given
         PageRequest pageRequest = PageRequest.of(0, 10);
         Page<NotificationDto> page = new PageImpl<>(List.of(notificationDto), pageRequest, 1);
-        when(notificationService.getNotifications(any(PageRequest.class))).thenReturn(page);
+        when(notificationService.getNotifications(pageRequest)).thenReturn(page);
 
         // When & Then
         mockMvc.perform(get("/api/v1/notifications")
@@ -179,7 +177,7 @@ class NotificationControllerTest {
                 .andExpect(jsonPath("$.content").isArray())
                 .andExpect(jsonPath("$.content[0].notificationId").value("NOTIF-12345678"));
 
-        verify(notificationService).getNotifications(any(PageRequest.class));
+        verify(notificationService).getNotifications(pageRequest);
     }
 
     @Test
@@ -222,16 +220,16 @@ class NotificationControllerTest {
         // Given
         PageRequest pageRequest = PageRequest.of(0, 10);
         Page<NotificationDto> page = new PageImpl<>(List.of(notificationDto), pageRequest, 1);
-        when(notificationService.getNotificationsByType(NotificationType.TRANSACTION_SUCCESS, pageRequest)).thenReturn(page);
+        when(notificationService.getNotificationsByType(NotificationType.ACCOUNT_UPDATE, pageRequest)).thenReturn(page);
 
         // When & Then
-        mockMvc.perform(get("/api/v1/notifications/type/TRANSACTION_SUCCESS")
+        mockMvc.perform(get("/api/v1/notifications/type/ACCOUNT_UPDATE")
                         .param("page", "0")
                         .param("size", "10"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content").isArray());
 
-        verify(notificationService).getNotificationsByType(NotificationType.TRANSACTION_SUCCESS, pageRequest);
+        verify(notificationService).getNotificationsByType(NotificationType.ACCOUNT_UPDATE, pageRequest);
     }
 
     @Test
@@ -277,8 +275,7 @@ class NotificationControllerTest {
 
         // When & Then
         mockMvc.perform(put("/api/v1/notifications/1/status")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("\"SENT\""))
+                        .param("status", "SENT"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.notificationId").value("NOTIF-12345678"));
 
@@ -293,8 +290,7 @@ class NotificationControllerTest {
 
         // When & Then
         mockMvc.perform(put("/api/v1/notifications/999/status")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("\"SENT\""))
+                        .param("status", "SENT"))
                 .andExpect(status().isNotFound());
 
         verify(notificationService).updateNotificationStatus(999L, NotificationStatus.SENT);
@@ -329,18 +325,15 @@ class NotificationControllerTest {
     @Test
     void getUnreadNotifications_ShouldReturnUnreadNotifications() throws Exception {
         // Given
-        PageRequest pageRequest = PageRequest.of(0, 10);
-        Page<NotificationDto> page = new PageImpl<>(List.of(notificationDto), pageRequest, 1);
-        when(notificationService.getUnreadNotifications(10L, pageRequest)).thenReturn(page);
+        when(notificationService.getUnreadNotificationsByUserId(10L)).thenReturn(List.of(notificationDto));
 
         // When & Then
-        mockMvc.perform(get("/api/v1/notifications/user/10/unread")
-                        .param("page", "0")
-                        .param("size", "10"))
+        mockMvc.perform(get("/api/v1/notifications/user/10/unread"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.content").isArray());
+                .andExpect(jsonPath("$").isArray())
+                .andExpect(jsonPath("$[0].notificationId").value("NOTIF-12345678"));
 
-        verify(notificationService).getUnreadNotifications(10L, pageRequest);
+        verify(notificationService).getUnreadNotificationsByUserId(10L);
     }
 
     @Test
@@ -406,7 +399,7 @@ class NotificationControllerTest {
         when(notificationService.getNotificationCountByUserIdAndStatus(10L, NotificationStatus.PENDING)).thenReturn(5L);
 
         // When & Then
-        mockMvc.perform(get("/api/v1/notifications/user/10/count")
+        mockMvc.perform(get("/api/v1/notifications/user/10/count-by-status")
                         .param("status", "PENDING"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").value(5));
