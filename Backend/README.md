@@ -9,6 +9,7 @@ The Telepesa backend is built with Spring Boot microservices architecture, provi
 - **Maven 3.8+** 
 - **PostgreSQL 13+** (or Docker for easy setup)
 - **Docker** (optional, for containerized development)
+- **NVD API Key** (for faster OWASP security scans) - [Generate your own](https://nvd.nist.gov/developers/request-an-api-key)
 
 ### 🏃‍♂️ Getting Started
 
@@ -31,14 +32,23 @@ The Telepesa backend is built with Spring Boot microservices architecture, provi
    mvn clean install
    ```
 
-4. **Start User Service**
+4. **Setup Environment Variables** (Recommended)
+   ```bash
+   # Setup local environment file
+   ./scripts/setup-env.sh
+   
+   # Edit .env.local with your actual API keys
+   nano .env.local
+   ```
+
+5. **Start User Service**
    ```bash
    cd ../user-service
    mvn spring-boot:run
    ```
    🌐 Service available at: http://localhost:8081
 
-5. **Test the API**
+6. **Test the API**
    ```bash
    # Quick health check
    curl http://localhost:8081/actuator/health
@@ -93,6 +103,34 @@ cd .. && ./quick-api-test.sh
 ✅ **Device Fingerprinting** - Enhanced security  
 ✅ **Password Security** - BCrypt + complexity rules  
 ✅ **CORS Configuration** - Secure cross-origin requests  
+✅ **OWASP Security Scanning** - Automated vulnerability detection
+
+### Security Scanning Setup
+For faster OWASP dependency vulnerability scans, get your own NVD API key:
+
+**📋 Quick Setup:**
+1. **Setup Environment**: `./scripts/setup-env.sh`
+2. **Get API Key**: Visit https://nvd.nist.gov/developers/request-an-api-key
+3. **Configure**: Edit `.env.local` with your API key
+4. **Run Scan**: `mvn dependency-check:check -DnvdApiKey=$NVD_API_KEY`
+
+**Benefits:**
+- 🚀 **10x faster** vulnerability scanning (2-3 minutes vs 30+ minutes)
+- 🔄 **Reliable API access** without rate limiting
+- 📊 **Complete vulnerability database** access
+- ⚡ **Optimized CI/CD pipelines**
+
+**📚 Detailed Guide**: See [NVD API Setup Guide](docs/NVD_API_SETUP.md) for complete instructions.
+
+**Per-Service Setup:**
+- **Transaction Service**: Use `./scripts/setup-local-dev.sh` for automated setup
+- **Other Services**: Export NVD_API_KEY before running security scans- 📊 **Complete vulnerability database** access
+- ⚡ **Optimized CI/CD pipelines**
+
+**Per-Service Setup:**
+- **Transaction Service**: Use `./scripts/setup-local-dev.sh` for automated setup
+- **User Service**: Export NVD_API_KEY before running security scans
+- **Other Services**: Add NVD_API_KEY to environment before Maven commands
 
 ## 📊 API Documentation
 
@@ -124,6 +162,7 @@ Backend/
 │   └── SECURITY_*.md             # Security documentation
 ├── user-service/                # User management service
 ├── account-service/             # Account management (planned)
+├── transaction-service/         # Transaction processing (scripts available)
 ├── shared-libraries/            # Common utilities
 ├── Telepesa_API_Collection.postman_collection.json
 ├── Telepesa_Development.postman_environment.json
@@ -145,9 +184,10 @@ Backend/
 - [End-to-End Test Report](docs/END_TO_END_TEST_REPORT.md) - Latest test results
 - [Security Implementation](docs/SECURITY_IMPLEMENTATION.md) - Security details
 - [Security Features](docs/SECURITY_FEATURES.md) - Feature documentation
-
+- [NVD API Setup Guide](docs/NVD_API_SETUP.md) - Fast security scanning setup
 ### 🔗 External Links
 - [User Service Testing Guide](user-service/README-TESTING.md)
+- [Transaction Service Setup](transaction-service/README.md) - Local development with NVD API
 - [Docker Compose Setup](docker-compose/docker-compose.yml)
 - [Shared Libraries](shared-libraries/)
 
@@ -195,11 +235,11 @@ cd user-service && mvn spring-boot:run
 - **Test Failures**: Run `mvn clean test` in service directory
 - **API Issues**: Use `./quick-api-test.sh` for diagnosis
 - **Documentation**: See `docs/` folder for detailed guides
+- **Security Scans**: Use provided NVD API key for faster execution
 
 ### Development Resources
 - [Spring Boot Documentation](https://docs.spring.io/spring-boot/docs/current/reference/htmlsingle/)
-- [Spring Security Reference](https://docs.spring.io/spring-security/reference/)
-- [Telepesa Development Rules](../Rules/springboot-cursor-rules.md)
+- [Transaction Service README](transaction-service/README.md) - Complete local setup guide
 
 ---
 

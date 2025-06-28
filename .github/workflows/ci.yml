@@ -1,4 +1,4 @@
-name: Spring Boot Backend CI/CD Pipeline
+name: Telepesa Spring Boot Backend CI/CD Pipeline
 
 on:
   push:

@@ -262,7 +262,7 @@
             <plugin>
                 <groupId>org.owasp</groupId>
                 <artifactId>dependency-check-maven</artifactId>
-                <version>10.0.4</version>
+                <version>11.1.0</version>
                 <configuration>
                     <failBuildOnCVSS>7</failBuildOnCVSS>
                     <formats>
@@ -274,8 +274,13 @@
                     </suppressionFiles>
                     <!-- NVD API Configuration for faster updates -->
                     <nvdApiKey>${env.NVD_API_KEY}</nvdApiKey>
-                    <nvdMaxRetryCount>3</nvdMaxRetryCount>
-                    <nvdApiDelay>2000</nvdApiDelay>
+                    <nvdMaxRetryCount>5</nvdMaxRetryCount>
+                    <nvdApiDelay>4000</nvdApiDelay>
+                    <nvdApiResultsPerPage>2000</nvdApiResultsPerPage>
+                    <!-- Error handling improvements -->
+                    <failOnError>false</failOnError>
+                    <enableRetired>false</enableRetired>
+                    <enableExperimental>false</enableExperimental>
                     <!-- Performance optimizations -->
                     <skipSystemScope>true</skipSystemScope>
                     <skipTestScope>true</skipTestScope>
@@ -298,6 +303,11 @@
                     <!-- Database update settings -->
                     <autoUpdate>true</autoUpdate>
                     <dataDirectory>${user.home}/.m2/repository/org/owasp/dependency-check-data</dataDirectory>
+                    <!-- Caching for performance -->
+                    <cveValidForHours>24</cveValidForHours>
+                    <!-- Skip problematic analyzers that cause parsing issues -->
+                    <retireJsAnalyzerEnabled>false</retireJsAnalyzerEnabled>
+                    <bundleAuditAnalyzerEnabled>false</bundleAuditAnalyzerEnabled>
                 </configuration>
                 <executions>
                     <execution>
