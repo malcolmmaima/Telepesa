@@ -1,5 +1,6 @@
 package com.maelcolium.telepesa.notification.dto;
 
+import com.maelcolium.telepesa.notification.model.DeliveryMethod;
 import com.maelcolium.telepesa.notification.model.NotificationType;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -8,6 +9,8 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
+import java.util.Map;
 
 @Data
 @Builder
@@ -29,8 +32,8 @@ public class CreateNotificationRequest {
     @NotNull(message = "Notification type is required")
     private NotificationType type;
 
-    @NotBlank(message = "Delivery method is required")
-    private String deliveryMethod; // EMAIL, SMS, PUSH, IN_APP
+    @NotNull(message = "Delivery method is required")
+    private DeliveryMethod deliveryMethod;
 
     private String recipientEmail;
 
@@ -40,5 +43,5 @@ public class CreateNotificationRequest {
 
     private String templateId;
 
-    private String metadata; // JSON string for additional data
+    private Map<String, String> metadata; // Map for additional data
 } 

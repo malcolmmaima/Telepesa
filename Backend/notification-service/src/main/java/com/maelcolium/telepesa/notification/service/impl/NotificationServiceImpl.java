@@ -167,17 +167,17 @@ public class NotificationServiceImpl implements NotificationService {
 
         try {
             // Simulate sending notification based on delivery method
-            switch (notificationDto.getDeliveryMethod().toUpperCase()) {
-                case "EMAIL":
+            switch (notificationDto.getDeliveryMethod()) {
+                case EMAIL:
                     sendEmailNotification(notificationDto);
                     break;
-                case "SMS":
+                case SMS:
                     sendSmsNotification(notificationDto);
                     break;
-                case "PUSH":
+                case PUSH_NOTIFICATION:
                     sendPushNotification(notificationDto);
                     break;
-                case "IN_APP":
+                case IN_APP:
                     sendInAppNotification(notificationDto);
                     break;
                 default:
@@ -197,7 +197,7 @@ public class NotificationServiceImpl implements NotificationService {
     @Scheduled(fixedRate = 30000) // Run every 30 seconds
     public void processPendingNotifications() {
         log.info("Processing pending notifications...");
-        List<Notification> pendingNotifications = notificationRepository.findPendingNotificationsForRetry(LocalDateTime.now());
+        List<Notification> pendingNotifications = notificationRepository.findPendingNotificationsForRetry(NotificationStatus.PENDING, LocalDateTime.now());
 
         for (Notification notification : pendingNotifications) {
             try {

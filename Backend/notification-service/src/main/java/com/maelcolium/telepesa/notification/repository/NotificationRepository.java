@@ -21,6 +21,10 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
 
     Page<Notification> findByUserId(Long userId, Pageable pageable);
 
+    Page<Notification> findByStatus(NotificationStatus status, Pageable pageable);
+
+    Page<Notification> findByType(NotificationType type, Pageable pageable);
+
     Page<Notification> findByUserIdAndStatus(Long userId, NotificationStatus status, Pageable pageable);
 
     Page<Notification> findByUserIdAndType(Long userId, NotificationType type, Pageable pageable);
@@ -28,6 +32,18 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
     List<Notification> findByStatusAndNextRetryAtBefore(NotificationStatus status, LocalDateTime before);
 
     List<Notification> findByStatusAndRetryCountLessThan(NotificationStatus status, Integer maxRetries);
+
+    @Query("SELECT n FROM Notification n WHERE n.userId = :userId AND n.readAt IS NULL ORDER BY n.createdAt DESC")
+    List<Notification> findUnreadNotificationsByUserId(@Param("userId") Long userId);
+
+    @Query("SELECT COUNT(n) FROM Notification n WHERE n.userId = :userId AND n.readAt IS NULL")
+    long countUnreadNotificationsByUserId(@Param("userId") Long userId);
+
+    @Query("SELECT COUNT(n) FROM Notification n WHERE n.userId = :userId AND n.readAt IS NOT NULL")
+    long countReadNotificationsByUserId(@Param("userId") Long userId);
+
+    @Query("SELECT n FROM Notification n WHERE n.status = :status AND n.retryCount < n.maxRetries AND (n.nextRetryAt IS NULL OR n.nextRetryAt <= :now)")
+    List<Notification> findPendingNotificationsForRetry(@Param("status") NotificationStatus status, @Param("now") LocalDateTime now);
 
     @Query("SELECT n FROM Notification n WHERE n.userId = :userId AND n.status = :status AND n.createdAt >= :since")
     Page<Notification> findRecentNotificationsByUserAndStatus(

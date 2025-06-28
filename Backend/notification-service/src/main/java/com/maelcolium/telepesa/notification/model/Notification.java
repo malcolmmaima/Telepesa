@@ -5,6 +5,7 @@ import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
@@ -16,6 +17,7 @@ import java.util.Map;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@EqualsAndHashCode(callSuper = false)
 public class Notification extends BaseEntity {
 
     @Column(name = "notification_id", unique = true, nullable = false)
@@ -36,7 +38,8 @@ public class Notification extends BaseEntity {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
-    private NotificationStatus status;
+    @Builder.Default
+    private NotificationStatus status = NotificationStatus.PENDING;
 
     @Column(name = "read_at")
     private LocalDateTime readAt;
@@ -68,9 +71,11 @@ public class Notification extends BaseEntity {
     private Map<String, String> metadata;
 
     @Column(name = "retry_count", nullable = false)
+    @Builder.Default
     private Integer retryCount = 0;
 
     @Column(name = "max_retries", nullable = false)
+    @Builder.Default
     private Integer maxRetries = 3;
 
     @Column(name = "next_retry_at")
