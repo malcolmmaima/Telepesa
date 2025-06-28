@@ -9,7 +9,7 @@ import com.maelcolium.telepesa.notification.service.NotificationService;
 import com.maelcolium.telepesa.notification.model.DeliveryMethod;
 import com.maelcolium.telepesa.notification.model.NotificationStatus;
 import com.maelcolium.telepesa.notification.model.NotificationType;
-import com.maelcolium.telepesa.exceptions.ResourceNotFoundException;
+import com.maelcolium.telepesa.notification.exception.ResourceNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;

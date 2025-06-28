@@ -1,6 +1,6 @@
 package com.maelcolium.telepesa.notification.exception;
 
-import com.maelcolium.telepesa.exceptions.ResourceNotFoundException;
+import com.maelcolium.telepesa.notification.exception.ResourceNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;

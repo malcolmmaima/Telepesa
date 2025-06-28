@@ -1,6 +1,6 @@
 package com.maelcolium.telepesa.notification.model;
 
-import com.maelcolium.telepesa.models.BaseEntity;
+import com.maelcolium.telepesa.notification.model.BaseEntity;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;

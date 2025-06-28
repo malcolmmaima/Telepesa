@@ -9,7 +9,7 @@ import com.maelcolium.telepesa.notification.model.NotificationType;
 import com.maelcolium.telepesa.notification.model.DeliveryMethod;
 import com.maelcolium.telepesa.notification.repository.NotificationRepository;
 import com.maelcolium.telepesa.notification.service.impl.NotificationServiceImpl;
-import com.maelcolium.telepesa.exceptions.ResourceNotFoundException;
+import com.maelcolium.telepesa.notification.exception.ResourceNotFoundException;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

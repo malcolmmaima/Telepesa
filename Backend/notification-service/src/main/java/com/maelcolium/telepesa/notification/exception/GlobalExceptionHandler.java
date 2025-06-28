@@ -1,6 +1,5 @@
 package com.maelcolium.telepesa.notification.exception;
 
-import com.maelcolium.telepesa.exceptions.ResourceNotFoundException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

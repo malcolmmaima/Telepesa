@@ -2,7 +2,7 @@ package com.maelcolium.telepesa.notification.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import com.maelcolium.telepesa.exceptions.ResourceNotFoundException;
+import com.maelcolium.telepesa.notification.exception.ResourceNotFoundException;
 import com.maelcolium.telepesa.notification.dto.CreateNotificationRequest;
 import com.maelcolium.telepesa.notification.dto.NotificationDto;
 import com.maelcolium.telepesa.notification.exception.GlobalExceptionHandler;
