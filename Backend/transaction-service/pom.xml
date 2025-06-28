@@ -272,6 +272,32 @@
                     <suppressionFiles>
                         <suppressionFile>dependency-check-suppressions.xml</suppressionFile>
                     </suppressionFiles>
+                    <!-- NVD API Configuration for faster updates -->
+                    <nvdApiKey>${env.NVD_API_KEY}</nvdApiKey>
+                    <nvdMaxRetryCount>3</nvdMaxRetryCount>
+                    <nvdApiDelay>2000</nvdApiDelay>
+                    <!-- Performance optimizations -->
+                    <skipSystemScope>true</skipSystemScope>
+                    <skipTestScope>true</skipTestScope>
+                    <skipProvidedScope>true</skipProvidedScope>
+                    <!-- Analyzer configurations -->
+                    <archiveAnalyzerEnabled>false</archiveAnalyzerEnabled>
+                    <jarAnalyzerEnabled>true</jarAnalyzerEnabled>
+                    <centralAnalyzerEnabled>true</centralAnalyzerEnabled>
+                    <nexusAnalyzerEnabled>false</nexusAnalyzerEnabled>
+                    <pyDistributionAnalyzerEnabled>false</pyDistributionAnalyzerEnabled>
+                    <pyPackageAnalyzerEnabled>false</pyPackageAnalyzerEnabled>
+                    <rubygemsAnalyzerEnabled>false</rubygemsAnalyzerEnabled>
+                    <opensslAnalyzerEnabled>false</opensslAnalyzerEnabled>
+                    <cmakeAnalyzerEnabled>false</cmakeAnalyzerEnabled>
+                    <autoconfAnalyzerEnabled>false</autoconfAnalyzerEnabled>
+                    <composerAnalyzerEnabled>false</composerAnalyzerEnabled>
+                    <nodeAnalyzerEnabled>false</nodeAnalyzerEnabled>
+                    <nuspecAnalyzerEnabled>false</nuspecAnalyzerEnabled>
+                    <assemblyAnalyzerEnabled>false</assemblyAnalyzerEnabled>
+                    <!-- Database update settings -->
+                    <autoUpdate>true</autoUpdate>
+                    <dataDirectory>${user.home}/.m2/repository/org/owasp/dependency-check-data</dataDirectory>
                 </configuration>
                 <executions>
                     <execution>
