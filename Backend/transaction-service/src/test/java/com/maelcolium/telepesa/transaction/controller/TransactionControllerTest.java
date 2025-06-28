@@ -1,6 +1,8 @@
 package com.maelcolium.telepesa.transaction.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.maelcolium.telepesa.transaction.dto.CreateTransactionRequest;
 import com.maelcolium.telepesa.transaction.dto.TransactionDto;
 import com.maelcolium.telepesa.transaction.service.TransactionService;
@@ -17,6 +19,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.web.PageableHandlerMethodArgumentResolver;
 import org.springframework.http.MediaType;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.test.web.servlet.MockMvc;
@@ -47,11 +50,20 @@ class TransactionControllerTest {
 
     @BeforeEach
     void setUp() {
+        // Configure ObjectMapper with required modules
+        objectMapper = new ObjectMapper();
+        objectMapper.registerModule(new JavaTimeModule());
+        objectMapper.registerModule(new Jdk8Module());
+        
+        // Configure Jackson converter
+        MappingJackson2HttpMessageConverter converter = new MappingJackson2HttpMessageConverter();
+        converter.setObjectMapper(objectMapper);
+        
         mockMvc = MockMvcBuilders.standaloneSetup(transactionController)
                 .setControllerAdvice(new GlobalExceptionHandler())
-                .setMessageConverters(new MappingJackson2HttpMessageConverter())
+                .setMessageConverters(converter)
+                .setCustomArgumentResolvers(new PageableHandlerMethodArgumentResolver())
                 .build();
-        objectMapper = new ObjectMapper();
 
         transactionDto = TransactionDto.builder()
                 .id(1L)
@@ -156,7 +168,8 @@ class TransactionControllerTest {
     @Test
     void getTransactions_ShouldReturnPagedResults() throws Exception {
         // Given
-        Page<TransactionDto> page = new PageImpl<>(List.of(transactionDto));
+        PageRequest pageRequest = PageRequest.of(0, 10);
+        Page<TransactionDto> page = new PageImpl<>(List.of(transactionDto), pageRequest, 1);
         when(transactionService.getTransactions(any(PageRequest.class))).thenReturn(page);
 
         // When & Then
@@ -173,7 +186,8 @@ class TransactionControllerTest {
     @Test
     void getTransactionsByUserId_ShouldReturnUserTransactions() throws Exception {
         // Given
-        Page<TransactionDto> page = new PageImpl<>(List.of(transactionDto));
+        PageRequest pageRequest = PageRequest.of(0, 10);
+        Page<TransactionDto> page = new PageImpl<>(List.of(transactionDto), pageRequest, 1);
         when(transactionService.getTransactionsByUserId(10L, PageRequest.of(0, 10))).thenReturn(page);
 
         // When & Then
@@ -190,7 +204,8 @@ class TransactionControllerTest {
     @Test
     void getTransactionsByAccountId_ShouldReturnAccountTransactions() throws Exception {
         // Given
-        Page<TransactionDto> page = new PageImpl<>(List.of(transactionDto));
+        PageRequest pageRequest = PageRequest.of(0, 10);
+        Page<TransactionDto> page = new PageImpl<>(List.of(transactionDto), pageRequest, 1);
         when(transactionService.getTransactionsByAccountId(1L, PageRequest.of(0, 10))).thenReturn(page);
 
         // When & Then
@@ -206,7 +221,8 @@ class TransactionControllerTest {
     @Test
     void getTransactionsByStatus_ShouldReturnFilteredTransactions() throws Exception {
         // Given
-        Page<TransactionDto> page = new PageImpl<>(List.of(transactionDto));
+        PageRequest pageRequest = PageRequest.of(0, 10);
+        Page<TransactionDto> page = new PageImpl<>(List.of(transactionDto), pageRequest, 1);
         when(transactionService.getTransactionsByStatus(TransactionStatus.PENDING, PageRequest.of(0, 10))).thenReturn(page);
 
         // When & Then
@@ -222,7 +238,8 @@ class TransactionControllerTest {
     @Test
     void getTransactionsByType_ShouldReturnFilteredTransactions() throws Exception {
         // Given
-        Page<TransactionDto> page = new PageImpl<>(List.of(transactionDto));
+        PageRequest pageRequest = PageRequest.of(0, 10);
+        Page<TransactionDto> page = new PageImpl<>(List.of(transactionDto), pageRequest, 1);
         when(transactionService.getTransactionsByType(TransactionType.TRANSFER, PageRequest.of(0, 10))).thenReturn(page);
 
         // When & Then
@@ -238,7 +255,8 @@ class TransactionControllerTest {
     @Test
     void getTransactionsByDateRange_ShouldReturnFilteredTransactions() throws Exception {
         // Given
-        Page<TransactionDto> page = new PageImpl<>(List.of(transactionDto));
+        PageRequest pageRequest = PageRequest.of(0, 10);
+        Page<TransactionDto> page = new PageImpl<>(List.of(transactionDto), pageRequest, 1);
         LocalDateTime startDate = LocalDateTime.now().minusDays(7);
         LocalDateTime endDate = LocalDateTime.now();
         when(transactionService.getTransactionsByDateRange(10L, startDate, endDate, PageRequest.of(0, 10))).thenReturn(page);
