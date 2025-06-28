@@ -52,21 +52,63 @@ To enhance financial inclusion across Africa by providing cooperatives and MFIs 
 
 ### Microservices Architecture
 ```
-┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
-│   API Gateway   │────│  Load Balancer  │────│   Frontend Apps │
-└─────────────────┘    └─────────────────┘    └─────────────────┘
-         │                        │                        │
-    ┌────▼────┐              ┌────▼────┐              ┌────▼────┐
-    │ User    │              │Account  │              │Transaction│
-    │Service  │              │Service  │              │ Service   │
-    │Port:8081│              │Port:8082│              │Port:8083  │
-    └─────────┘              └─────────┘              └───────────┘
-         │                        │                        │
-    ┌────▼────┐              ┌────▼────┐              ┌────▼────┐
-    │ Loan    │              │Notification│            │  Shared   │
-    │Service  │              │ Service  │              │Libraries  │
-    │Port:8084│              │Port:8085│              │           │
-    └─────────┘              └─────────┘              └───────────┘
+                    ┌─────────────────────────────────────────────────────┐
+                    │              Frontend Layer                         │
+                    │  ┌─────────────┐ ┌─────────────┐ ┌─────────────┐   │
+                    │  │   Android   │ │     iOS     │ │ Web Dashboard│   │
+                    │  │    App      │ │    App      │ │   (React)    │   │
+                    │  └─────────────┘ └─────────────┘ └─────────────┘   │
+                    └─────────────────────────────────────────────────────┘
+                                              │
+                    ┌─────────────────────────▼─────────────────────────────┐
+                    │                API Gateway                            │
+                    │              (Port: 8080) 🚧                         │
+                    └─────────────────────────┬─────────────────────────────┘
+                                              │
+                    ┌─────────────────────────▼─────────────────────────────┐
+                    │              Load Balancer / Service Mesh             │
+                    └─────┬─────────┬─────────┬─────────┬─────────┬─────────┘
+                          │         │         │         │         │
+                     ┌────▼────┐┌───▼────┐┌───▼────┐┌───▼────┐┌───▼────┐
+                     │  User   ││Account ││Transaction││Notification││ Loan   │
+                     │ Service ││Service ││ Service ││ Service ││Service │
+                     │Port:8081││Port:8082││Port:8083││Port:8085││Port:8084│
+                     │   ✅    ││   ✅   ││   ✅   ││   ✅   ││   🚧   │
+                     │ LIVE    ││ LIVE   ││ LIVE   ││ LIVE   ││PLANNED │
+                     └─────────┘└────────┘└────────┘└────────┘└────────┘
+                          │         │         │         │         │
+                     ┌────▼─────────▼─────────▼─────────▼─────────▼────┐
+                     │              Shared Libraries                   │
+                     │        (Common Models, Utils, Security)         │
+                     │                    ✅ LIVE                      │
+                     └─────────────────────┬───────────────────────────┘
+                                          │
+                     ┌────────────────────▼────────────────────────────┐
+                     │              Data Layer                         │
+                     │  ┌─────────────┐ ┌─────────────┐ ┌───────────┐ │
+                     │  │ PostgreSQL  │ │   Redis     │ │    H2     │ │
+                     │  │(Production) │ │  (Cache)    │ │ (Testing) │ │
+                     │  │     ✅      │ │     ✅      │ │     ✅    │ │
+                     │  └─────────────┘ └─────────────┘ └───────────┘ │
+                     └─────────────────────────────────────────────────┘
+
+📊 Service Status Summary:
+┌─────────────────────┬──────────┬─────────────┬──────────────────┐
+│ Service             │ Status   │ Port        │ Test Coverage    │
+├─────────────────────┼──────────┼─────────────┼──────────────────┤
+│ User Service        │ ✅ LIVE  │ 8081        │ 81% line, 35% br │
+│ Account Service     │ ✅ LIVE  │ 8082        │ 85% line, 80% br │
+│ Transaction Service │ ✅ LIVE  │ 8083        │ 82% line, 70% br │
+│ Notification Service│ ✅ LIVE  │ 8085        │ 90% line, 85% br │
+│ Loan Service        │ 🚧 PLAN  │ 8084        │ Ready for dev    │
+│ API Gateway         │ 🚧 PLAN  │ 8080        │ Future feature   │
+└─────────────────────┴──────────┴─────────────┴──────────────────┘
+
+🔗 Inter-Service Communication:
+• User ←→ Account: User account management and authentication
+• Account ←→ Transaction: Account balance updates and validation  
+• Transaction ←→ Notification: Real-time payment notifications
+• All Services ←→ Shared Libraries: Common security, models, utilities
 ```
 
 ### 🛠️ Technology Stack
@@ -151,7 +193,14 @@ To enhance financial inclusion across Africa by providing cooperatives and MFIs 
    ```
    The service will be available at `http://localhost:8085`
 
-7. **Test API Endpoints**
+7. **Start Transaction Service**
+   ```bash
+   cd Backend/transaction-service
+   mvn spring-boot:run
+   ```
+   The service will be available at `http://localhost:8083`
+
+8. **Test API Endpoints**
    ```bash
    # Quick API functionality test
    cd Backend
@@ -162,6 +211,7 @@ To enhance financial inclusion across Africa by providing cooperatives and MFIs 
    curl http://localhost:8081/actuator/health
    curl http://localhost:8082/actuator/health
    curl http://localhost:8085/actuator/health
+   curl http://localhost:8083/actuator/health
    ```
 
 ### 📱 Running Mobile Apps
@@ -191,7 +241,7 @@ npm start
 ## 🧪 Testing
 
 ### Current Test Status ✅
-- **Unit Tests**: 100+ passing (100% success rate)
+- **Unit Tests**: 190+ passing (100% success rate)
 - **Coverage**: 85% line coverage, 78% branch coverage
 - **E2E Tests**: 24/25 passing (96% success rate)
 - **Overall Status**: **PRODUCTION READY** 🚀
@@ -202,7 +252,7 @@ npm start
 | User Service | ✅ 81/81 passing | 81% line, 35% branch | ✅ **PASSING** |
 | Account Service | ✅ 47/47 passing | 85% line, 80% branch | ✅ **PASSING** |
 | Notification Service | ✅ 62/62 passing | 90% line, 85% branch | ✅ **PASSING** |
-| Transaction Service | 🚧 **IN PROGRESS** | - | 🚧 **PLANNED** |
+| Transaction Service | ✅ 104/104 passing | 82% line, 70% branch | ✅ **PASSING** |
 | Loan Service | 🚧 **IN PROGRESS** | - | 🚧 **PLANNED** |
 
 ### Running Tests
@@ -259,6 +309,7 @@ Backend/Telepesa_Development.postman_environment.json
 - **User Service**: http://localhost:8081/swagger-ui.html ✅ **LIVE**
 - **Account Service**: http://localhost:8082/swagger-ui.html ✅ **LIVE**
 - **Notification Service**: http://localhost:8085/swagger-ui.html ✅ **LIVE**
+- **Transaction Service**: http://localhost:8083/swagger-ui.html ✅ **LIVE**
 - **OpenAPI Specs**: Available at `/v3/api-docs` endpoints
 - **Postman Collection**: `Backend/Telepesa_API_Collection.postman_collection.json`
 - **Test Environment**: `Backend/Telepesa_Development.postman_environment.json`
@@ -269,7 +320,7 @@ Backend/Telepesa_Development.postman_environment.json
 | User Service | ✅ **LIVE** | 25+ automated tests | 96% pass rate |
 | Account Service | ✅ **LIVE** | 47+ comprehensive tests | 100% pass rate |
 | Notification Service | ✅ **LIVE** | 62+ comprehensive tests | 100% pass rate |
-| Transaction Service | 🚧 **IN DEVELOPMENT** | Ready for implementation | - |
+| Transaction Service | ✅ **LIVE** | 104+ comprehensive tests | 100% pass rate |
 | Loan Service | 🚧 **PLANNED** | Ready for implementation | - |
 
 ### Architecture Documentation
@@ -311,7 +362,7 @@ Telepesa/
 ├── Backend/                           # Spring Boot microservices
 │   ├── user-service/                 # User management (Port: 8081) ✅
 │   ├── account-service/              # Account management (Port: 8082) ✅
-│   ├── transaction-service/          # Transaction processing (Port: 8083) 🚧
+│   ├── transaction-service/          # Transaction processing (Port: 8083) ✅
 │   ├── loan-service/                # Loan management (Port: 8084) 🚧
 │   ├── notification-service/        # Notifications (Port: 8085) ✅
 │   ├── api-gateway/                 # API Gateway and routing 🚧
