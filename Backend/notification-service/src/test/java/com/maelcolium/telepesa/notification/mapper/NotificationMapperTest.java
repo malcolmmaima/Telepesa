@@ -30,47 +30,37 @@ class NotificationMapperTest {
         LocalDateTime now = LocalDateTime.now();
         
         notification = Notification.builder()
-                .id(1L)
                 .notificationId("NOTIF-12345678")
                 .userId(10L)
                 .title("Test Notification")
                 .message("This is a test notification")
-                .notificationType(NotificationType.TRANSACTION_SUCCESS)
+                .type(NotificationType.TRANSACTION_SUCCESS)
                 .status(NotificationStatus.PENDING)
                 .deliveryMethod(DeliveryMethod.EMAIL)
                 .recipientEmail("test@example.com")
                 .recipientPhone("+254700000000")
                 .metadata(Map.of("key", "value"))
-                .scheduledAt(now.plusMinutes(5))
                 .sentAt(null)
-                .deliveredAt(null)
                 .readAt(null)
                 .retryCount(0)
                 .maxRetries(3)
-                .createdAt(now)
-                .updatedAt(now)
                 .build();
 
         notificationDto = NotificationDto.builder()
-                .id(1L)
                 .notificationId("NOTIF-12345678")
                 .userId(10L)
                 .title("Test Notification")
                 .message("This is a test notification")
-                .notificationType(NotificationType.TRANSACTION_SUCCESS)
+                .type(NotificationType.TRANSACTION_SUCCESS)
                 .status(NotificationStatus.PENDING)
                 .deliveryMethod(DeliveryMethod.EMAIL)
                 .recipientEmail("test@example.com")
                 .recipientPhone("+254700000000")
                 .metadata(Map.of("key", "value"))
-                .scheduledAt(now.plusMinutes(5))
                 .sentAt(null)
-                .deliveredAt(null)
                 .readAt(null)
                 .retryCount(0)
                 .maxRetries(3)
-                .createdAt(now)
-                .updatedAt(now)
                 .build();
     }
 
@@ -86,15 +76,13 @@ class NotificationMapperTest {
         assertThat(result.getUserId()).isEqualTo(notification.getUserId());
         assertThat(result.getTitle()).isEqualTo(notification.getTitle());
         assertThat(result.getMessage()).isEqualTo(notification.getMessage());
-        assertThat(result.getNotificationType()).isEqualTo(notification.getNotificationType());
+        assertThat(result.getType()).isEqualTo(notification.getType());
         assertThat(result.getStatus()).isEqualTo(notification.getStatus());
         assertThat(result.getDeliveryMethod()).isEqualTo(notification.getDeliveryMethod());
         assertThat(result.getRecipientEmail()).isEqualTo(notification.getRecipientEmail());
         assertThat(result.getRecipientPhone()).isEqualTo(notification.getRecipientPhone());
         assertThat(result.getMetadata()).isEqualTo(notification.getMetadata());
-        assertThat(result.getScheduledAt()).isEqualTo(notification.getScheduledAt());
         assertThat(result.getSentAt()).isEqualTo(notification.getSentAt());
-        assertThat(result.getDeliveredAt()).isEqualTo(notification.getDeliveredAt());
         assertThat(result.getReadAt()).isEqualTo(notification.getReadAt());
         assertThat(result.getRetryCount()).isEqualTo(notification.getRetryCount());
         assertThat(result.getMaxRetries()).isEqualTo(notification.getMaxRetries());
@@ -115,20 +103,17 @@ class NotificationMapperTest {
     void toDto_WithNullValues_ShouldHandleNullsCorrectly() {
         // Given
         Notification notificationWithNulls = Notification.builder()
-                .id(1L)
                 .notificationId("NOTIF-12345678")
                 .userId(10L)
                 .title("Test Notification")
                 .message(null)
-                .notificationType(NotificationType.TRANSACTION_SUCCESS)
+                .type(NotificationType.TRANSACTION_SUCCESS)
                 .status(NotificationStatus.PENDING)
                 .deliveryMethod(DeliveryMethod.EMAIL)
                 .recipientEmail(null)
                 .recipientPhone(null)
                 .metadata(null)
-                .scheduledAt(null)
                 .sentAt(null)
-                .deliveredAt(null)
                 .readAt(null)
                 .retryCount(0)
                 .maxRetries(3)
@@ -145,9 +130,7 @@ class NotificationMapperTest {
         assertThat(result.getRecipientEmail()).isNull();
         assertThat(result.getRecipientPhone()).isNull();
         assertThat(result.getMetadata()).isNull();
-        assertThat(result.getScheduledAt()).isNull();
         assertThat(result.getSentAt()).isNull();
-        assertThat(result.getDeliveredAt()).isNull();
         assertThat(result.getReadAt()).isNull();
     }
 
@@ -158,13 +141,13 @@ class NotificationMapperTest {
         
         for (NotificationType type : types) {
             // Given
-            notification.setNotificationType(type);
+            notification.setType(type);
             
             // When
             NotificationDto result = notificationMapper.toDto(notification);
             
             // Then
-            assertThat(result.getNotificationType()).isEqualTo(type);
+            assertThat(result.getType()).isEqualTo(type);
         }
     }
 
@@ -291,23 +274,17 @@ class NotificationMapperTest {
     @Test
     void toDto_WithDateTimeValues_ShouldMapCorrectly() {
         // Given
-        LocalDateTime scheduledAt = LocalDateTime.of(2023, 12, 25, 14, 30, 45);
         LocalDateTime sentAt = LocalDateTime.of(2023, 12, 25, 14, 31, 0);
-        LocalDateTime deliveredAt = LocalDateTime.of(2023, 12, 25, 14, 31, 15);
         LocalDateTime readAt = LocalDateTime.of(2023, 12, 25, 14, 32, 0);
         
-        notification.setScheduledAt(scheduledAt);
         notification.setSentAt(sentAt);
-        notification.setDeliveredAt(deliveredAt);
         notification.setReadAt(readAt);
 
         // When
         NotificationDto result = notificationMapper.toDto(notification);
 
         // Then
-        assertThat(result.getScheduledAt()).isEqualTo(scheduledAt);
         assertThat(result.getSentAt()).isEqualTo(sentAt);
-        assertThat(result.getDeliveredAt()).isEqualTo(deliveredAt);
         assertThat(result.getReadAt()).isEqualTo(readAt);
     }
 
@@ -449,10 +426,8 @@ class NotificationMapperTest {
         
         // SENT -> DELIVERED
         notification.setStatus(NotificationStatus.DELIVERED);
-        notification.setDeliveredAt(now.plusSeconds(30));
         NotificationDto result2 = notificationMapper.toDto(notification);
         assertThat(result2.getStatus()).isEqualTo(NotificationStatus.DELIVERED);
-        assertThat(result2.getDeliveredAt()).isEqualTo(now.plusSeconds(30));
         
         // DELIVERED -> READ
         notification.setStatus(NotificationStatus.READ);

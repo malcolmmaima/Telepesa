@@ -6,6 +6,7 @@ import com.maelcolium.telepesa.notification.mapper.NotificationMapper;
 import com.maelcolium.telepesa.notification.model.Notification;
 import com.maelcolium.telepesa.notification.repository.NotificationRepository;
 import com.maelcolium.telepesa.notification.service.NotificationService;
+import com.maelcolium.telepesa.notification.model.DeliveryMethod;
 import com.maelcolium.telepesa.notification.model.NotificationStatus;
 import com.maelcolium.telepesa.notification.model.NotificationType;
 import com.maelcolium.telepesa.exceptions.ResourceNotFoundException;
@@ -159,6 +160,79 @@ public class NotificationServiceImpl implements NotificationService {
     @Transactional(readOnly = true)
     public long getReadNotificationCount(Long userId) {
         return notificationRepository.countReadNotificationsByUserId(userId);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<NotificationDto> getNotificationsByDeliveryMethod(DeliveryMethod deliveryMethod, Pageable pageable) {
+        // This would need a repository method, for now return empty page
+        return Page.empty(pageable);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<NotificationDto> getNotificationsByDateRange(Long userId, LocalDateTime startDate, LocalDateTime endDate, Pageable pageable) {
+        // This would need a repository method, for now return empty page
+        return Page.empty(pageable);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<NotificationDto> getUnreadNotifications(Long userId, Pageable pageable) {
+        Page<Notification> notifications = notificationRepository.findByUserIdAndStatus(userId, NotificationStatus.PENDING, pageable);
+        return notifications.map(notificationMapper::toDto);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<NotificationDto> getPendingNotifications() {
+        List<Notification> notifications = notificationRepository.findPendingNotificationsForRetry(NotificationStatus.PENDING, LocalDateTime.now());
+        return notifications.stream()
+                .map(notificationMapper::toDto)
+                .toList();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<NotificationDto> getFailedNotifications(Pageable pageable) {
+        Page<Notification> notifications = notificationRepository.findByStatus(NotificationStatus.FAILED, pageable);
+        return notifications.map(notificationMapper::toDto);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public long getNotificationCountByUserIdAndStatus(Long userId, NotificationStatus status) {
+        return notificationRepository.countByUserIdAndStatus(userId, status);
+    }
+
+    @Override
+    public NotificationDto retryFailedNotification(Long id) {
+        Notification notification = notificationRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Notification not found with id: " + id));
+
+        if (notification.getStatus() == NotificationStatus.FAILED && 
+            notification.getRetryCount() < notification.getMaxRetries()) {
+            
+            notification.setRetryCount(notification.getRetryCount() + 1);
+            notification.setStatus(NotificationStatus.PENDING);
+            notification.setNextRetryAt(LocalDateTime.now().plusMinutes(5 * notification.getRetryCount()));
+            
+            Notification updatedNotification = notificationRepository.save(notification);
+            log.info("Notification scheduled for retry: {}", notification.getNotificationId());
+            
+            return notificationMapper.toDto(updatedNotification);
+        } else {
+            throw new IllegalStateException("Notification cannot be retried");
+        }
+    }
+
+    @Override
+    public void deleteNotification(Long id) {
+        if (!notificationRepository.existsById(id)) {
+            throw new ResourceNotFoundException("Notification not found with id: " + id);
+        }
+        notificationRepository.deleteById(id);
+        log.info("Notification deleted with id: {}", id);
     }
 
     @Override
