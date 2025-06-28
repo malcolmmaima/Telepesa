@@ -1,6 +1,7 @@
 package com.maelcolium.telepesa.notification.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.maelcolium.telepesa.notification.dto.CreateNotificationRequest;
 import com.maelcolium.telepesa.notification.dto.NotificationDto;
 import com.maelcolium.telepesa.notification.service.NotificationService;
@@ -17,7 +18,9 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.web.PageableHandlerMethodArgumentResolver;
 import org.springframework.http.MediaType;
+import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
@@ -46,8 +49,18 @@ class NotificationControllerTest {
 
     @BeforeEach
     void setUp() {
-        mockMvc = MockMvcBuilders.standaloneSetup(notificationController).build();
+        // Configure ObjectMapper with proper modules
         objectMapper = new ObjectMapper();
+        objectMapper.registerModule(new JavaTimeModule());
+        
+        // Configure MockMvc with proper Jackson configuration
+        MappingJackson2HttpMessageConverter converter = new MappingJackson2HttpMessageConverter();
+        converter.setObjectMapper(objectMapper);
+
+        mockMvc = MockMvcBuilders.standaloneSetup(notificationController)
+                .setMessageConverters(converter)
+                .setCustomArgumentResolvers(new PageableHandlerMethodArgumentResolver())
+                .build();
 
         notificationDto = NotificationDto.builder()
                 .id(1L)
@@ -144,7 +157,7 @@ class NotificationControllerTest {
         when(notificationService.getNotificationByNotificationId("NOTIF-12345678")).thenReturn(notificationDto);
 
         // When & Then
-        mockMvc.perform(get("/api/v1/notifications/by-notification-id/NOTIF-12345678"))
+        mockMvc.perform(get("/api/v1/notifications/notification-id/NOTIF-12345678"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.notificationId").value("NOTIF-12345678"));
 
@@ -154,7 +167,8 @@ class NotificationControllerTest {
     @Test
     void getNotifications_ShouldReturnPagedResults() throws Exception {
         // Given
-        Page<NotificationDto> page = new PageImpl<>(List.of(notificationDto));
+        PageRequest pageRequest = PageRequest.of(0, 10);
+        Page<NotificationDto> page = new PageImpl<>(List.of(notificationDto), pageRequest, 1);
         when(notificationService.getNotifications(any(PageRequest.class))).thenReturn(page);
 
         // When & Then
@@ -171,8 +185,9 @@ class NotificationControllerTest {
     @Test
     void getNotificationsByUserId_ShouldReturnUserNotifications() throws Exception {
         // Given
-        Page<NotificationDto> page = new PageImpl<>(List.of(notificationDto));
-        when(notificationService.getNotificationsByUserId(10L, PageRequest.of(0, 10))).thenReturn(page);
+        PageRequest pageRequest = PageRequest.of(0, 10);
+        Page<NotificationDto> page = new PageImpl<>(List.of(notificationDto), pageRequest, 1);
+        when(notificationService.getNotificationsByUserId(10L, pageRequest)).thenReturn(page);
 
         // When & Then
         mockMvc.perform(get("/api/v1/notifications/user/10")
@@ -182,14 +197,15 @@ class NotificationControllerTest {
                 .andExpect(jsonPath("$.content").isArray())
                 .andExpect(jsonPath("$.content[0].userId").value(10));
 
-        verify(notificationService).getNotificationsByUserId(10L, PageRequest.of(0, 10));
+        verify(notificationService).getNotificationsByUserId(10L, pageRequest);
     }
 
     @Test
     void getNotificationsByStatus_ShouldReturnStatusFilteredNotifications() throws Exception {
         // Given
-        Page<NotificationDto> page = new PageImpl<>(List.of(notificationDto));
-        when(notificationService.getNotificationsByStatus(NotificationStatus.PENDING, PageRequest.of(0, 10))).thenReturn(page);
+        PageRequest pageRequest = PageRequest.of(0, 10);
+        Page<NotificationDto> page = new PageImpl<>(List.of(notificationDto), pageRequest, 1);
+        when(notificationService.getNotificationsByStatus(NotificationStatus.PENDING, pageRequest)).thenReturn(page);
 
         // When & Then
         mockMvc.perform(get("/api/v1/notifications/status/PENDING")
@@ -198,14 +214,15 @@ class NotificationControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content").isArray());
 
-        verify(notificationService).getNotificationsByStatus(NotificationStatus.PENDING, PageRequest.of(0, 10));
+        verify(notificationService).getNotificationsByStatus(NotificationStatus.PENDING, pageRequest);
     }
 
     @Test
     void getNotificationsByType_ShouldReturnTypeFilteredNotifications() throws Exception {
         // Given
-        Page<NotificationDto> page = new PageImpl<>(List.of(notificationDto));
-        when(notificationService.getNotificationsByType(NotificationType.TRANSACTION_SUCCESS, PageRequest.of(0, 10))).thenReturn(page);
+        PageRequest pageRequest = PageRequest.of(0, 10);
+        Page<NotificationDto> page = new PageImpl<>(List.of(notificationDto), pageRequest, 1);
+        when(notificationService.getNotificationsByType(NotificationType.TRANSACTION_SUCCESS, pageRequest)).thenReturn(page);
 
         // When & Then
         mockMvc.perform(get("/api/v1/notifications/type/TRANSACTION_SUCCESS")
@@ -214,14 +231,15 @@ class NotificationControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content").isArray());
 
-        verify(notificationService).getNotificationsByType(NotificationType.TRANSACTION_SUCCESS, PageRequest.of(0, 10));
+        verify(notificationService).getNotificationsByType(NotificationType.TRANSACTION_SUCCESS, pageRequest);
     }
 
     @Test
     void getNotificationsByDeliveryMethod_ShouldReturnMethodFilteredNotifications() throws Exception {
         // Given
-        Page<NotificationDto> page = new PageImpl<>(List.of(notificationDto));
-        when(notificationService.getNotificationsByDeliveryMethod(DeliveryMethod.EMAIL, PageRequest.of(0, 10))).thenReturn(page);
+        PageRequest pageRequest = PageRequest.of(0, 10);
+        Page<NotificationDto> page = new PageImpl<>(List.of(notificationDto), pageRequest, 1);
+        when(notificationService.getNotificationsByDeliveryMethod(DeliveryMethod.EMAIL, pageRequest)).thenReturn(page);
 
         // When & Then
         mockMvc.perform(get("/api/v1/notifications/delivery-method/EMAIL")
@@ -230,27 +248,26 @@ class NotificationControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content").isArray());
 
-        verify(notificationService).getNotificationsByDeliveryMethod(DeliveryMethod.EMAIL, PageRequest.of(0, 10));
+        verify(notificationService).getNotificationsByDeliveryMethod(DeliveryMethod.EMAIL, pageRequest);
     }
 
     @Test
     void getNotificationsByDateRange_ShouldReturnDateFilteredNotifications() throws Exception {
         // Given
-        LocalDateTime startDate = LocalDateTime.now().minusDays(7);
-        LocalDateTime endDate = LocalDateTime.now();
-        Page<NotificationDto> page = new PageImpl<>(List.of(notificationDto));
-        when(notificationService.getNotificationsByDateRange(10L, startDate, endDate, PageRequest.of(0, 10))).thenReturn(page);
+        PageRequest pageRequest = PageRequest.of(0, 10);
+        Page<NotificationDto> page = new PageImpl<>(List.of(notificationDto), pageRequest, 1);
+        when(notificationService.getNotificationsByDateRange(eq(10L), any(LocalDateTime.class), any(LocalDateTime.class), eq(pageRequest))).thenReturn(page);
 
         // When & Then
         mockMvc.perform(get("/api/v1/notifications/user/10/date-range")
-                        .param("startDate", startDate.toString())
-                        .param("endDate", endDate.toString())
+                        .param("startDate", "2023-12-01")
+                        .param("endDate", "2023-12-31")
                         .param("page", "0")
                         .param("size", "10"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content").isArray());
 
-        verify(notificationService).getNotificationsByDateRange(10L, startDate, endDate, PageRequest.of(0, 10));
+        verify(notificationService).getNotificationsByDateRange(eq(10L), any(LocalDateTime.class), any(LocalDateTime.class), eq(pageRequest));
     }
 
     @Test
@@ -312,8 +329,9 @@ class NotificationControllerTest {
     @Test
     void getUnreadNotifications_ShouldReturnUnreadNotifications() throws Exception {
         // Given
-        Page<NotificationDto> page = new PageImpl<>(List.of(notificationDto));
-        when(notificationService.getUnreadNotifications(10L, PageRequest.of(0, 10))).thenReturn(page);
+        PageRequest pageRequest = PageRequest.of(0, 10);
+        Page<NotificationDto> page = new PageImpl<>(List.of(notificationDto), pageRequest, 1);
+        when(notificationService.getUnreadNotifications(10L, pageRequest)).thenReturn(page);
 
         // When & Then
         mockMvc.perform(get("/api/v1/notifications/user/10/unread")
@@ -322,7 +340,7 @@ class NotificationControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content").isArray());
 
-        verify(notificationService).getUnreadNotifications(10L, PageRequest.of(0, 10));
+        verify(notificationService).getUnreadNotifications(10L, pageRequest);
     }
 
     @Test
@@ -342,8 +360,9 @@ class NotificationControllerTest {
     @Test
     void getFailedNotifications_ShouldReturnFailedNotifications() throws Exception {
         // Given
-        Page<NotificationDto> page = new PageImpl<>(List.of(notificationDto));
-        when(notificationService.getFailedNotifications(PageRequest.of(0, 10))).thenReturn(page);
+        PageRequest pageRequest = PageRequest.of(0, 10);
+        Page<NotificationDto> page = new PageImpl<>(List.of(notificationDto), pageRequest, 1);
+        when(notificationService.getFailedNotifications(pageRequest)).thenReturn(page);
 
         // When & Then
         mockMvc.perform(get("/api/v1/notifications/failed")
@@ -352,7 +371,7 @@ class NotificationControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content").isArray());
 
-        verify(notificationService).getFailedNotifications(PageRequest.of(0, 10));
+        verify(notificationService).getFailedNotifications(pageRequest);
     }
 
     @Test

@@ -66,8 +66,8 @@ public class Notification extends BaseEntity {
     @ElementCollection
     @CollectionTable(name = "notification_metadata", 
                      joinColumns = @JoinColumn(name = "notification_id"))
-    @MapKeyColumn(name = "key")
-    @Column(name = "value")
+    @MapKeyColumn(name = "metadata_key")
+    @Column(name = "metadata_value")
     private Map<String, String> metadata;
 
     @Column(name = "retry_count", nullable = false)

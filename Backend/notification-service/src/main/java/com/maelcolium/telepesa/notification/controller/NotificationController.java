@@ -3,6 +3,7 @@ package com.maelcolium.telepesa.notification.controller;
 import com.maelcolium.telepesa.notification.dto.CreateNotificationRequest;
 import com.maelcolium.telepesa.notification.dto.NotificationDto;
 import com.maelcolium.telepesa.notification.service.NotificationService;
+import com.maelcolium.telepesa.notification.model.DeliveryMethod;
 import com.maelcolium.telepesa.notification.model.NotificationStatus;
 import com.maelcolium.telepesa.notification.model.NotificationType;
 import io.swagger.v3.oas.annotations.Operation;
@@ -18,6 +19,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @RestController
@@ -175,6 +177,93 @@ public class NotificationController {
     public ResponseEntity<Void> retryFailedNotifications() {
         notificationService.retryFailedNotifications();
         return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("/delivery-method/{deliveryMethod}")
+    @Operation(summary = "Get notifications by delivery method", description = "Retrieve notifications filtered by delivery method")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Page<NotificationDto>> getNotificationsByDeliveryMethod(
+            @PathVariable String deliveryMethod,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        try {
+            DeliveryMethod method = DeliveryMethod.valueOf(deliveryMethod.toUpperCase());
+            Pageable pageable = PageRequest.of(page, size);
+            Page<NotificationDto> notifications = notificationService.getNotificationsByDeliveryMethod(method, pageable);
+            return ResponseEntity.ok(notifications);
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException("Invalid delivery method: " + deliveryMethod);
+        }
+    }
+
+    @GetMapping("/user/{userId}/date-range")
+    @Operation(summary = "Get notifications by date range", description = "Retrieve notifications for a user within a date range")
+    @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
+    public ResponseEntity<Page<NotificationDto>> getNotificationsByDateRange(
+            @PathVariable Long userId,
+            @RequestParam String startDate,
+            @RequestParam String endDate,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        try {
+            LocalDateTime start = LocalDateTime.parse(startDate + "T00:00:00");
+            LocalDateTime end = LocalDateTime.parse(endDate + "T23:59:59");
+            Pageable pageable = PageRequest.of(page, size);
+            Page<NotificationDto> notifications = notificationService.getNotificationsByDateRange(userId, start, end, pageable);
+            return ResponseEntity.ok(notifications);
+        } catch (Exception e) {
+            throw new IllegalArgumentException("Invalid date format. Use YYYY-MM-DD");
+        }
+    }
+
+    @GetMapping("/pending")
+    @Operation(summary = "Get pending notifications", description = "Retrieve all pending notifications")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<List<NotificationDto>> getPendingNotifications() {
+        List<NotificationDto> notifications = notificationService.getPendingNotifications();
+        return ResponseEntity.ok(notifications);
+    }
+
+    @GetMapping("/failed")
+    @Operation(summary = "Get failed notifications", description = "Retrieve all failed notifications")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Page<NotificationDto>> getFailedNotifications(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        Page<NotificationDto> notifications = notificationService.getFailedNotifications(pageable);
+        return ResponseEntity.ok(notifications);
+    }
+
+    @PutMapping("/{id}/retry")
+    @Operation(summary = "Retry failed notification", description = "Retry a specific failed notification")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<NotificationDto> retryFailedNotification(@PathVariable Long id) {
+        NotificationDto notification = notificationService.retryFailedNotification(id);
+        return ResponseEntity.ok(notification);
+    }
+
+    @GetMapping("/user/{userId}/count-by-status")
+    @Operation(summary = "Get notification count by status", description = "Get count of notifications for a user by status")
+    @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
+    public ResponseEntity<Long> getNotificationCountByUserIdAndStatus(
+            @PathVariable Long userId,
+            @RequestParam String status) {
+        try {
+            NotificationStatus notificationStatus = NotificationStatus.valueOf(status.toUpperCase());
+            Long count = notificationService.getNotificationCountByUserIdAndStatus(userId, notificationStatus);
+            return ResponseEntity.ok(count);
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException("Invalid status: " + status);
+        }
+    }
+
+    @DeleteMapping("/{id}")
+    @Operation(summary = "Delete notification", description = "Delete a notification by ID")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Void> deleteNotification(@PathVariable Long id) {
+        notificationService.deleteNotification(id);
+        return ResponseEntity.noContent().build();
     }
 
     // Helper class for notification counts response

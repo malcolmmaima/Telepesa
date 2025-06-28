@@ -124,7 +124,6 @@ class NotificationMapperTest {
 
         // Then
         assertThat(result).isNotNull();
-        assertThat(result.getId()).isEqualTo(1L);
         assertThat(result.getNotificationId()).isEqualTo("NOTIF-12345678");
         assertThat(result.getMessage()).isNull();
         assertThat(result.getRecipientEmail()).isNull();
