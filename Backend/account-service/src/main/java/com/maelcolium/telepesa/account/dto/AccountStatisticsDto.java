@@ -47,6 +47,12 @@ public class AccountStatisticsDto {
     private Long frozenAccounts;
 
     /**
+     * Number of pending accounts
+     */
+    @Schema(description = "Number of pending accounts", example = "50")
+    private Long pendingAccounts;
+
+    /**
      * Number of closed accounts
      */
     @Schema(description = "Number of closed accounts", example = "25")

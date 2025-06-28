@@ -18,7 +18,7 @@ import java.time.LocalDateTime;
  * @version 1.0.0
  */
 @Data
-@Builder
+@Builder(toBuilder = true)
 @NoArgsConstructor
 @AllArgsConstructor
 @Schema(description = "Account information response object")
