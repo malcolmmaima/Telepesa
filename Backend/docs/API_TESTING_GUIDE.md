@@ -16,9 +16,9 @@ This guide covers comprehensive API testing for the Telepesa Banking Platform us
 For rapid API validation, use our provided test script:
 
 ```bash
-cd Backend
-chmod +x quick-api-test.sh
-./quick-api-test.sh
+# Make the script executable and run it
+chmod +x scripts/quick-api-test.sh
+./scripts/quick-api-test.sh
 ```
 
 This script tests:

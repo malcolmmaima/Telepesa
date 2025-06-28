@@ -55,7 +55,7 @@ The Telepesa backend is built with Spring Boot microservices architecture, provi
    
    # Run comprehensive tests
    cd ..
-   ./quick-api-test.sh
+   ./scripts/quick-api-test.sh
    ```
 
 ## 🏗️ Services Overview
@@ -87,7 +87,7 @@ The Telepesa backend is built with Spring Boot microservices architecture, provi
 cd user-service && mvn test
 
 # Quick API validation (no Postman needed)
-cd .. && ./quick-api-test.sh
+cd .. && ./scripts/quick-api-test.sh
 
 # Comprehensive API testing with Postman
 # Import: Telepesa_API_Collection.postman_collection.json
@@ -141,7 +141,7 @@ For faster OWASP dependency vulnerability scans, get your own NVD API key:
 ### Testing Resources
 - **Postman Collection**: `Telepesa_API_Collection.postman_collection.json`
 - **Test Environment**: `Telepesa_Development.postman_environment.json`
-- **Quick Test Script**: `quick-api-test.sh`
+- **Quick Test Script**: `scripts/quick-api-test.sh`
 
 ## 🛠️ Development
 
@@ -160,13 +160,19 @@ Backend/
 │   ├── API_TESTING_GUIDE.md      # Comprehensive testing guide
 │   ├── END_TO_END_TEST_REPORT.md # Test execution results
 │   └── SECURITY_*.md             # Security documentation
+├── scripts/                      # All backend scripts
+│   ├── quick-api-test.sh         # Quick validation script
+│   ├── end-to-end-test.sh        # E2E testing script
+│   ├── build-shared-libs.sh      # Build utilities
+│   ├── test-enhanced-security.sh # Security testing
+│   ├── setup-env.sh              # Environment setup
+│   └── test-all-services.sh      # Service testing
 ├── user-service/                # User management service
 ├── account-service/             # Account management (planned)
 ├── transaction-service/         # Transaction processing (scripts available)
 ├── shared-libraries/            # Common utilities
 ├── Telepesa_API_Collection.postman_collection.json
-├── Telepesa_Development.postman_environment.json
-└── quick-api-test.sh
+└── Telepesa_Development.postman_environment.json
 ```
 
 ### Adding New Services
@@ -233,7 +239,7 @@ cd user-service && mvn spring-boot:run
 ### Quick Help
 - **Setup Issues**: Check Prerequisites and Database connection
 - **Test Failures**: Run `mvn clean test` in service directory
-- **API Issues**: Use `./quick-api-test.sh` for diagnosis
+- **API Issues**: Use `./scripts/quick-api-test.sh` for diagnosis
 - **Documentation**: See `docs/` folder for detailed guides
 - **Security Scans**: Use provided NVD API key for faster execution
 
