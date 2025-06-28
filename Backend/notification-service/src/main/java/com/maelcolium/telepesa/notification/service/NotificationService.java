@@ -2,8 +2,8 @@ package com.maelcolium.telepesa.notification.service;
 
 import com.maelcolium.telepesa.notification.dto.CreateNotificationRequest;
 import com.maelcolium.telepesa.notification.dto.NotificationDto;
-import com.maelcolium.telepesa.notification.model.Notification.NotificationStatus;
-import com.maelcolium.telepesa.notification.model.Notification.NotificationType;
+import com.maelcolium.telepesa.notification.model.NotificationStatus;
+import com.maelcolium.telepesa.notification.model.NotificationType;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 

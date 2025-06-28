@@ -1,6 +1,6 @@
 package com.maelcolium.telepesa.notification.dto;
 
-import com.maelcolium.telepesa.notification.model.Notification.NotificationType;
+import com.maelcolium.telepesa.notification.model.NotificationType;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;

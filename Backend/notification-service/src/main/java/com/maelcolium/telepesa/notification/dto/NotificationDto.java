@@ -1,7 +1,7 @@
 package com.maelcolium.telepesa.notification.dto;
 
-import com.maelcolium.telepesa.notification.model.Notification.NotificationStatus;
-import com.maelcolium.telepesa.notification.model.Notification.NotificationType;
+import com.maelcolium.telepesa.notification.model.NotificationStatus;
+import com.maelcolium.telepesa.notification.model.NotificationType;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
