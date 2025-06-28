@@ -74,7 +74,7 @@ class NotificationControllerTest {
                 .userId(10L)
                 .title("Test Notification")
                 .message("This is a test notification")
-                .type(NotificationType.ACCOUNT_UPDATE)
+                .type(NotificationType.ACCOUNT_UPDATED)
                 .status(NotificationStatus.PENDING)
                 .deliveryMethod(DeliveryMethod.EMAIL)
                 .metadata(metadata)
@@ -85,7 +85,7 @@ class NotificationControllerTest {
                 .userId(10L)
                 .title("Test Notification")
                 .message("This is a test notification")
-                .type(NotificationType.ACCOUNT_UPDATE)
+                .type(NotificationType.ACCOUNT_UPDATED)
                 .deliveryMethod(DeliveryMethod.EMAIL)
                 .metadata(metadata)
                 .build();
@@ -220,16 +220,16 @@ class NotificationControllerTest {
         // Given
         PageRequest pageRequest = PageRequest.of(0, 10);
         Page<NotificationDto> page = new PageImpl<>(List.of(notificationDto), pageRequest, 1);
-        when(notificationService.getNotificationsByType(NotificationType.ACCOUNT_UPDATE, pageRequest)).thenReturn(page);
+        when(notificationService.getNotificationsByType(NotificationType.ACCOUNT_UPDATED, pageRequest)).thenReturn(page);
 
         // When & Then
-        mockMvc.perform(get("/api/v1/notifications/type/ACCOUNT_UPDATE")
+        mockMvc.perform(get("/api/v1/notifications/type/ACCOUNT_UPDATED")
                         .param("page", "0")
                         .param("size", "10"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content").isArray());
 
-        verify(notificationService).getNotificationsByType(NotificationType.ACCOUNT_UPDATE, pageRequest);
+        verify(notificationService).getNotificationsByType(NotificationType.ACCOUNT_UPDATED, pageRequest);
     }
 
     @Test
