@@ -58,16 +58,20 @@
         </dependency>
 
         <!-- Spring Cloud OpenFeign for inter-service communication -->
+        <!--
         <dependency>
             <groupId>org.springframework.cloud</groupId>
             <artifactId>spring-cloud-starter-openfeign</artifactId>
         </dependency>
+        -->
 
         <!-- Circuit Breaker -->
+        <!--
         <dependency>
             <groupId>org.springframework.cloud</groupId>
             <artifactId>spring-cloud-starter-circuitbreaker-resilience4j</artifactId>
         </dependency>
+        -->
 
         <!-- Database Dependencies -->
         <dependency>
@@ -105,23 +109,29 @@
 
         <!-- Shared Libraries - Temporarily commented out for CI/CD fix -->
     
+        <!--
         <dependency>
             <groupId>com.maelcolium.telepesa</groupId>
             <artifactId>common-models</artifactId>
             <version>1.0.0</version>
         </dependency>
+        -->
         
+        <!--
         <dependency>
             <groupId>com.maelcolium.telepesa</groupId>
             <artifactId>security-utils</artifactId>
             <version>1.0.0</version>
         </dependency>
+        -->
         
+        <!--
         <dependency>
             <groupId>com.maelcolium.telepesa</groupId>
             <artifactId>common-exceptions</artifactId>
             <version>1.0.0</version>
         </dependency>
+        -->
     
 
         <!-- Lombok -->
@@ -165,6 +175,7 @@
         </dependency>
     </dependencies>
 
+    <!--
     <dependencyManagement>
         <dependencies>
             <dependency>
@@ -176,6 +187,7 @@
             </dependency>
         </dependencies>
     </dependencyManagement>
+    -->
 
     <build>
         <plugins>
