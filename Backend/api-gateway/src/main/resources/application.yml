@@ -1,0 +1,383 @@
+spring:
+  application:
+    name: api-gateway
+  profiles:
+    active: dev
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+    fetch-registry: true
+    register-with-eureka: true
+  instance:
+    prefer-ip-address: true
+    instance-id: ${spring.application.name}:${server.port}
+    health-check-url-path: /actuator/health
+    status-page-url-path: /actuator/info
+
+server:
+  port: 8080
+  servlet:
+    context-path: /
+  compression:
+    enabled: true
+  http2:
+    enabled: true
+
+cloud:
+  gateway:
+    discovery:
+      locator:
+        enabled: true
+        lower-case-service-id: true
+    routes:
+      # User Service Routes with Rate Limiting
+      - id: user-service-registration
+        uri: lb://user-service
+        predicates:
+          - Path=/api/v1/users/register
+          - Method=POST
+        filters:
+          - name: RequestRateLimiter
+            args:
+              redis-rate-limiter.replenishRate: 10
+              redis-rate-limiter.burstCapacity: 20
+          - name: Retry
+            args:
+              retries: 3
+              statuses: BAD_GATEWAY,SERVICE_UNAVAILABLE
+              methods: POST
+      
+      - id: user-service-login
+        uri: lb://user-service
+        predicates:
+          - Path=/api/v1/users/login
+          - Method=POST
+        filters:
+          - name: RequestRateLimiter
+            args:
+              redis-rate-limiter.replenishRate: 5
+              redis-rate-limiter.burstCapacity: 10
+          - name: Retry
+            args:
+              retries: 2
+              statuses: BAD_GATEWAY,SERVICE_UNAVAILABLE
+              methods: POST
+      
+      - id: user-service-general
+        uri: lb://user-service
+        predicates:
+          - Path=/api/v1/users/**
+        filters:
+          - name: JwtAuthenticationFilter
+          - name: Retry
+            args:
+              retries: 2
+              statuses: BAD_GATEWAY,SERVICE_UNAVAILABLE
+              methods: GET,POST,PUT,DELETE
+      
+      # Account Service Routes
+      - id: account-service
+        uri: lb://account-service
+        predicates:
+          - Path=/api/v1/accounts/**
+        filters:
+          - name: JwtAuthenticationFilter
+          - name: Retry
+            args:
+              retries: 2
+              statuses: BAD_GATEWAY,SERVICE_UNAVAILABLE
+              methods: GET,POST,PUT,DELETE
+      
+      # Transaction Service Routes
+      - id: transaction-service
+        uri: lb://transaction-service
+        predicates:
+          - Path=/api/v1/transactions/**
+        filters:
+          - name: JwtAuthenticationFilter
+          - name: Retry
+            args:
+              retries: 2
+              statuses: BAD_GATEWAY,SERVICE_UNAVAILABLE
+              methods: GET,POST,PUT,DELETE
+      
+      # Loan Service Routes
+      - id: loan-service
+        uri: lb://loan-service
+        predicates:
+          - Path=/api/v1/loans/**
+        filters:
+          - name: JwtAuthenticationFilter
+          - name: Retry
+            args:
+              retries: 2
+              statuses: BAD_GATEWAY,SERVICE_UNAVAILABLE
+              methods: GET,POST,PUT,DELETE
+      
+      # Notification Service Routes
+      - id: notification-service
+        uri: lb://notification-service
+        predicates:
+          - Path=/api/v1/notifications/**
+        filters:
+          - name: JwtAuthenticationFilter
+          - name: Retry
+            args:
+              retries: 2
+              statuses: BAD_GATEWAY,SERVICE_UNAVAILABLE
+              methods: GET,POST,PUT,DELETE
+      
+      # Health Check Routes (Public)
+      - id: health-checks
+        uri: lb://user-service
+        predicates:
+          - Path=/api/v1/health/**
+        filters:
+          - name: Retry
+            args:
+              retries: 1
+              statuses: BAD_GATEWAY,SERVICE_UNAVAILABLE
+              methods: GET
+      
+      # API Documentation Routes
+      - id: api-docs
+        uri: lb://user-service
+        predicates:
+          - Path=/api/v1/docs/**
+        filters:
+          - name: Retry
+            args:
+              retries: 1
+              statuses: BAD_GATEWAY,SERVICE_UNAVAILABLE
+              methods: GET
+      
+      # Swagger UI Routes for each service
+      - id: user-service-swagger-ui
+        uri: lb://user-service
+        predicates:
+          - Path=/api/v1/docs/user-service/**
+        filters:
+          - name: RewritePath
+            args:
+              regexp: "/api/v1/docs/user-service/(?<remaining>.*)"
+              replacement: "/${remaining}"
+          - name: Retry
+            args:
+              retries: 1
+              statuses: BAD_GATEWAY,SERVICE_UNAVAILABLE
+              methods: GET
+      
+      - id: account-service-swagger-ui
+        uri: lb://account-service
+        predicates:
+          - Path=/api/v1/docs/account-service/**
+        filters:
+          - name: RewritePath
+            args:
+              regexp: "/api/v1/docs/account-service/(?<remaining>.*)"
+              replacement: "/${remaining}"
+          - name: Retry
+            args:
+              retries: 1
+              statuses: BAD_GATEWAY,SERVICE_UNAVAILABLE
+              methods: GET
+      
+      - id: transaction-service-swagger-ui
+        uri: lb://transaction-service
+        predicates:
+          - Path=/api/v1/docs/transaction-service/**
+        filters:
+          - name: RewritePath
+            args:
+              regexp: "/api/v1/docs/transaction-service/(?<remaining>.*)"
+              replacement: "/${remaining}"
+          - name: Retry
+            args:
+              retries: 1
+              statuses: BAD_GATEWAY,SERVICE_UNAVAILABLE
+              methods: GET
+      
+      - id: loan-service-swagger-ui
+        uri: lb://loan-service
+        predicates:
+          - Path=/api/v1/docs/loan-service/**
+        filters:
+          - name: RewritePath
+            args:
+              regexp: "/api/v1/docs/loan-service/(?<remaining>.*)"
+              replacement: "/${remaining}"
+          - name: Retry
+            args:
+              retries: 1
+              statuses: BAD_GATEWAY,SERVICE_UNAVAILABLE
+              methods: GET
+      
+      - id: notification-service-swagger-ui
+        uri: lb://notification-service
+        predicates:
+          - Path=/api/v1/docs/notification-service/**
+        filters:
+          - name: RewritePath
+            args:
+              regexp: "/api/v1/docs/notification-service/(?<remaining>.*)"
+              replacement: "/${remaining}"
+          - name: Retry
+            args:
+              retries: 1
+              statuses: BAD_GATEWAY,SERVICE_UNAVAILABLE
+              methods: GET
+      
+      # OpenAPI Spec Routes for each service
+      - id: user-service-openapi
+        uri: lb://user-service
+        predicates:
+          - Path=/api/v1/openapi/user-service/**
+        filters:
+          - name: RewritePath
+            args:
+              regexp: "/api/v1/openapi/user-service/(?<remaining>.*)"
+              replacement: "/${remaining}"
+          - name: Retry
+            args:
+              retries: 1
+              statuses: BAD_GATEWAY,SERVICE_UNAVAILABLE
+              methods: GET
+      
+      - id: account-service-openapi
+        uri: lb://account-service
+        predicates:
+          - Path=/api/v1/openapi/account-service/**
+        filters:
+          - name: RewritePath
+            args:
+              regexp: "/api/v1/openapi/account-service/(?<remaining>.*)"
+              replacement: "/${remaining}"
+          - name: Retry
+            args:
+              retries: 1
+              statuses: BAD_GATEWAY,SERVICE_UNAVAILABLE
+              methods: GET
+      
+      - id: transaction-service-openapi
+        uri: lb://transaction-service
+        predicates:
+          - Path=/api/v1/openapi/transaction-service/**
+        filters:
+          - name: RewritePath
+            args:
+              regexp: "/api/v1/openapi/transaction-service/(?<remaining>.*)"
+              replacement: "/${remaining}"
+          - name: Retry
+            args:
+              retries: 1
+              statuses: BAD_GATEWAY,SERVICE_UNAVAILABLE
+              methods: GET
+      
+      - id: loan-service-openapi
+        uri: lb://loan-service
+        predicates:
+          - Path=/api/v1/openapi/loan-service/**
+        filters:
+          - name: RewritePath
+            args:
+              regexp: "/api/v1/openapi/loan-service/(?<remaining>.*)"
+              replacement: "/${remaining}"
+          - name: Retry
+            args:
+              retries: 1
+              statuses: BAD_GATEWAY,SERVICE_UNAVAILABLE
+              methods: GET
+      
+      - id: notification-service-openapi
+        uri: lb://notification-service
+        predicates:
+          - Path=/api/v1/openapi/notification-service/**
+        filters:
+          - name: RewritePath
+            args:
+              regexp: "/api/v1/openapi/notification-service/(?<remaining>.*)"
+              replacement: "/${remaining}"
+          - name: Retry
+            args:
+              retries: 1
+              statuses: BAD_GATEWAY,SERVICE_UNAVAILABLE
+              methods: GET
+    
+    globalcors:
+      corsConfigurations:
+        '[/**]':
+          allowedOrigins: 
+            - "http://localhost:3000"
+            - "http://localhost:8080"
+            - "https://telepesa.com"
+            - "https://dashboard.telepesa.com"
+          allowedMethods:
+            - GET
+            - POST
+            - PUT
+            - DELETE
+            - OPTIONS
+            - PATCH
+          allowedHeaders: 
+            - "Authorization"
+            - "Content-Type"
+            - "X-Requested-With"
+            - "Accept"
+            - "Origin"
+            - "Access-Control-Request-Method"
+            - "Access-Control-Request-Headers"
+          exposedHeaders:
+            - "Access-Control-Allow-Origin"
+            - "Access-Control-Allow-Credentials"
+          allowCredentials: true
+          maxAge: 3600
+
+# Redis Configuration for Rate Limiting
+spring:
+  redis:
+    host: ${REDIS_HOST:localhost}
+    port: ${REDIS_PORT:6379}
+    password: ${REDIS_PASSWORD:}
+    timeout: 2000ms
+    lettuce:
+      pool:
+        max-active: 8
+        max-idle: 8
+        min-idle: 0
+
+# JWT Configuration
+app:
+  jwt:
+    secret: ${JWT_SECRET:myVerySecretJWTKeyForTelepesaUserService123!@#}
+    expiration: ${JWT_EXPIRATION:86400}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus,gateway
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: always
+    gateway:
+      enabled: true
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+    tags:
+      application: ${spring.application.name}
+
+logging:
+  level:
+    org.springframework.cloud.gateway: DEBUG
+    org.springframework.web: INFO
+    com.maelcolium.telepesa: DEBUG
+    com.netflix.discovery: INFO
+    com.netflix.eureka: INFO
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n" 

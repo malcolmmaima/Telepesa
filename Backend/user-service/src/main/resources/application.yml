@@ -57,6 +57,19 @@ spring:
       properties:
         spring.json.trusted.packages: com.maelcolium.telepesa
 
+# Eureka Service Discovery Configuration
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+    fetch-registry: true
+    register-with-eureka: true
+  instance:
+    prefer-ip-address: true
+    instance-id: ${spring.application.name}:${server.port}
+    health-check-url-path: /actuator/health
+    status-page-url-path: /actuator/info
+
 # Application-specific configuration
 app:
   jwt:

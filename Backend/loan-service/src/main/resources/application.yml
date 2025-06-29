@@ -130,3 +130,16 @@ logging:
   level:
     com.maelcolium.telepesa.loan: WARN
     org.hibernate.SQL: WARN
+
+# Eureka Service Discovery Configuration
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+    fetch-registry: true
+    register-with-eureka: true
+  instance:
+    prefer-ip-address: true
+    instance-id: ${spring.application.name}:${server.port}
+    health-check-url-path: /actuator/health
+    status-page-url-path: /actuator/info
