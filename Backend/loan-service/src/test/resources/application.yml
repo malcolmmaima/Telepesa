@@ -1,0 +1,25 @@
+spring:
+  profiles:
+    active: test
+  
+  datasource:
+    url: jdbc:h2:mem:testdb
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: password
+  
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    database-platform: org.hibernate.dialect.H2Dialect
+    show-sql: false
+  
+  h2:
+    console:
+      enabled: true
+
+logging:
+  level:
+    com.maelcolium.telepesa.loan: DEBUG
+    org.springframework.test: WARN
+    org.hibernate: WARN
