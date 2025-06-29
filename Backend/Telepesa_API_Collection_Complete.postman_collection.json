@@ -1,0 +1,1157 @@
+{
+	"info": {
+		"_postman_id": "12345678-1234-1234-1234-123456789abc",
+		"name": "Telepesa Complete Banking Platform API",
+		"description": "Comprehensive API collection for Telepesa Banking Platform with complete workflows from signup to banking operations",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "12345678"
+	},
+	"item": [
+		{
+			"name": "1. System Health & Infrastructure",
+			"item": [
+				{
+					"name": "Health Check - User Service",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response time is less than 1000ms\", function () {",
+									"    pm.expect(pm.response.responseTime).to.be.below(1000);",
+									"});",
+									"",
+									"pm.test(\"Service status is UP\", function () {",
+									"    const jsonData = pm.response.json();",
+									"    pm.expect(jsonData.status).to.eql(\"UP\");",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{user_service_url}}/actuator/health",
+							"host": [
+								"{{user_service_url}}"
+							],
+							"path": [
+								"actuator",
+								"health"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Health Check - Account Service",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Service status is UP\", function () {",
+									"    const jsonData = pm.response.json();",
+									"    pm.expect(jsonData.status).to.eql(\"UP\");",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{account_service_url}}/actuator/health",
+							"host": [
+								"{{account_service_url}}"
+							],
+							"path": [
+								"actuator",
+								"health"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Health Check - Transaction Service",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Service status is UP\", function () {",
+									"    const jsonData = pm.response.json();",
+									"    pm.expect(jsonData.status).to.eql(\"UP\");",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{transaction_service_url}}/actuator/health",
+							"host": [
+								"{{transaction_service_url}}"
+							],
+							"path": [
+								"actuator",
+								"health"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Health Check - Loan Service",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Service status is UP\", function () {",
+									"    const jsonData = pm.response.json();",
+									"    pm.expect(jsonData.status).to.eql(\"UP\");",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{loan_service_url}}/actuator/health",
+							"host": [
+								"{{loan_service_url}}"
+							],
+							"path": [
+								"actuator",
+								"health"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Health Check - Notification Service",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Service status is UP\", function () {",
+									"    const jsonData = pm.response.json();",
+									"    pm.expect(jsonData.status).to.eql(\"UP\");",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{notification_service_url}}/actuator/health",
+							"host": [
+								"{{notification_service_url}}"
+							],
+							"path": [
+								"actuator",
+								"health"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "2. User Registration & Authentication",
+			"item": [
+				{
+					"name": "Register New User",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"// Generate unique user data",
+									"const timestamp = Date.now();",
+									"pm.globals.set(\"test_username\", \"testuser\" + timestamp);",
+									"pm.globals.set(\"test_email\", \"testuser\" + timestamp + \"@telepesa.com\");",
+									"pm.globals.set(\"test_phone\", \"+254700\" + timestamp.toString().slice(-6));"
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 201\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"",
+									"pm.test(\"User created successfully\", function () {",
+									"    const jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property(\"id\");",
+									"    pm.expect(jsonData).to.have.property(\"username\");",
+									"    pm.expect(jsonData).to.have.property(\"email\");",
+									"    pm.expect(jsonData.username).to.eql(pm.globals.get(\"test_username\"));",
+									"    pm.expect(jsonData.email).to.eql(pm.globals.get(\"test_email\"));",
+									"});",
+									"",
+									"pm.test(\"User status is PENDING_VERIFICATION\", function () {",
+									"    const jsonData = pm.response.json();",
+									"    pm.expect(jsonData.status).to.eql(\"PENDING_VERIFICATION\");",
+									"});",
+									"",
+									"// Store user ID for later tests",
+									"if (pm.response.code === 201) {",
+									"    const jsonData = pm.response.json();",
+									"    pm.globals.set(\"test_user_id\", jsonData.id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"username\": \"{{test_username}}\",\n    \"email\": \"{{test_email}}\",\n    \"password\": \"SecureP@ssw0rd123!\",\n    \"firstName\": \"Test\",\n    \"lastName\": \"User\",\n    \"phoneNumber\": \"{{test_phone}}\"\n}"
+						},
+						"url": {
+							"raw": "{{user_service_url}}/api/users/register",
+							"host": [
+								"{{user_service_url}}"
+							],
+							"path": [
+								"api",
+								"users",
+								"register"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Login with Pending Verification (Should Fail)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 401 or 400\", function () {",
+									"    pm.expect(pm.response.code).to.be.oneOf([401, 400]);",
+									"});",
+									"",
+									"pm.test(\"Login blocked due to pending verification\", function () {",
+									"    const jsonData = pm.response.json();",
+									"    pm.expect(jsonData.message).to.include.oneOf([\"not active\", \"verification\", \"pending\"]);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"usernameOrEmail\": \"{{test_username}}\",\n    \"password\": \"SecureP@ssw0rd123!\"\n}"
+						},
+						"url": {
+							"raw": "{{user_service_url}}/api/users/login",
+							"host": [
+								"{{user_service_url}}"
+							],
+							"path": [
+								"api",
+								"users",
+								"login"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Activate User Account",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"User status updated to ACTIVE\", function () {",
+									"    const jsonData = pm.response.json();",
+									"    pm.expect(jsonData.status).to.eql(\"ACTIVE\");",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"userId\": {{test_user_id}},\n    \"status\": \"ACTIVE\"\n}"
+						},
+						"url": {
+							"raw": "{{user_service_url}}/api/users/{{test_user_id}}/status",
+							"host": [
+								"{{user_service_url}}"
+							],
+							"path": [
+								"api",
+								"users",
+								"{{test_user_id}}",
+								"status"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Login with Active Account",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Login successful with tokens\", function () {",
+									"    const jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property(\"token\");",
+									"    pm.expect(jsonData).to.have.property(\"refreshToken\");",
+									"    pm.expect(jsonData).to.have.property(\"user\");",
+									"});",
+									"",
+									"// Store tokens for later tests",
+									"if (pm.response.code === 200) {",
+									"    const jsonData = pm.response.json();",
+									"    pm.globals.set(\"jwt_token\", jsonData.token);",
+									"    pm.globals.set(\"refresh_token\", jsonData.refreshToken);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"usernameOrEmail\": \"{{test_username}}\",\n    \"password\": \"SecureP@ssw0rd123!\"\n}"
+						},
+						"url": {
+							"raw": "{{user_service_url}}/api/users/login",
+							"host": [
+								"{{user_service_url}}"
+							],
+							"path": [
+								"api",
+								"users",
+								"login"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "3. Account Management",
+			"item": [
+				{
+					"name": "Create Bank Account",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 201\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"",
+									"pm.test(\"Account created successfully\", function () {",
+									"    const jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property(\"id\");",
+									"    pm.expect(jsonData).to.have.property(\"accountNumber\");",
+									"    pm.expect(jsonData).to.have.property(\"balance\");",
+									"    pm.expect(jsonData.userId).to.eql(parseInt(pm.globals.get(\"test_user_id\")));",
+									"});",
+									"",
+									"// Store account ID for later tests",
+									"if (pm.response.code === 201) {",
+									"    const jsonData = pm.response.json();",
+									"    pm.globals.set(\"test_account_id\", jsonData.id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"userId\": {{test_user_id}},\n    \"accountType\": \"SAVINGS\",\n    \"currency\": \"KES\",\n    \"initialBalance\": 10000.00\n}"
+						},
+						"url": {
+							"raw": "{{account_service_url}}/api/accounts",
+							"host": [
+								"{{account_service_url}}"
+							],
+							"path": [
+								"api",
+								"accounts"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Account Details",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Account details retrieved\", function () {",
+									"    const jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property(\"id\");",
+									"    pm.expect(jsonData).to.have.property(\"balance\");",
+									"    pm.expect(jsonData).to.have.property(\"accountNumber\");",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{account_service_url}}/api/accounts/{{test_account_id}}",
+							"host": [
+								"{{account_service_url}}"
+							],
+							"path": [
+								"api",
+								"accounts",
+								"{{test_account_id}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get User Accounts",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"User accounts retrieved\", function () {",
+									"    const jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property(\"content\");",
+									"    pm.expect(jsonData.content).to.be.an('array');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{account_service_url}}/api/accounts/user/{{test_user_id}}",
+							"host": [
+								"{{account_service_url}}"
+							],
+							"path": [
+								"api",
+								"accounts",
+								"user",
+								"{{test_user_id}}"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "4. Transaction Processing",
+			"item": [
+				{
+					"name": "Create Transaction",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 201\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"",
+									"pm.test(\"Transaction created successfully\", function () {",
+									"    const jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property(\"id\");",
+									"    pm.expect(jsonData).to.have.property(\"amount\");",
+									"    pm.expect(jsonData).to.have.property(\"status\");",
+									"});",
+									"",
+									"// Store transaction ID for later tests",
+									"if (pm.response.code === 201) {",
+									"    const jsonData = pm.response.json();",
+									"    pm.globals.set(\"test_transaction_id\", jsonData.id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"fromAccountId\": {{test_account_id}},\n    \"toAccountId\": {{test_account_id}},\n    \"amount\": 1000.00,\n    \"currency\": \"KES\",\n    \"transactionType\": \"TRANSFER\",\n    \"description\": \"Test transaction\"\n}"
+						},
+						"url": {
+							"raw": "{{transaction_service_url}}/api/transactions",
+							"host": [
+								"{{transaction_service_url}}"
+							],
+							"path": [
+								"api",
+								"transactions"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Transaction Details",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Transaction details retrieved\", function () {",
+									"    const jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property(\"id\");",
+									"    pm.expect(jsonData).to.have.property(\"amount\");",
+									"    pm.expect(jsonData).to.have.property(\"status\");",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{transaction_service_url}}/api/transactions/{{test_transaction_id}}",
+							"host": [
+								"{{transaction_service_url}}"
+							],
+							"path": [
+								"api",
+								"transactions",
+								"{{test_transaction_id}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Account Transaction History",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Transaction history retrieved\", function () {",
+									"    const jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property(\"content\");",
+									"    pm.expect(jsonData).to.have.property(\"totalElements\");",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{transaction_service_url}}/api/transactions/account/{{test_account_id}}",
+							"host": [
+								"{{transaction_service_url}}"
+							],
+							"path": [
+								"api",
+								"transactions",
+								"account",
+								"{{test_account_id}}"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "5. Loan Management",
+			"item": [
+				{
+					"name": "Create Loan Application",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 201\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"",
+									"pm.test(\"Loan application created successfully\", function () {",
+									"    const jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property(\"id\");",
+									"    pm.expect(jsonData).to.have.property(\"amount\");",
+									"    pm.expect(jsonData).to.have.property(\"status\");",
+									"    pm.expect(jsonData.userId).to.eql(parseInt(pm.globals.get(\"test_user_id\")));",
+									"});",
+									"",
+									"// Store loan ID for later tests",
+									"if (pm.response.code === 201) {",
+									"    const jsonData = pm.response.json();",
+									"    pm.globals.set(\"test_loan_id\", jsonData.id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"userId\": {{test_user_id}},\n    \"amount\": 50000.00,\n    \"currency\": \"KES\",\n    \"term\": 12,\n    \"purpose\": \"Business expansion\",\n    \"interestRate\": 15.5\n}"
+						},
+						"url": {
+							"raw": "{{loan_service_url}}/api/loans",
+							"host": [
+								"{{loan_service_url}}"
+							],
+							"path": [
+								"api",
+								"loans"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Loan Details",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Loan details retrieved\", function () {",
+									"    const jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property(\"id\");",
+									"    pm.expect(jsonData).to.have.property(\"amount\");",
+									"    pm.expect(jsonData).to.have.property(\"status\");",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{loan_service_url}}/api/loans/{{test_loan_id}}",
+							"host": [
+								"{{loan_service_url}}"
+							],
+							"path": [
+								"api",
+								"loans",
+								"{{test_loan_id}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create Collateral",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 201\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"",
+									"pm.test(\"Collateral created successfully\", function () {",
+									"    const jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property(\"id\");",
+									"    pm.expect(jsonData).to.have.property(\"type\");",
+									"    pm.expect(jsonData).to.have.property(\"value\");",
+									"    pm.expect(jsonData.loanId).to.eql(parseInt(pm.globals.get(\"test_loan_id\")));",
+									"});",
+									"",
+									"// Store collateral ID for later tests",
+									"if (pm.response.code === 201) {",
+									"    const jsonData = pm.response.json();",
+									"    pm.globals.set(\"test_collateral_id\", jsonData.id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"loanId\": {{test_loan_id}},\n    \"ownerId\": {{test_user_id}},\n    \"type\": \"VEHICLE\",\n    \"description\": \"Toyota Hilux 2020\",\n    \"value\": 800000.00,\n    \"currency\": \"KES\"\n}"
+						},
+						"url": {
+							"raw": "{{loan_service_url}}/api/collaterals",
+							"host": [
+								"{{loan_service_url}}"
+							],
+							"path": [
+								"api",
+								"collaterals"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Loan Collaterals",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Loan collaterals retrieved\", function () {",
+									"    const jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property(\"content\");",
+									"    pm.expect(jsonData.content).to.be.an('array');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{loan_service_url}}/api/collaterals/loan/{{test_loan_id}}",
+							"host": [
+								"{{loan_service_url}}"
+							],
+							"path": [
+								"api",
+								"collaterals",
+								"loan",
+								"{{test_loan_id}}"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "6. Notification System",
+			"item": [
+				{
+					"name": "Create Notification",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 201\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"",
+									"pm.test(\"Notification created successfully\", function () {",
+									"    const jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property(\"id\");",
+									"    pm.expect(jsonData).to.have.property(\"title\");",
+									"    pm.expect(jsonData).to.have.property(\"message\");",
+									"    pm.expect(jsonData.userId).to.eql(parseInt(pm.globals.get(\"test_user_id\")));",
+									"});",
+									"",
+									"// Store notification ID for later tests",
+									"if (pm.response.code === 201) {",
+									"    const jsonData = pm.response.json();",
+									"    pm.globals.set(\"test_notification_id\", jsonData.id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"userId\": {{test_user_id}},\n    \"type\": \"TRANSACTION\",\n    \"title\": \"Transaction Successful\",\n    \"message\": \"Your transaction of KES 1,000 has been processed successfully.\",\n    \"priority\": \"HIGH\"\n}"
+						},
+						"url": {
+							"raw": "{{notification_service_url}}/api/notifications",
+							"host": [
+								"{{notification_service_url}}"
+							],
+							"path": [
+								"api",
+								"notifications"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get User Notifications",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"User notifications retrieved\", function () {",
+									"    const jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property(\"content\");",
+									"    pm.expect(jsonData).to.have.property(\"totalElements\");",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{notification_service_url}}/api/notifications/user/{{test_user_id}}",
+							"host": [
+								"{{notification_service_url}}"
+							],
+							"path": [
+								"api",
+								"notifications",
+								"user",
+								"{{test_user_id}}"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "7. Security Testing",
+			"item": [
+				{
+					"name": "Unauthorized Access Test",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 401\", function () {",
+									"    pm.response.to.have.status(401);",
+									"});",
+									"",
+									"pm.test(\"Unauthorized access blocked\", function () {",
+									"    const jsonData = pm.response.json();",
+									"    pm.expect(jsonData.message).to.include.oneOf([\"Unauthorized\", \"Access denied\"]);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{account_service_url}}/api/accounts",
+							"host": [
+								"{{account_service_url}}"
+							],
+							"path": [
+								"api",
+								"accounts"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Invalid Token Test",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 401\", function () {",
+									"    pm.response.to.have.status(401);",
+									"});",
+									"",
+									"pm.test(\"Invalid token rejected\", function () {",
+									"    const jsonData = pm.response.json();",
+									"    pm.expect(jsonData.message).to.include.oneOf([\"Invalid token\", \"Unauthorized\"]);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer invalid_token_here"
+							}
+						],
+						"url": {
+							"raw": "{{account_service_url}}/api/accounts",
+							"host": [
+								"{{account_service_url}}"
+							],
+							"path": [
+								"api",
+								"accounts"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"// Global pre-request script",
+					"console.log('Starting API test for:', pm.request.url);"
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"// Global test script",
+					"pm.test(\"Response time is reasonable\", function () {",
+					"    pm.expect(pm.response.responseTime).to.be.below(5000);",
+					"});"
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:8081",
+			"type": "string"
+		}
+	]
+} 

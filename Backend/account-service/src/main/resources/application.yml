@@ -18,18 +18,23 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: validate
+      ddl-auto: create-drop
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
         format_sql: true
-        show_sql: false
+        show_sql: true
         jdbc:
           batch_size: 20
         order_inserts: true
         order_updates: true
         batch_versioned_data: true
-    show-sql: false
+    show-sql: true
+
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
 
   flyway:
     locations: classpath:db/migration
@@ -115,14 +120,19 @@ spring:
   
   datasource:
     url: jdbc:postgresql://localhost:5432/telepesa_accounts_dev
+    username: ${DB_USERNAME:telepesa}
+    password: ${DB_PASSWORD:password}
+    driver-class-name: org.postgresql.Driver
     
   jpa:
     hibernate:
       ddl-auto: create-drop
     properties:
       hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
         show_sql: true
         format_sql: true
+    show-sql: true
 
 logging:
   level:
@@ -155,6 +165,7 @@ spring:
   h2:
     console:
       enabled: true
+      path: /h2-console
 
 logging:
   level:
@@ -172,6 +183,7 @@ spring:
     url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/telepesa_accounts_prod}
     username: ${DB_USERNAME}
     password: ${DB_PASSWORD}
+    driver-class-name: org.postgresql.Driver
     hikari:
       maximum-pool-size: 30
       minimum-idle: 10
@@ -181,6 +193,7 @@ spring:
       ddl-auto: validate
     properties:
       hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
         show_sql: false
         format_sql: false
     show-sql: false
@@ -197,11 +210,4 @@ management:
     web:
       exposure:
         include: health,info,metrics
-
-logging:
-  level:
-    com.maelcolium.telepesa: INFO
-    org.springframework.security: WARN
-    org.hibernate.SQL: ERROR
-  file:
-    name: /var/log/telepesa/account-service.log 
+ 

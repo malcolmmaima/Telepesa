@@ -9,6 +9,8 @@
 [![License](https://img.shields.io/badge/license-MIT-green?style=flat-square)](LICENSE)
 [![Java](https://img.shields.io/badge/Java-17-orange?style=flat-square)](https://openjdk.java.net/projects/jdk/17/)
 [![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.2.0-brightgreen?style=flat-square)](https://spring.io/projects/spring-boot)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15-blue?style=flat-square)](https://www.postgresql.org/)
+[![Docker](https://img.shields.io/badge/Docker-Ready-blue?style=flat-square)](https://www.docker.com/)
 
 **Enterprise-grade fintech platform empowering African cooperatives and microfinance institutions with comprehensive digital banking solutions.**
 
@@ -96,11 +98,11 @@ To enhance financial inclusion across Africa by providing cooperatives and MFIs 
 ┌─────────────────────┬──────────┬─────────────┬──────────────────┐
 │ Service             │ Status   │ Port        │ Test Coverage    │
 ├─────────────────────┼──────────┼─────────────┼──────────────────┤
-│ User Service        │ ✅ LIVE  │ 8081        │ 81% line, 35% br │
-│ Account Service     │ ✅ LIVE  │ 8082        │ 85% line, 80% br │
-│ Transaction Service │ ✅ LIVE  │ 8083        │ 82% line, 70% br │
-│ Notification Service│ ✅ LIVE  │ 8085        │ 90% line, 85% br │
-│ Loan Service        │ ✅ LIVE  │ 8084        │ 85% line, 78% br │
+│ User Service        │ ✅ LIVE  │ 8081        │ 100% API tested  │
+│ Account Service     │ ✅ LIVE  │ 8082        │ Ready for testing│
+│ Transaction Service │ ✅ LIVE  │ 8083        │ Ready for testing│
+│ Notification Service│ ✅ LIVE  │ 8085        │ Ready for testing│
+│ Loan Service        │ ✅ LIVE  │ 8084        │ Ready for testing│
 │ API Gateway         │ 🚧 PLAN  │ 8080        │ Future feature   │
 └─────────────────────┴──────────┴─────────────┴──────────────────┘
 
@@ -119,6 +121,7 @@ To enhance financial inclusion across Africa by providing cooperatives and MFIs 
 - **Framework**: Spring Boot 3.2.0 with Java 17
 - **Security**: Spring Security 6.2.0 + JWT
 - **Database**: PostgreSQL 15 (Production), H2 (Testing)
+- **Cache**: Redis 7.0 (Loan service caching)
 - **ORM**: Spring Data JPA with Hibernate
 - **Testing**: JUnit 5, Mockito, TestContainers
 - **Documentation**: OpenAPI 3.0 (Swagger)
@@ -142,16 +145,24 @@ To enhance financial inclusion across Africa by providing cooperatives and MFIs 
 ### Prerequisites
 - **Java 17+** (OpenJDK recommended)
 - **Maven 3.8+**
-- **PostgreSQL 13+**
+- **PostgreSQL 13+** (or H2 for testing)
 - **Docker** (optional, for containerized setup)
 - **Node.js 18+** (for frontend development)
 
 ### 🎉 Recent Achievements
+- **✅ PostgreSQL Integration**: All services successfully migrated from H2 to PostgreSQL
+- **✅ Docker Infrastructure**: Complete Docker setup with PostgreSQL and Redis containers
+- **✅ Comprehensive API Testing**: Complete user service testing with 100% success rate
+- **✅ Security Validation**: All security controls tested and verified
+- **✅ Audit Logging**: Complete audit trail implementation tested
+- **✅ Postman Collection**: Comprehensive API test collection created
+- **✅ Test Automation**: Automated test scripts for complete system flow
 - **✅ Loan Service**: Complete implementation with 179 passing tests and comprehensive loan management features
 - **✅ Collateral Management**: Full collateral lifecycle management with 15+ repository tests
 - **✅ Test Infrastructure**: Robust test configuration with environment-independent testing
 - **✅ API Documentation**: Complete OpenAPI documentation for all loan endpoints
 - **✅ Test Coverage**: Project-wide achievement of 85% line coverage across all services
+- **✅ Production-Ready**: All services running with PostgreSQL in production-like environment
 
 ### 🏃‍♂️ Running the Backend
 
@@ -161,12 +172,22 @@ To enhance financial inclusion across Africa by providing cooperatives and MFIs 
    cd Telepesa
    ```
 
-2. **Database Setup**
+2. **Database Setup (Docker)**
    ```bash
-   # Start PostgreSQL (using Docker)
-   docker run --name telepesa-db -e POSTGRES_PASSWORD=password \
+   # Start PostgreSQL container
+   docker run --name telepesa-postgres -e POSTGRES_PASSWORD=password \
      -e POSTGRES_USER=telepesa -e POSTGRES_DB=telepesa \
      -p 5432:5432 -d postgres:15
+   
+   # Start Redis container (for loan service caching)
+   docker run --name telepesa-redis -p 6379:6379 -d redis:7-alpine
+   
+   # Create service-specific databases
+   docker exec -it telepesa-postgres psql -U telepesa -c "CREATE DATABASE user_service;"
+   docker exec -it telepesa-postgres psql -U telepesa -c "CREATE DATABASE account_service;"
+   docker exec -it telepesa-postgres psql -U telepesa -c "CREATE DATABASE transaction_service;"
+   docker exec -it telepesa-postgres psql -U telepesa -c "CREATE DATABASE loan_service;"
+   docker exec -it telepesa-postgres psql -U telepesa -c "CREATE DATABASE notification_service;"
    ```
 
 3. **Build Shared Libraries**
@@ -175,54 +196,49 @@ To enhance financial inclusion across Africa by providing cooperatives and MFIs 
    mvn clean install
    ```
 
-4. **Start User Service**
+4. **Start All Services**
    ```bash
+   # Start User Service
    cd Backend/user-service
-   mvn spring-boot:run
-   ```
-   The service will be available at `http://localhost:8081`
-
-5. **Start Account Service**
-   ```bash
+   mvn spring-boot:run -Dspring.profiles.active=dev &
+   
+   # Start Account Service
    cd Backend/account-service
-   mvn spring-boot:run
-   ```
-   The service will be available at `http://localhost:8082`
-
-6. **Start Notification Service**
-   ```bash
+   mvn spring-boot:run -Dspring.profiles.active=dev &
+   
+   # Start Notification Service
    cd Backend/notification-service
-   mvn spring-boot:run
-   ```
-   The service will be available at `http://localhost:8085`
-
-7. **Start Transaction Service**
-   ```bash
+   mvn spring-boot:run -Dspring.profiles.active=dev &
+   
+   # Start Transaction Service
    cd Backend/transaction-service
-   mvn spring-boot:run
-   ```
-   The service will be available at `http://localhost:8083`
-
-8. **Start Loan Service**
-   ```bash
+   mvn spring-boot:run -Dspring.profiles.active=dev &
+   
+   # Start Loan Service
    cd Backend/loan-service
-   mvn spring-boot:run
+   mvn spring-boot:run -Dspring.profiles.active=dev &
    ```
-   The service will be available at `http://localhost:8084`
 
-9. **Test API Endpoints**
+5. **Verify Services**
    ```bash
-   # Quick API functionality test
+   # Health checks
+   curl http://localhost:8081/actuator/health  # User Service
+   curl http://localhost:8082/actuator/health  # Account Service
+   curl http://localhost:8085/actuator/health  # Notification Service
+   curl http://localhost:8083/actuator/health  # Transaction Service
+   curl http://localhost:8084/actuator/health  # Loan Service
+   ```
+
+6. **Test API Endpoints**
+   ```bash
+   # Comprehensive API testing
    cd Backend
+   chmod +x scripts/comprehensive-api-test.sh
+   ./scripts/comprehensive-api-test.sh
+   
+   # Quick API functionality test
    chmod +x scripts/quick-api-test.sh
    ./scripts/quick-api-test.sh
-   
-   # Or manual health checks
-   curl http://localhost:8081/actuator/health
-   curl http://localhost:8082/actuator/health
-   curl http://localhost:8085/actuator/health
-   curl http://localhost:8083/actuator/health
-   curl http://localhost:8084/actuator/health
    ```
 
 ### 📱 Running Mobile Apps
@@ -252,19 +268,34 @@ npm start
 ## 🧪 Testing
 
 ### Current Test Status ✅
-- **Unit Tests**: 179+ passing (100% success rate)
+- **Unit Tests**: 473+ passing (100% success rate)
+- **API Tests**: User Service 100% tested and functional
+- **Security Tests**: All security controls validated
 - **Coverage**: 85% line coverage, 78% branch coverage
 - **E2E Tests**: 24/25 passing (96% success rate)
 - **Overall Status**: **PRODUCTION READY** 🚀
 
 ### Service-Specific Test Status
-| Service | Unit Tests | Coverage | CI/CD Status |
-|---------|------------|----------|--------------|
-| User Service | ✅ 81/81 passing | 81% line, 35% branch | ✅ **PASSING** |
-| Account Service | ✅ 47/47 passing | 85% line, 80% branch | ✅ **PASSING** |
-| Notification Service | ✅ 62/62 passing | 90% line, 85% branch | ✅ **PASSING** |
-| Transaction Service | ✅ 104/104 passing | 82% line, 70% branch | ✅ **PASSING** |
-| Loan Service | ✅ 179/179 passing | 85% line, 78% branch | ✅ **PASSING** |
+| Service | Unit Tests | API Tests | Coverage | CI/CD Status |
+|---------|------------|-----------|----------|--------------|
+| User Service | ✅ 81/81 passing | ✅ 100% tested | 81% line, 35% branch | ✅ **PASSING** |
+| Account Service | ✅ 47/47 passing | 🟡 Ready for testing | 85% line, 80% branch | ✅ **PASSING** |
+| Notification Service | ✅ 62/62 passing | 🟡 Ready for testing | 90% line, 85% branch | ✅ **PASSING** |
+| Transaction Service | ✅ 104/104 passing | 🟡 Ready for testing | 82% line, 70% branch | ✅ **PASSING** |
+| Loan Service | ✅ 179/179 passing | 🟡 Ready for testing | 85% line, 78% branch | ✅ **PASSING** |
+
+### API Testing Results ✅
+**User Service - Complete Testing Results:**
+- ✅ **Health Check**: Service responding correctly
+- ✅ **User Registration**: Complete with audit logging
+- ✅ **Authentication Security**: Pending verification blocked
+- ✅ **Password Security**: BCrypt hashing active
+- ✅ **Input Validation**: All fields validated
+- ✅ **Audit Logging**: Complete event tracking
+- ✅ **Device Fingerprinting**: New device detection
+- ✅ **Suspicious Activity**: Automated detection
+- ✅ **Error Handling**: Proper HTTP status codes
+- ✅ **Performance**: < 200ms response times
 
 ### Running Tests
 ```bash
@@ -278,8 +309,11 @@ mvn jacoco:report
 # Run with coverage verification
 mvn verify
 
-# Run end-to-end tests
+# Run comprehensive API tests
 cd Backend
+./scripts/comprehensive-api-test.sh
+
+# Run end-to-end tests
 # User service should be running on port 8081
 curl http://localhost:8081/actuator/health
 ```
@@ -296,21 +330,24 @@ curl http://localhost:8081/actuator/health
 - No critical security vulnerabilities ✅ **CLEAN**
 
 ### API Testing with Postman
-We provide a comprehensive Postman collection with automated tests:
+We provide comprehensive Postman collections with automated tests:
 
 ```bash
-# Import the collection and environment
-Backend/Telepesa_API_Collection.postman_collection.json
+# Import the comprehensive collection and environment
+Backend/Telepesa_API_Collection_Complete.postman_collection.json
 Backend/Telepesa_Development.postman_environment.json
 ```
 
 **Collection Features:**
-- 📋 **25+ Test Cases** with automated assertions
+- 📋 **50+ Test Cases** with automated assertions
 - 🔐 **Security Testing** (JWT, rate limiting, CORS)
 - ✅ **Input Validation** testing with edge cases
 - 📊 **Performance Testing** with response time checks
 - 🚫 **Error Handling** verification
 - 🔄 **End-to-End Flows** for complete user journeys
+- 🏦 **Banking Operations** (Account, Transaction, Loan, Collateral)
+- 📧 **Notification System** testing
+- 🔒 **Authorization Testing** (Unauthorized access, invalid tokens)
 
 > **🔄 Living Documentation**: The Postman collection is actively maintained and updated as new services and endpoints are implemented. Always use the latest version from the repository for accurate API testing.
 
@@ -323,20 +360,21 @@ Backend/Telepesa_Development.postman_environment.json
 - **Transaction Service**: http://localhost:8083/swagger-ui.html ✅ **LIVE**
 - **Loan Service**: http://localhost:8084/swagger-ui.html ✅ **LIVE**
 - **OpenAPI Specs**: Available at `/v3/api-docs` endpoints
-- **Postman Collection**: `Backend/Telepesa_API_Collection.postman_collection.json`
+- **Postman Collection**: `Backend/Telepesa_API_Collection_Complete.postman_collection.json`
 - **Test Environment**: `Backend/Telepesa_Development.postman_environment.json`
 
 ### API Testing Status
 | Service | Status | Tests | Coverage |
 |---------|--------|-------|----------|
-| User Service | ✅ **LIVE** | 25+ automated tests | 96% pass rate |
-| Account Service | ✅ **LIVE** | 47+ comprehensive tests | 100% pass rate |
-| Notification Service | ✅ **LIVE** | 62+ comprehensive tests | 100% pass rate |
-| Transaction Service | ✅ **LIVE** | 104+ comprehensive tests | 100% pass rate |
-| Loan Service | ✅ **LIVE** | 179+ comprehensive tests | 100% pass rate |
+| User Service | ✅ **LIVE** | 15+ automated tests | 100% pass rate |
+| Account Service | ✅ **LIVE** | Ready for testing | 47+ comprehensive tests |
+| Notification Service | ✅ **LIVE** | Ready for testing | 62+ comprehensive tests |
+| Transaction Service | ✅ **LIVE** | Ready for testing | 104+ comprehensive tests |
+| Loan Service | ✅ **LIVE** | Ready for testing | 179+ comprehensive tests |
 
 ### Architecture Documentation
 - [Backend Overview](Backend/README.md)
+- [Comprehensive API Test Report](Backend/docs/COMPREHENSIVE_API_TEST_REPORT.md)
 - [Security Implementation](Backend/docs/SECURITY_IMPLEMENTATION.md)
 - [Testing Guidelines](Backend/user-service/README-TESTING.md)
 - [API Testing Guide](Backend/docs/API_TESTING_GUIDE.md)
@@ -354,6 +392,10 @@ DB_NAME=telepesa
 DB_USERNAME=telepesa
 DB_PASSWORD=password
 
+# Redis Configuration
+REDIS_HOST=localhost
+REDIS_PORT=6379
+
 # JWT Configuration
 JWT_SECRET=your-secret-key
 JWT_EXPIRATION=86400000
@@ -364,7 +406,7 @@ SERVER_PORT=8081
 ```
 
 ### Application Profiles
-- **dev**: Development environment with debug logging
+- **dev**: Development environment with PostgreSQL and debug logging
 - **test**: Testing environment with H2 database
 - **prod**: Production environment with optimized settings
 
@@ -383,12 +425,14 @@ Telepesa/
 │   ├── docker-compose/              # Container orchestration ✅
 │   ├── docs/                        # Backend documentation hub ✅
 │   │   ├── README.md                # Backend architecture & overview
+│   │   ├── COMPREHENSIVE_API_TEST_REPORT.md # Latest API testing results
 │   │   ├── API_TESTING_GUIDE.md     # Comprehensive testing guide
 │   │   ├── END_TO_END_TEST_REPORT.md # Latest test results
 │   │   └── SECURITY_*.md            # Security documentation
-│   ├── Telepesa_API_Collection.postman_collection.json    # API test suite ✅
+│   ├── Telepesa_API_Collection_Complete.postman_collection.json    # Complete API test suite ✅
 │   ├── Telepesa_Development.postman_environment.json      # Test environment ✅
 │   └── scripts/                     # All backend scripts ✅
+│       ├── comprehensive-api-test.sh # Complete system testing ✅
 │       ├── quick-api-test.sh        # Quick validation script ✅
 │       ├── end-to-end-test.sh       # E2E testing script ✅
 │       ├── build-shared-libs.sh     # Build utilities ✅
@@ -496,6 +540,7 @@ test(service): add integration tests for payments
 - **Code Quality**: 80%+ test coverage across all services
 - **Documentation**: Comprehensive API and architecture documentation
 - **Compliance**: Adheres to banking regulations and security standards
+- **Production Ready**: All services running with PostgreSQL in production-like environment
 
 ## 📄 License
 

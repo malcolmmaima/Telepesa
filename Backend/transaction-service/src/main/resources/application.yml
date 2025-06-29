@@ -47,20 +47,24 @@ spring:
     activate:
       on-profile: dev
   datasource:
-    url: jdbc:h2:mem:testdb
-    username: sa
-    password: 
-    driver-class-name: org.h2.Driver
-  h2:
-    console:
-      enabled: true
-      path: /h2-console
+    url: jdbc:postgresql://localhost:5432/telepesa_transactions_dev
+    username: ${DB_USERNAME:telepesa}
+    password: ${DB_PASSWORD:password}
+    driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:
       ddl-auto: create-drop
     properties:
       hibernate:
-        dialect: org.hibernate.dialect.H2Dialect
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        show_sql: true
+        format_sql: true
+    show-sql: true
+  logging:
+    level:
+      com.maelcolium.telepesa: DEBUG
+      org.springframework.web: DEBUG
+      org.hibernate.SQL: DEBUG
 
 ---
 spring:
