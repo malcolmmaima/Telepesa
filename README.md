@@ -64,11 +64,14 @@ To enhance financial inclusion across Africa by providing cooperatives and MFIs 
                                               │
                     ┌─────────────────────────▼─────────────────────────────┐
                     │                API Gateway                            │
-                    │              (Port: 8080) 🚧                         │
+                    │              (Port: 8080) ✅                          │
+                    │         🆕 Documentation Proxying                     │
+                    │         🆕 Rate Limiting & Security                   │
                     └─────────────────────────┬─────────────────────────────┘
                                               │
                     ┌─────────────────────────▼─────────────────────────────┐
-                    │              Load Balancer / Service Mesh             │
+                    │              Service Discovery (Eureka)               │
+                    │                   (Port: 8761) ✅                     │
                     └─────┬─────────┬─────────┬─────────┬─────────┬─────────┘
                           │         │         │         │         │
                      ┌────▼────┐┌───▼────┐┌───▼────┐┌───▼────┐┌───▼────┐
@@ -98,15 +101,18 @@ To enhance financial inclusion across Africa by providing cooperatives and MFIs 
 ┌─────────────────────┬──────────┬─────────────┬──────────────────┐
 │ Service             │ Status   │ Port        │ Test Coverage    │
 ├─────────────────────┼──────────┼─────────────┼──────────────────┤
+│ Eureka Server       │ ✅ LIVE  │ 8761        │ Service Discovery│
+│ API Gateway         │ ✅ LIVE  │ 8080        │ Route Proxying   │
 │ User Service        │ ✅ LIVE  │ 8081        │ 100% API tested  │
 │ Account Service     │ ✅ LIVE  │ 8082        │ Ready for testing│
 │ Transaction Service │ ✅ LIVE  │ 8083        │ Ready for testing│
 │ Notification Service│ ✅ LIVE  │ 8085        │ Ready for testing│
 │ Loan Service        │ ✅ LIVE  │ 8084        │ Ready for testing│
-│ API Gateway         │ 🚧 PLAN  │ 8080        │ Future feature   │
 └─────────────────────┴──────────┴─────────────┴──────────────────┘
 
 🔗 Inter-Service Communication:
+• API Gateway ←→ All Services: Centralized routing and security
+• Eureka Server ←→ All Services: Service discovery and registration
 • User ←→ Account: User account management and authentication
 • Account ←→ Transaction: Account balance updates and validation  
 • Transaction ←→ Notification: Real-time payment notifications
@@ -119,6 +125,8 @@ To enhance financial inclusion across Africa by providing cooperatives and MFIs 
 
 #### Backend
 - **Framework**: Spring Boot 3.2.0 with Java 17
+- **API Gateway**: Spring Cloud Gateway with WebClient (reactive)
+- **Service Discovery**: Netflix Eureka Server
 - **Security**: Spring Security 6.2.0 + JWT
 - **Database**: PostgreSQL 15 (Production), H2 (Testing)
 - **Cache**: Redis 7.0 (Loan service caching)
@@ -150,6 +158,9 @@ To enhance financial inclusion across Africa by providing cooperatives and MFIs 
 - **Node.js 18+** (for frontend development)
 
 ### 🎉 Recent Achievements
+- **✅ API Gateway**: Successfully implemented with WebClient, rate limiting, and documentation proxying
+- **✅ Eureka Server**: Service discovery fully operational with all services registered
+- **✅ CI/CD Fixes**: Resolved dependency management issues in notification-service
 - **✅ PostgreSQL Integration**: All services successfully migrated from H2 to PostgreSQL
 - **✅ Docker Infrastructure**: Complete Docker setup with PostgreSQL and Redis containers
 - **✅ Comprehensive API Testing**: Complete user service testing with 100% success rate
@@ -198,360 +209,166 @@ To enhance financial inclusion across Africa by providing cooperatives and MFIs 
 
 4. **Start All Services**
    ```bash
-   # Start User Service
+   # Start Eureka Server (Service Discovery)
+   cd Backend/eureka-server
+   mvn spring-boot:run -Dspring.profiles.active=dev
+   
+   # Start API Gateway
+   cd Backend/api-gateway
+   mvn spring-boot:run -Dspring.profiles.active=dev
+   
+   # Start Microservices (in separate terminals)
    cd Backend/user-service
-   mvn spring-boot:run -Dspring.profiles.active=dev &
+   mvn spring-boot:run -Dspring.profiles.active=dev
    
-   # Start Account Service
    cd Backend/account-service
-   mvn spring-boot:run -Dspring.profiles.active=dev &
+   mvn spring-boot:run -Dspring.profiles.active=dev
    
-   # Start Notification Service
-   cd Backend/notification-service
-   mvn spring-boot:run -Dspring.profiles.active=dev &
-   
-   # Start Transaction Service
    cd Backend/transaction-service
-   mvn spring-boot:run -Dspring.profiles.active=dev &
+   mvn spring-boot:run -Dspring.profiles.active=dev
    
-   # Start Loan Service
    cd Backend/loan-service
-   mvn spring-boot:run -Dspring.profiles.active=dev &
+   mvn spring-boot:run -Dspring.profiles.active=dev
+   
+   cd Backend/notification-service
+   mvn spring-boot:run -Dspring.profiles.active=dev
    ```
 
 5. **Verify Services**
    ```bash
-   # Health checks
-   curl http://localhost:8081/actuator/health  # User Service
-   curl http://localhost:8082/actuator/health  # Account Service
-   curl http://localhost:8085/actuator/health  # Notification Service
-   curl http://localhost:8083/actuator/health  # Transaction Service
-   curl http://localhost:8084/actuator/health  # Loan Service
-   ```
-
-6. **Test API Endpoints**
-   ```bash
-   # Comprehensive API testing
-   cd Backend
-   chmod +x scripts/comprehensive-api-test.sh
-   ./scripts/comprehensive-api-test.sh
+   # Check Eureka Dashboard
+   curl http://localhost:8761
    
-   # Quick API functionality test
-   chmod +x scripts/quick-api-test.sh
-   ./scripts/quick-api-test.sh
+   # Check API Gateway Health
+   curl http://localhost:8080/actuator/health
+   
+   # Check Service Routes
+   curl http://localhost:8080/actuator/gateway/routes
    ```
 
-### 📱 Running Mobile Apps
+### 🧪 Testing
 
-#### Android
-```bash
-cd Frontend/Android
-./gradlew assembleDebug
-# Open in Android Studio and run
-```
+1. **Run All Tests**
+   ```bash
+   cd Backend
+   mvn clean test
+   ```
 
-#### iOS
-```bash
-cd Frontend/iOS
-pod install
-# Open Telepesa.xcworkspace in Xcode and run
-```
+2. **API Testing with Postman**
+   - Import `Backend/Telepesa_API_Collection_Complete.postman_collection.json`
+   - Run the complete test suite
 
-### 🌐 Running Web Dashboard
-```bash
-cd Frontend/Dashboard
-npm install
-npm start
-# Open http://localhost:3000
-```
-
-## 🧪 Testing
-
-### Current Test Status ✅
-- **Unit Tests**: 473+ passing (100% success rate)
-- **API Tests**: User Service 100% tested and functional
-- **Security Tests**: All security controls validated
-- **Coverage**: 85% line coverage, 78% branch coverage
-- **E2E Tests**: 24/25 passing (96% success rate)
-- **Overall Status**: **PRODUCTION READY** 🚀
-
-### Service-Specific Test Status
-| Service | Unit Tests | API Tests | Coverage | CI/CD Status |
-|---------|------------|-----------|----------|--------------|
-| User Service | ✅ 81/81 passing | ✅ 100% tested | 81% line, 35% branch | ✅ **PASSING** |
-| Account Service | ✅ 47/47 passing | 🟡 Ready for testing | 85% line, 80% branch | ✅ **PASSING** |
-| Notification Service | ✅ 62/62 passing | 🟡 Ready for testing | 90% line, 85% branch | ✅ **PASSING** |
-| Transaction Service | ✅ 104/104 passing | 🟡 Ready for testing | 82% line, 70% branch | ✅ **PASSING** |
-| Loan Service | ✅ 179/179 passing | 🟡 Ready for testing | 85% line, 78% branch | ✅ **PASSING** |
-
-### API Testing Results ✅
-**User Service - Complete Testing Results:**
-- ✅ **Health Check**: Service responding correctly
-- ✅ **User Registration**: Complete with audit logging
-- ✅ **Authentication Security**: Pending verification blocked
-- ✅ **Password Security**: BCrypt hashing active
-- ✅ **Input Validation**: All fields validated
-- ✅ **Audit Logging**: Complete event tracking
-- ✅ **Device Fingerprinting**: New device detection
-- ✅ **Suspicious Activity**: Automated detection
-- ✅ **Error Handling**: Proper HTTP status codes
-- ✅ **Performance**: < 200ms response times
-
-### Running Tests
-```bash
-# Run all backend tests
-cd Backend/loan-service
-mvn test
-
-# Generate coverage report
-mvn jacoco:report
-
-# Run with coverage verification
-mvn verify
-
-# Run comprehensive API tests
-cd Backend
-./scripts/comprehensive-api-test.sh
-
-# Run end-to-end tests
-# User service should be running on port 8081
-curl http://localhost:8081/actuator/health
-```
-
-### Test Coverage Requirements
-- **Minimum 80% line coverage** for all services ✅ **ACHIEVED**
-- **Minimum 75% branch coverage** for business logic ✅ **ACHIEVED**
-- **100% coverage** for critical banking operations ✅ **ACHIEVED**
-
-### Quality Gates ✅
-- All tests must pass ✅ **PASSING**
-- Coverage thresholds must be met ✅ **BOTH LINE & BRANCH COVERAGE MET**
-- OWASP security scans must pass ✅ **PASSING**
-- No critical security vulnerabilities ✅ **CLEAN**
-
-### API Testing with Postman
-We provide comprehensive Postman collections with automated tests:
-
-```bash
-# Import the comprehensive collection and environment
-Backend/Telepesa_API_Collection_Complete.postman_collection.json
-Backend/Telepesa_Development.postman_environment.json
-```
-
-**Collection Features:**
-- 📋 **50+ Test Cases** with automated assertions
-- 🔐 **Security Testing** (JWT, rate limiting, CORS)
-- ✅ **Input Validation** testing with edge cases
-- 📊 **Performance Testing** with response time checks
-- 🚫 **Error Handling** verification
-- 🔄 **End-to-End Flows** for complete user journeys
-- 🏦 **Banking Operations** (Account, Transaction, Loan, Collateral)
-- 📧 **Notification System** testing
-- 🔒 **Authorization Testing** (Unauthorized access, invalid tokens)
-
-> **🔄 Living Documentation**: The Postman collection is actively maintained and updated as new services and endpoints are implemented. Always use the latest version from the repository for accurate API testing.
+3. **Individual Service Testing**
+   ```bash
+   # Test User Service
+   cd Backend/user-service
+   mvn test
+   
+   # Test Loan Service
+   cd Backend/loan-service
+   mvn test
+   ```
 
 ## 📚 Documentation
 
-### API Documentation
-- **User Service**: http://localhost:8081/swagger-ui.html ✅ **LIVE**
-- **Account Service**: http://localhost:8082/swagger-ui.html ✅ **LIVE**
-- **Notification Service**: http://localhost:8085/swagger-ui.html ✅ **LIVE**
-- **Transaction Service**: http://localhost:8083/swagger-ui.html ✅ **LIVE**
-- **Loan Service**: http://localhost:8084/swagger-ui.html ✅ **LIVE**
-- **OpenAPI Specs**: Available at `/v3/api-docs` endpoints
-- **Postman Collection**: `Backend/Telepesa_API_Collection_Complete.postman_collection.json`
-- **Test Environment**: `Backend/Telepesa_Development.postman_environment.json`
-
-### API Testing Status
-| Service | Status | Tests | Coverage |
-|---------|--------|-------|----------|
-| User Service | ✅ **LIVE** | 15+ automated tests | 100% pass rate |
-| Account Service | ✅ **LIVE** | Ready for testing | 47+ comprehensive tests |
-| Notification Service | ✅ **LIVE** | Ready for testing | 62+ comprehensive tests |
-| Transaction Service | ✅ **LIVE** | Ready for testing | 104+ comprehensive tests |
-| Loan Service | ✅ **LIVE** | Ready for testing | 179+ comprehensive tests |
-
-### Architecture Documentation
-- [Backend Overview](Backend/README.md)
-- [Comprehensive API Test Report](Backend/docs/COMPREHENSIVE_API_TEST_REPORT.md)
-- [Security Implementation](Backend/docs/SECURITY_IMPLEMENTATION.md)
-- [Testing Guidelines](Backend/user-service/README-TESTING.md)
-- [API Testing Guide](Backend/docs/API_TESTING_GUIDE.md)
-- [End-to-End Test Report](Backend/docs/END_TO_END_TEST_REPORT.md)
-- [Loan Features Documentation](Backend/loan-service/LOAN_FEATURES.md)
-
-## 🔧 Configuration
-
-### Environment Variables
-```bash
-# Database Configuration
-DB_HOST=localhost
-DB_PORT=5432
-DB_NAME=telepesa
-DB_USERNAME=telepesa
-DB_PASSWORD=password
-
-# Redis Configuration
-REDIS_HOST=localhost
-REDIS_PORT=6379
-
-# JWT Configuration
-JWT_SECRET=your-secret-key
-JWT_EXPIRATION=86400000
-
-# Application Configuration
-SPRING_PROFILES_ACTIVE=dev
-SERVER_PORT=8081
+### 📁 Documentation Structure
+```
+Backend/
+├── README.md                    # ✅ Main entry point (this file)
+├── docs/                        # 📁 All detailed documentation
+│   ├── API_TESTING_GUIDE.md     # Complete API testing guide
+│   ├── END_TO_END_TEST_REPORT.md # Comprehensive test results
+│   ├── SECURITY_IMPLEMENTATION.md # Security features documentation
+│   ├── ARCHITECTURE.md          # Detailed architecture guide
+│   ├── CI_CD_STATUS.md          # CI/CD pipeline status
+│   └── *.md                     # Other documentation files
+├── Telepesa_API_Collection_Complete.postman_collection.json
+└── quick-api-test.sh
 ```
 
-### Application Profiles
-- **dev**: Development environment with PostgreSQL and debug logging
-- **test**: Testing environment with H2 database
-- **prod**: Production environment with optimized settings
+### 🔗 Quick Links
+- **[API Testing Guide](Backend/docs/API_TESTING_GUIDE.md)** - Complete guide for testing all APIs
+- **[End-to-End Test Report](Backend/docs/END_TO_END_TEST_REPORT.md)** - Comprehensive test results and coverage
+- **[Security Implementation](Backend/docs/SECURITY_IMPLEMENTATION.md)** - Security features and compliance
+- **[Architecture Guide](Backend/docs/ARCHITECTURE.md)** - Detailed system architecture
+- **[CI/CD Status](Backend/docs/CI_CD_STATUS.md)** - Pipeline status and deployment info
 
-## 🏗️ Project Structure
+### 🆕 API Gateway Features
+- **Documentation Proxying**: Access all service Swagger UI through `/api/v1/docs/{service-name}/swagger-ui.html`
+- **Rate Limiting**: Configurable rate limiting per IP and user
+- **Security**: JWT authentication and authorization
+- **Load Balancing**: Automatic load balancing across service instances
+- **Health Checks**: Centralized health monitoring
 
-```
-Telepesa/
-├── Backend/                           # Spring Boot microservices
-│   ├── user-service/                 # User management (Port: 8081) ✅
-│   ├── account-service/              # Account management (Port: 8082) ✅
-│   ├── transaction-service/          # Transaction processing (Port: 8083) ✅
-│   ├── loan-service/                # Loan management (Port: 8084) ✅
-│   ├── notification-service/        # Notifications (Port: 8085) ✅
-│   ├── api-gateway/                 # API Gateway and routing 🚧
-│   ├── shared-libraries/            # Common utilities and models ✅
-│   ├── docker-compose/              # Container orchestration ✅
-│   ├── docs/                        # Backend documentation hub ✅
-│   │   ├── README.md                # Backend architecture & overview
-│   │   ├── COMPREHENSIVE_API_TEST_REPORT.md # Latest API testing results
-│   │   ├── API_TESTING_GUIDE.md     # Comprehensive testing guide
-│   │   ├── END_TO_END_TEST_REPORT.md # Latest test results
-│   │   └── SECURITY_*.md            # Security documentation
-│   ├── Telepesa_API_Collection_Complete.postman_collection.json    # Complete API test suite ✅
-│   ├── Telepesa_Development.postman_environment.json      # Test environment ✅
-│   └── scripts/                     # All backend scripts ✅
-│       ├── comprehensive-api-test.sh # Complete system testing ✅
-│       ├── quick-api-test.sh        # Quick validation script ✅
-│       ├── end-to-end-test.sh       # E2E testing script ✅
-│       ├── build-shared-libs.sh     # Build utilities ✅
-│       ├── test-enhanced-security.sh # Security testing ✅
-│       ├── setup-env.sh             # Environment setup ✅
-│       └── test-all-services.sh     # Service testing ✅
-├── Frontend/                         # Client applications
-│   ├── Android/                     # Kotlin + Jetpack Compose 🚧
-│   ├── iOS/                         # Swift + SwiftUI 🚧
-│   └── Dashboard/                   # React + TypeScript 🚧
-├── Docs/                            # Project-wide documentation ✅
-├── Rules/                           # Development guidelines ✅
-└── .github/workflows/               # CI/CD pipelines ✅
-```
+### 🔍 Service Endpoints
 
-**Legend**: ✅ Complete | 🚧 Planned/In Progress
+#### API Gateway (Port 8080)
+- **Health**: `GET /actuator/health`
+- **Routes**: `GET /actuator/gateway/routes`
+- **Documentation**: `GET /api/v1/docs/{service-name}/swagger-ui.html`
 
-## 🚀 Deployment
+#### Eureka Server (Port 8761)
+- **Dashboard**: `GET /` (Web UI)
+- **Applications**: `GET /eureka/apps`
 
-### Docker Deployment
-```bash
-# Build and run all services
-docker-compose up --build
+#### User Service (Port 8081)
+- **Health**: `GET /actuator/health`
+- **API Docs**: `GET /swagger-ui.html`
+- **Users**: `GET /api/v1/users`
 
-# Scale services
-docker-compose up --scale user-service=3
-```
+#### Account Service (Port 8082)
+- **Health**: `GET /actuator/health`
+- **API Docs**: `GET /swagger-ui.html`
+- **Accounts**: `GET /api/v1/accounts`
 
-### Production Deployment
-1. **Container Registry**: Push images to ECR/Docker Hub
-2. **Orchestration**: Deploy using Kubernetes/ECS
-3. **Monitoring**: Setup CloudWatch/Prometheus
-4. **Load Balancing**: Configure ALB/NGINX
+#### Transaction Service (Port 8083)
+- **Health**: `GET /actuator/health`
+- **API Docs**: `GET /swagger-ui.html`
+- **Transactions**: `GET /api/v1/transactions`
 
-## 🔐 Security Features
+#### Loan Service (Port 8084)
+- **Health**: `GET /actuator/health`
+- **API Docs**: `GET /swagger-ui.html`
+- **Loans**: `GET /api/v1/loans`
 
-### Authentication & Authorization
-- JWT-based stateless authentication
-- Role-based access control (RBAC)
-- Multi-factor authentication (MFA) support
-- Session management and timeout
-
-### Data Protection
-- AES-256 encryption for sensitive data
-- TLS 1.3 for data in transit
-- PCI DSS compliance measures
-- GDPR compliance features
-
-### Fraud Prevention
-- Real-time transaction monitoring
-- Device fingerprinting
-- Suspicious activity detection
-- Rate limiting and DDoS protection
-
-## 📊 Monitoring & Observability
-
-### Health Checks
-- Application health endpoints
-- Database connectivity checks
-- External service availability
-- Custom business metrics
-
-### Logging
-- Structured JSON logging
-- Centralized log aggregation
-- Audit trail compliance
-- Error tracking and alerting
-
-### Metrics
-- Application performance metrics
-- Business KPIs and analytics
-- Resource utilization monitoring
-- SLA/SLO tracking
+#### Notification Service (Port 8085)
+- **Health**: `GET /actuator/health`
+- **API Docs**: `GET /swagger-ui.html`
+- **Notifications**: `GET /api/v1/notifications`
 
 ## 🤝 Contributing
 
-### Development Workflow
-1. **Fork** the repository
-2. **Create** a feature branch (`git checkout -b feature/amazing-feature`)
-3. **Write** comprehensive tests (minimum 80% coverage)
-4. **Commit** changes (`git commit -m 'Add amazing feature'`)
-5. **Push** to branch (`git push origin feature/amazing-feature`)
-6. **Open** a Pull Request
+### Development Guidelines
+- **Testing**: 80% minimum code coverage required
+- **Documentation**: All new features must be documented
+- **Code Quality**: Follow Spring Boot best practices
+- **Security**: All security features must be tested
 
-### Code Quality Standards
-- **Testing**: All code must have corresponding unit tests
-- **Coverage**: Minimum 80% line coverage required
-- **Security**: OWASP security scans must pass
-- **Documentation**: Public APIs must be documented
-- **Code Review**: All changes require peer review
+### Testing Requirements
+- **Unit Tests**: Required for all service methods
+- **Integration Tests**: Required for all controllers
+- **End-to-End Tests**: Required for critical user flows
+- **Security Tests**: Required for all authentication/authorization
 
-### Commit Message Convention
-```
-type(scope): description
-
-feat(user): add multi-factor authentication
-fix(account): resolve balance calculation bug
-docs(readme): update deployment instructions
-test(service): add integration tests for payments
-```
-
-## 🏆 Recognition
-
-- **Enterprise Security**: Banking-grade security implementation
-- **Code Quality**: 80%+ test coverage across all services
-- **Documentation**: Comprehensive API and architecture documentation
-- **Compliance**: Adheres to banking regulations and security standards
-- **Production Ready**: All services running with PostgreSQL in production-like environment
+### Code Review Process
+1. Create feature branch from `main`
+2. Implement feature with tests
+3. Ensure all tests pass
+4. Update documentation
+5. Submit pull request
+6. Code review and approval
+7. Merge to main
 
 ## 📄 License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## 🙏 Acknowledgments
+## 🆘 Support
 
-- **Spring Boot Community** for excellent framework and documentation
-- **African Fintech Leaders** for requirements and validation
-- **Open Source Contributors** for tools and libraries
-- **Security Researchers** for best practices and guidelines
+- **Documentation**: Check the [docs](Backend/docs/) folder
+- **Issues**: Report bugs via GitHub Issues
+- **Discussions**: Use GitHub Discussions for questions
+- **Security**: Report security issues privately
 
 ---
 
@@ -559,6 +376,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 **Built with ❤️ for African Financial Inclusion**
 
-[📧 Contact](mailto:contact@telepesa.com) • [🌐 Website](https://telepesa.com) • [📱 Mobile Apps](https://apps.telepesa.com) • [📊 Dashboard](https://dashboard.telepesa.com)
+[Back to Top](#telepesa---modern-banking-platform-for-africa)
 
 </div>
