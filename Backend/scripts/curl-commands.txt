@@ -1,0 +1,133 @@
+# Telepesa Test Users - Individual Curl Commands
+# Run these commands one by one to create test users
+
+# Test User 1: John Doe (Regular Customer)
+curl -X POST http://localhost:8081/api/v1/users/register \
+  -H "Content-Type: application/json" \
+  -d '{
+    "username": "johndoe",
+    "email": "john.doe@example.com",
+    "password": "SecurePass123!",
+    "firstName": "John",
+    "lastName": "Doe",
+    "phoneNumber": "+254700123456"
+  }'
+
+# Test User 2: Jane Smith (Business Customer)
+curl -X POST http://localhost:8081/api/v1/users/register \
+  -H "Content-Type: application/json" \
+  -d '{
+    "username": "janesmith",
+    "email": "jane.smith@business.com",
+    "password": "BusinessPass456!",
+    "firstName": "Jane",
+    "lastName": "Smith",
+    "phoneNumber": "+254700123457"
+  }'
+
+# Test User 3: Michael Johnson (Premium Customer)
+curl -X POST http://localhost:8081/api/v1/users/register \
+  -H "Content-Type: application/json" \
+  -d '{
+    "username": "mikejohnson",
+    "email": "mike.johnson@premium.com",
+    "password": "PremiumPass789!",
+    "firstName": "Michael",
+    "lastName": "Johnson",
+    "phoneNumber": "+254700123458"
+  }'
+
+# Test User 4: Sarah Wilson (Student)
+curl -X POST http://localhost:8081/api/v1/users/register \
+  -H "Content-Type: application/json" \
+  -d '{
+    "username": "sarahwilson",
+    "email": "sarah.wilson@student.com",
+    "password": "StudentPass321!",
+    "firstName": "Sarah",
+    "lastName": "Wilson",
+    "phoneNumber": "+254700123459"
+  }'
+
+# Test User 5: David Brown (Senior Citizen)
+curl -X POST http://localhost:8081/api/v1/users/register \
+  -H "Content-Type: application/json" \
+  -d '{
+    "username": "davidbrown",
+    "email": "david.brown@senior.com",
+    "password": "SeniorPass654!",
+    "firstName": "David",
+    "lastName": "Brown",
+    "phoneNumber": "+254700123460"
+  }'
+
+# Test User 6: Lisa Davis (Small Business Owner)
+curl -X POST http://localhost:8081/api/v1/users/register \
+  -H "Content-Type: application/json" \
+  -d '{
+    "username": "lisadavis",
+    "email": "lisa.davis@smallbiz.com",
+    "password": "SmallBizPass987!",
+    "firstName": "Lisa",
+    "lastName": "Davis",
+    "phoneNumber": "+254700123461"
+  }'
+
+# Test User 7: Robert Wilson (Freelancer)
+curl -X POST http://localhost:8081/api/v1/users/register \
+  -H "Content-Type: application/json" \
+  -d '{
+    "username": "robertwilson",
+    "email": "robert.wilson@freelance.com",
+    "password": "FreelancePass147!",
+    "firstName": "Robert",
+    "lastName": "Wilson",
+    "phoneNumber": "+254700123462"
+  }'
+
+# Test User 8: Maria Garcia (Teacher)
+curl -X POST http://localhost:8081/api/v1/users/register \
+  -H "Content-Type: application/json" \
+  -d '{
+    "username": "mariagarcia",
+    "email": "maria.garcia@teacher.com",
+    "password": "TeacherPass258!",
+    "firstName": "Maria",
+    "lastName": "Garcia",
+    "phoneNumber": "+254700123463"
+  }'
+
+# Test User 9: James Taylor (Engineer)
+curl -X POST http://localhost:8081/api/v1/users/register \
+  -H "Content-Type: application/json" \
+  -d '{
+    "username": "jamestaylor",
+    "email": "james.taylor@engineer.com",
+    "password": "EngineerPass369!",
+    "firstName": "James",
+    "lastName": "Taylor",
+    "phoneNumber": "+254700123464"
+  }'
+
+# Test User 10: Emily Anderson (Doctor)
+curl -X POST http://localhost:8081/api/v1/users/register \
+  -H "Content-Type: application/json" \
+  -d '{
+    "username": "emilyanderson",
+    "email": "emily.anderson@doctor.com",
+    "password": "DoctorPass741!",
+    "firstName": "Emily",
+    "lastName": "Anderson",
+    "phoneNumber": "+254700123465"
+  }'
+
+# After creating users, check the database:
+# docker exec -it telepesa-postgres psql -U telepesa -d user_service -c "SELECT id, username, email, status, created_at FROM users;"
+
+# Activate all users (required for login):
+# docker exec -it telepesa-postgres psql -U telepesa -d user_service -c "UPDATE users SET status = 'ACTIVE' WHERE status = 'PENDING_VERIFICATION';"
+
+# Test login with any user:
+# curl -X POST http://localhost:8081/api/v1/auth/login \
+#   -H "Content-Type: application/json" \
+#   -d '{"username":"johndoe","password":"SecurePass123!"}' 

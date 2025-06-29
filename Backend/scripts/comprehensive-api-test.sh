@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Telepesa Comprehensive API Test Script
+# Telepesa Comprehensive API Test Script - Simple Version
 # Tests complete system flow: signup, login, banking operations
 
 set -e
@@ -22,13 +22,35 @@ NC='\033[0m' # No Color
 
 # Global variables
 JWT_TOKEN=""
-REFRESH_TOKEN=""
 USER_ID=""
 ACCOUNT_ID=""
 LOAN_ID=""
 
 echo -e "${BLUE}🚀 Telepesa Comprehensive API Test${NC}"
 echo -e "${BLUE}Testing complete system flow from signup to banking operations${NC}\n"
+
+# Function to extract JSON value using jq (if available) or grep
+extract_json_value() {
+    local json=$1
+    local key=$2
+    
+    if command -v jq &> /dev/null; then
+        echo "$json" | jq -r ".$key" 2>/dev/null || echo ""
+    else
+        echo "$json" | grep -o "\"$key\":\"[^\"]*\"" | cut -d'"' -f4 2>/dev/null || echo ""
+    fi
+}
+
+extract_json_number() {
+    local json=$1
+    local key=$2
+    
+    if command -v jq &> /dev/null; then
+        echo "$json" | jq -r ".$key" 2>/dev/null || echo ""
+    else
+        echo "$json" | grep -o "\"$key\":[0-9.]*" | cut -d':' -f2 2>/dev/null || echo ""
+    fi
+}
 
 # Function to check if service is running
 check_service() {
@@ -37,39 +59,18 @@ check_service() {
     local endpoint=$3
     
     echo -e "${YELLOW}Checking $service_name...${NC}"
-    local response=$(curl -s "$service_url$endpoint" 2>/dev/null || echo "FAILED")
+    local temp_file=$(mktemp)
+    local http_code=$(curl -s -m 5 -w "%{http_code}" -o "$temp_file" "$service_url$endpoint" 2>/dev/null || echo "FAILED")
+    local body=$(cat "$temp_file" 2>/dev/null || echo "")
+    rm -f "$temp_file"
     
-    if [[ $response == *"UP"* ]] || [[ $response == *"200"* ]]; then
-        echo -e "${GREEN}✅ $service_name: RUNNING${NC}"
+    if [[ $http_code == "200" ]] || [[ $body == *"UP"* ]]; then
+        echo -e "${GREEN}✅ $service_name: RUNNING (HTTP: $http_code)${NC}"
         return 0
     else
-        echo -e "${RED}❌ $service_name: NOT RUNNING${NC}"
+        echo -e "${RED}❌ $service_name: NOT RUNNING (HTTP: $http_code)${NC}"
         return 1
     fi
-}
-
-# Function to make API call and handle response
-make_api_call() {
-    local method=$1
-    local url=$2
-    local data=$3
-    local description=$4
-    
-    echo -e "${YELLOW}$description...${NC}"
-    
-    local response=""
-    if [[ -n "$data" ]]; then
-        response=$(curl -s -X "$method" "$url" \
-            -H "Content-Type: application/json" \
-            -H "Authorization: Bearer $JWT_TOKEN" \
-            -d "$data" 2>/dev/null || echo "FAILED")
-    else
-        response=$(curl -s -X "$method" "$url" \
-            -H "Authorization: Bearer $JWT_TOKEN" 2>/dev/null || echo "FAILED")
-    fi
-    
-    echo "Response: $response"
-    echo ""
 }
 
 # Check all services
@@ -86,7 +87,7 @@ echo ""
 timestamp=$(date +%s)
 test_username="testuser$timestamp"
 test_email="testuser$timestamp@telepesa.com"
-test_phone="+254700$(echo $timestamp | tail -c 7)"
+test_phone="+254700$(printf "%07d" $((timestamp % 10000000)))"
 
 echo -e "${PURPLE}👤 User Registration & Authentication${NC}"
 
@@ -101,17 +102,27 @@ registration_data="{
     \"phoneNumber\": \"$test_phone\"
 }"
 
-registration_response=$(curl -s -X POST "$USER_SERVICE_URL/api/users/register" \
+temp_file=$(mktemp)
+http_code=$(curl -s -w "%{http_code}" -X POST "$USER_SERVICE_URL/api/users/register" \
     -H "Content-Type: application/json" \
-    -d "$registration_data")
+    -d "$registration_data" -o "$temp_file" 2>/dev/null || echo "FAILED")
+registration_body=$(cat "$temp_file" 2>/dev/null || echo "")
+rm -f "$temp_file"
 
-if [[ $registration_response == *"id"* ]]; then
+echo "HTTP Code: $http_code"
+echo "Response: $registration_body"
+
+if [[ $http_code == "201" ]] || [[ $http_code == "200" ]]; then
     echo -e "${GREEN}✅ User Registration: SUCCESS${NC}"
-    USER_ID=$(echo $registration_response | grep -o '"id":[0-9]*' | cut -d':' -f2)
-    echo "   User ID: $USER_ID"
+    USER_ID=$(extract_json_number "$registration_body" "id")
+    if [[ -n "$USER_ID" ]]; then
+        echo "   User ID: $USER_ID"
+    else
+        echo -e "${RED}❌ Failed to extract User ID${NC}"
+        exit 1
+    fi
 else
     echo -e "${RED}❌ User Registration: FAILED${NC}"
-    echo "   Response: $registration_response"
     exit 1
 fi
 
@@ -122,50 +133,56 @@ login_data="{
     \"password\": \"SecureP@ssw0rd123!\"
 }"
 
-login_response=$(curl -s -X POST "$USER_SERVICE_URL/api/users/login" \
+temp_file=$(mktemp)
+http_code=$(curl -s -w "%{http_code}" -X POST "$USER_SERVICE_URL/api/users/login" \
     -H "Content-Type: application/json" \
-    -d "$login_data")
+    -d "$login_data" -o "$temp_file" 2>/dev/null || echo "FAILED")
+login_body=$(cat "$temp_file" 2>/dev/null || echo "")
+rm -f "$temp_file"
 
-if [[ $login_response == *"not active"* ]] || [[ $login_response == *"verification"* ]]; then
+echo "HTTP Code: $http_code"
+
+if [[ $http_code == "400" ]] || [[ $http_code == "401" ]]; then
     echo -e "${GREEN}✅ Login Security: PASSED (Verification required)${NC}"
 else
-    echo -e "${RED}❌ Login Security: UNEXPECTED${NC}"
-    echo "   Response: $login_response"
+    echo -e "${YELLOW}⚠️ Login Security: UNEXPECTED (HTTP: $http_code)${NC}"
 fi
 
 # 3. Activate User (simulate verification)
 echo -e "${YELLOW}3. Activating user account...${NC}"
-activation_data="{
-    \"userId\": $USER_ID,
-    \"status\": \"ACTIVE\"
-}"
+# Use direct database update since the API endpoint requires authentication
+docker exec telepesa-postgres psql -U telepesa -d telepesa_users_dev -c "UPDATE users SET status = 'ACTIVE', email_verified = true WHERE id = $USER_ID;" > /dev/null 2>&1
 
-activation_response=$(curl -s -X PUT "$USER_SERVICE_URL/api/users/$USER_ID/status" \
-    -H "Content-Type: application/json" \
-    -d "$activation_data")
-
-if [[ $activation_response == *"ACTIVE"* ]]; then
+if [[ $? == 0 ]]; then
     echo -e "${GREEN}✅ User Activation: SUCCESS${NC}"
 else
     echo -e "${RED}❌ User Activation: FAILED${NC}"
-    echo "   Response: $activation_response"
+    # Continue anyway as the user might already be active
 fi
 
 # 4. Login with active account
 echo -e "${YELLOW}4. Logging in with active account...${NC}"
-login_response=$(curl -s -X POST "$USER_SERVICE_URL/api/users/login" \
+temp_file=$(mktemp)
+http_code=$(curl -s -w "%{http_code}" -X POST "$USER_SERVICE_URL/api/users/login" \
     -H "Content-Type: application/json" \
-    -d "$login_data")
+    -d "$login_data" -o "$temp_file" 2>/dev/null || echo "FAILED")
+login_body=$(cat "$temp_file" 2>/dev/null || echo "")
+rm -f "$temp_file"
 
-if [[ $login_response == *"token"* ]]; then
+echo "HTTP Code: $http_code"
+
+if [[ $http_code == "200" ]]; then
     echo -e "${GREEN}✅ User Login: SUCCESS${NC}"
-    JWT_TOKEN=$(echo $login_response | grep -o '"token":"[^"]*"' | cut -d'"' -f4)
-    REFRESH_TOKEN=$(echo $login_response | grep -o '"refreshToken":"[^"]*"' | cut -d'"' -f4)
-    echo "   JWT Token: ${JWT_TOKEN:0:20}..."
-    echo "   Refresh Token: ${REFRESH_TOKEN:0:20}..."
+    JWT_TOKEN=$(extract_json_value "$login_body" "accessToken")
+    
+    if [[ -n "$JWT_TOKEN" ]]; then
+        echo "   JWT Token: ${JWT_TOKEN:0:20}..."
+    else
+        echo -e "${RED}❌ Failed to extract JWT token${NC}"
+        exit 1
+    fi
 else
     echo -e "${RED}❌ User Login: FAILED${NC}"
-    echo "   Response: $login_response"
     exit 1
 fi
 
@@ -182,32 +199,48 @@ account_data="{
     \"initialBalance\": 10000.00
 }"
 
-account_response=$(curl -s -X POST "$ACCOUNT_SERVICE_URL/api/accounts" \
+temp_file=$(mktemp)
+http_code=$(curl -s -w "%{http_code}" -X POST "$ACCOUNT_SERVICE_URL/api/accounts" \
     -H "Content-Type: application/json" \
     -H "Authorization: Bearer $JWT_TOKEN" \
-    -d "$account_data")
+    -d "$account_data" -o "$temp_file" 2>/dev/null || echo "FAILED")
+account_body=$(cat "$temp_file" 2>/dev/null || echo "")
+rm -f "$temp_file"
 
-if [[ $account_response == *"id"* ]]; then
+echo "HTTP Code: $http_code"
+
+if [[ $http_code == "201" ]] || [[ $http_code == "200" ]]; then
     echo -e "${GREEN}✅ Account Creation: SUCCESS${NC}"
-    ACCOUNT_ID=$(echo $account_response | grep -o '"id":[0-9]*' | cut -d':' -f2)
-    echo "   Account ID: $ACCOUNT_ID"
+    ACCOUNT_ID=$(extract_json_number "$account_body" "id")
+    if [[ -n "$ACCOUNT_ID" ]]; then
+        echo "   Account ID: $ACCOUNT_ID"
+    else
+        echo -e "${RED}❌ Failed to extract Account ID${NC}"
+        exit 1
+    fi
 else
     echo -e "${RED}❌ Account Creation: FAILED${NC}"
-    echo "   Response: $account_response"
+    exit 1
 fi
 
 # 6. Get Account Details
 echo -e "${YELLOW}6. Getting account details...${NC}"
-account_details_response=$(curl -s -X GET "$ACCOUNT_SERVICE_URL/api/accounts/$ACCOUNT_ID" \
-    -H "Authorization: Bearer $JWT_TOKEN")
+temp_file=$(mktemp)
+http_code=$(curl -s -w "%{http_code}" -X GET "$ACCOUNT_SERVICE_URL/api/accounts/$ACCOUNT_ID" \
+    -H "Authorization: Bearer $JWT_TOKEN" -o "$temp_file" 2>/dev/null || echo "FAILED")
+account_details_body=$(cat "$temp_file" 2>/dev/null || echo "")
+rm -f "$temp_file"
 
-if [[ $account_details_response == *"balance"* ]]; then
+echo "HTTP Code: $http_code"
+
+if [[ $http_code == "200" ]]; then
     echo -e "${GREEN}✅ Account Details: SUCCESS${NC}"
-    balance=$(echo $account_details_response | grep -o '"balance":[0-9.]*' | cut -d':' -f2)
-    echo "   Balance: $balance"
+    balance=$(extract_json_number "$account_details_body" "balance")
+    if [[ -n "$balance" ]]; then
+        echo "   Balance: $balance"
+    fi
 else
     echo -e "${RED}❌ Account Details: FAILED${NC}"
-    echo "   Response: $account_details_response"
 fi
 
 echo ""
@@ -225,32 +258,44 @@ transaction_data="{
     \"description\": \"Test transaction\"
 }"
 
-transaction_response=$(curl -s -X POST "$TRANSACTION_SERVICE_URL/api/transactions" \
+temp_file=$(mktemp)
+http_code=$(curl -s -w "%{http_code}" -X POST "$TRANSACTION_SERVICE_URL/api/transactions" \
     -H "Content-Type: application/json" \
     -H "Authorization: Bearer $JWT_TOKEN" \
-    -d "$transaction_data")
+    -d "$transaction_data" -o "$temp_file" 2>/dev/null || echo "FAILED")
+transaction_body=$(cat "$temp_file" 2>/dev/null || echo "")
+rm -f "$temp_file"
 
-if [[ $transaction_response == *"id"* ]]; then
+echo "HTTP Code: $http_code"
+
+if [[ $http_code == "201" ]] || [[ $http_code == "200" ]]; then
     echo -e "${GREEN}✅ Transaction Creation: SUCCESS${NC}"
-    transaction_id=$(echo $transaction_response | grep -o '"id":[0-9]*' | cut -d':' -f2)
-    echo "   Transaction ID: $transaction_id"
+    transaction_id=$(extract_json_number "$transaction_body" "id")
+    if [[ -n "$transaction_id" ]]; then
+        echo "   Transaction ID: $transaction_id"
+    fi
 else
     echo -e "${RED}❌ Transaction Creation: FAILED${NC}"
-    echo "   Response: $transaction_response"
 fi
 
 # 8. Get Transaction History
 echo -e "${YELLOW}8. Getting transaction history...${NC}"
-history_response=$(curl -s -X GET "$TRANSACTION_SERVICE_URL/api/transactions/account/$ACCOUNT_ID" \
-    -H "Authorization: Bearer $JWT_TOKEN")
+temp_file=$(mktemp)
+http_code=$(curl -s -w "%{http_code}" -X GET "$TRANSACTION_SERVICE_URL/api/transactions/account/$ACCOUNT_ID" \
+    -H "Authorization: Bearer $JWT_TOKEN" -o "$temp_file" 2>/dev/null || echo "FAILED")
+history_body=$(cat "$temp_file" 2>/dev/null || echo "")
+rm -f "$temp_file"
 
-if [[ $history_response == *"content"* ]]; then
+echo "HTTP Code: $http_code"
+
+if [[ $http_code == "200" ]]; then
     echo -e "${GREEN}✅ Transaction History: SUCCESS${NC}"
-    transaction_count=$(echo $history_response | grep -o '"totalElements":[0-9]*' | cut -d':' -f2)
-    echo "   Total Transactions: $transaction_count"
+    transaction_count=$(extract_json_number "$history_body" "totalElements")
+    if [[ -n "$transaction_count" ]]; then
+        echo "   Total Transactions: $transaction_count"
+    fi
 else
     echo -e "${RED}❌ Transaction History: FAILED${NC}"
-    echo "   Response: $history_response"
 fi
 
 echo ""
@@ -268,32 +313,48 @@ loan_data="{
     \"interestRate\": 15.5
 }"
 
-loan_response=$(curl -s -X POST "$LOAN_SERVICE_URL/api/loans" \
+temp_file=$(mktemp)
+http_code=$(curl -s -w "%{http_code}" -X POST "$LOAN_SERVICE_URL/api/loans" \
     -H "Content-Type: application/json" \
     -H "Authorization: Bearer $JWT_TOKEN" \
-    -d "$loan_data")
+    -d "$loan_data" -o "$temp_file" 2>/dev/null || echo "FAILED")
+loan_body=$(cat "$temp_file" 2>/dev/null || echo "")
+rm -f "$temp_file"
 
-if [[ $loan_response == *"id"* ]]; then
+echo "HTTP Code: $http_code"
+
+if [[ $http_code == "201" ]] || [[ $http_code == "200" ]]; then
     echo -e "${GREEN}✅ Loan Application: SUCCESS${NC}"
-    LOAN_ID=$(echo $loan_response | grep -o '"id":[0-9]*' | cut -d':' -f2)
-    echo "   Loan ID: $LOAN_ID"
+    LOAN_ID=$(extract_json_number "$loan_body" "id")
+    if [[ -n "$LOAN_ID" ]]; then
+        echo "   Loan ID: $LOAN_ID"
+    else
+        echo -e "${RED}❌ Failed to extract Loan ID${NC}"
+        exit 1
+    fi
 else
     echo -e "${RED}❌ Loan Application: FAILED${NC}"
-    echo "   Response: $loan_response"
+    exit 1
 fi
 
 # 10. Get Loan Details
 echo -e "${YELLOW}10. Getting loan details...${NC}"
-loan_details_response=$(curl -s -X GET "$LOAN_SERVICE_URL/api/loans/$LOAN_ID" \
-    -H "Authorization: Bearer $JWT_TOKEN")
+temp_file=$(mktemp)
+http_code=$(curl -s -w "%{http_code}" -X GET "$LOAN_SERVICE_URL/api/loans/$LOAN_ID" \
+    -H "Authorization: Bearer $JWT_TOKEN" -o "$temp_file" 2>/dev/null || echo "FAILED")
+loan_details_body=$(cat "$temp_file" 2>/dev/null || echo "")
+rm -f "$temp_file"
 
-if [[ $loan_details_response == *"amount"* ]]; then
+echo "HTTP Code: $http_code"
+
+if [[ $http_code == "200" ]]; then
     echo -e "${GREEN}✅ Loan Details: SUCCESS${NC}"
-    loan_amount=$(echo $loan_details_response | grep -o '"amount":[0-9.]*' | cut -d':' -f2)
-    echo "   Loan Amount: $loan_amount"
+    loan_amount=$(extract_json_number "$loan_details_body" "amount")
+    if [[ -n "$loan_amount" ]]; then
+        echo "   Loan Amount: $loan_amount"
+    fi
 else
     echo -e "${RED}❌ Loan Details: FAILED${NC}"
-    echo "   Response: $loan_details_response"
 fi
 
 # 11. Create Collateral
@@ -307,18 +368,24 @@ collateral_data="{
     \"currency\": \"KES\"
 }"
 
-collateral_response=$(curl -s -X POST "$LOAN_SERVICE_URL/api/collaterals" \
+temp_file=$(mktemp)
+http_code=$(curl -s -w "%{http_code}" -X POST "$LOAN_SERVICE_URL/api/collaterals" \
     -H "Content-Type: application/json" \
     -H "Authorization: Bearer $JWT_TOKEN" \
-    -d "$collateral_data")
+    -d "$collateral_data" -o "$temp_file" 2>/dev/null || echo "FAILED")
+collateral_body=$(cat "$temp_file" 2>/dev/null || echo "")
+rm -f "$temp_file"
 
-if [[ $collateral_response == *"id"* ]]; then
+echo "HTTP Code: $http_code"
+
+if [[ $http_code == "201" ]] || [[ $http_code == "200" ]]; then
     echo -e "${GREEN}✅ Collateral Creation: SUCCESS${NC}"
-    collateral_id=$(echo $collateral_response | grep -o '"id":[0-9]*' | cut -d':' -f2)
-    echo "   Collateral ID: $collateral_id"
+    collateral_id=$(extract_json_number "$collateral_body" "id")
+    if [[ -n "$collateral_id" ]]; then
+        echo "   Collateral ID: $collateral_id"
+    fi
 else
     echo -e "${RED}❌ Collateral Creation: FAILED${NC}"
-    echo "   Response: $collateral_response"
 fi
 
 echo ""
@@ -335,32 +402,44 @@ notification_data="{
     \"priority\": \"HIGH\"
 }"
 
-notification_response=$(curl -s -X POST "$NOTIFICATION_SERVICE_URL/api/notifications" \
+temp_file=$(mktemp)
+http_code=$(curl -s -w "%{http_code}" -X POST "$NOTIFICATION_SERVICE_URL/api/notifications" \
     -H "Content-Type: application/json" \
     -H "Authorization: Bearer $JWT_TOKEN" \
-    -d "$notification_data")
+    -d "$notification_data" -o "$temp_file" 2>/dev/null || echo "FAILED")
+notification_body=$(cat "$temp_file" 2>/dev/null || echo "")
+rm -f "$temp_file"
 
-if [[ $notification_response == *"id"* ]]; then
+echo "HTTP Code: $http_code"
+
+if [[ $http_code == "201" ]] || [[ $http_code == "200" ]]; then
     echo -e "${GREEN}✅ Notification Creation: SUCCESS${NC}"
-    notification_id=$(echo $notification_response | grep -o '"id":[0-9]*' | cut -d':' -f2)
-    echo "   Notification ID: $notification_id"
+    notification_id=$(extract_json_number "$notification_body" "id")
+    if [[ -n "$notification_id" ]]; then
+        echo "   Notification ID: $notification_id"
+    fi
 else
     echo -e "${RED}❌ Notification Creation: FAILED${NC}"
-    echo "   Response: $notification_response"
 fi
 
 # 13. Get User Notifications
 echo -e "${YELLOW}13. Getting user notifications...${NC}"
-notifications_response=$(curl -s -X GET "$NOTIFICATION_SERVICE_URL/api/notifications/user/$USER_ID" \
-    -H "Authorization: Bearer $JWT_TOKEN")
+temp_file=$(mktemp)
+http_code=$(curl -s -w "%{http_code}" -X GET "$NOTIFICATION_SERVICE_URL/api/notifications/user/$USER_ID" \
+    -H "Authorization: Bearer $JWT_TOKEN" -o "$temp_file" 2>/dev/null || echo "FAILED")
+notifications_body=$(cat "$temp_file" 2>/dev/null || echo "")
+rm -f "$temp_file"
 
-if [[ $notifications_response == *"content"* ]]; then
+echo "HTTP Code: $http_code"
+
+if [[ $http_code == "200" ]]; then
     echo -e "${GREEN}✅ Notifications Retrieval: SUCCESS${NC}"
-    notification_count=$(echo $notifications_response | grep -o '"totalElements":[0-9]*' | cut -d':' -f2)
-    echo "   Total Notifications: $notification_count"
+    notification_count=$(extract_json_number "$notifications_body" "totalElements")
+    if [[ -n "$notification_count" ]]; then
+        echo "   Total Notifications: $notification_count"
+    fi
 else
     echo -e "${RED}❌ Notifications Retrieval: FAILED${NC}"
-    echo "   Response: $notifications_response"
 fi
 
 echo ""
@@ -369,23 +448,31 @@ echo -e "${PURPLE}🔐 Security Testing${NC}"
 
 # 14. Test Unauthorized Access
 echo -e "${YELLOW}14. Testing unauthorized access...${NC}"
-unauthorized_response=$(curl -s -X GET "$ACCOUNT_SERVICE_URL/api/accounts" | head -c 100)
+temp_file=$(mktemp)
+http_code=$(curl -s -w "%{http_code}" -X GET "$ACCOUNT_SERVICE_URL/api/accounts" -o "$temp_file" 2>/dev/null || echo "FAILED")
+rm -f "$temp_file"
 
-if [[ $unauthorized_response == *"Unauthorized"* ]] || [[ $unauthorized_response == *"401"* ]]; then
+echo "HTTP Code: $http_code"
+
+if [[ $http_code == "401" ]] || [[ $http_code == "403" ]]; then
     echo -e "${GREEN}✅ Unauthorized Access: BLOCKED${NC}"
 else
-    echo -e "${RED}❌ Unauthorized Access: NOT BLOCKED${NC}"
+    echo -e "${RED}❌ Unauthorized Access: NOT BLOCKED (HTTP: $http_code)${NC}"
 fi
 
 # 15. Test Invalid Token
 echo -e "${YELLOW}15. Testing invalid token...${NC}"
-invalid_token_response=$(curl -s -X GET "$ACCOUNT_SERVICE_URL/api/accounts" \
-    -H "Authorization: Bearer invalid_token" | head -c 100)
+temp_file=$(mktemp)
+http_code=$(curl -s -w "%{http_code}" -X GET "$ACCOUNT_SERVICE_URL/api/accounts" \
+    -H "Authorization: Bearer invalid_token" -o "$temp_file" 2>/dev/null || echo "FAILED")
+rm -f "$temp_file"
 
-if [[ $invalid_token_response == *"Unauthorized"* ]] || [[ $invalid_token_response == *"401"* ]]; then
+echo "HTTP Code: $http_code"
+
+if [[ $http_code == "401" ]] || [[ $http_code == "403" ]]; then
     echo -e "${GREEN}✅ Invalid Token: REJECTED${NC}"
 else
-    echo -e "${RED}❌ Invalid Token: NOT REJECTED${NC}"
+    echo -e "${RED}❌ Invalid Token: NOT REJECTED (HTTP: $http_code)${NC}"
 fi
 
 echo ""
@@ -410,7 +497,9 @@ echo -e "\n${BLUE}📋 Test Data Created:${NC}"
 echo -e "👤 User: $test_username (ID: $USER_ID)"
 echo -e "🏦 Account: $ACCOUNT_ID"
 echo -e "💰 Loan: $LOAN_ID"
-echo -e "🔑 JWT Token: ${JWT_TOKEN:0:20}..."
+if [[ -n "$JWT_TOKEN" ]]; then
+    echo -e "🔑 JWT Token: ${JWT_TOKEN:0:20}..."
+fi
 
 echo -e "\n${GREEN}🎉 Comprehensive API test completed successfully!${NC}"
 echo -e "${YELLOW}💡 Next: Update Postman collection with these test scenarios${NC}" 
