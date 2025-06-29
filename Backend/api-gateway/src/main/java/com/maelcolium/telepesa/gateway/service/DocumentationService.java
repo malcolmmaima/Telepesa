@@ -5,7 +5,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.client.ServiceInstance;
 import org.springframework.cloud.client.discovery.DiscoveryClient;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
+import org.springframework.web.reactive.function.client.WebClient;
 
 import java.time.LocalDateTime;
 import java.util.*;
@@ -26,7 +26,7 @@ import java.util.concurrent.TimeUnit;
 public class DocumentationService {
 
     private final DiscoveryClient discoveryClient;
-    private final RestTemplate restTemplate;
+    private final WebClient webClient;
     
     @Value("${server.port:8080}")
     private String gatewayPort;
@@ -34,9 +34,9 @@ public class DocumentationService {
     @Value("${eureka.client.service-url.defaultZone:http://localhost:8761/eureka/}")
     private String eurekaUrl;
 
-    public DocumentationService(DiscoveryClient discoveryClient, RestTemplate restTemplate) {
+    public DocumentationService(DiscoveryClient discoveryClient, WebClient webClient) {
         this.discoveryClient = discoveryClient;
-        this.restTemplate = restTemplate;
+        this.webClient = webClient;
     }
 
     /**
@@ -163,7 +163,11 @@ public class DocumentationService {
             
             CompletableFuture<String> future = CompletableFuture.supplyAsync(() -> {
                 try {
-                    restTemplate.getForObject(healthUrl, String.class);
+                    webClient.get()
+                            .uri(healthUrl)
+                            .retrieve()
+                            .bodyToMono(String.class)
+                            .block();
                     return "UP";
                 } catch (Exception e) {
                     log.warn("Health check failed for {}: {}", serviceName, e.getMessage());
@@ -204,30 +208,18 @@ public class DocumentationService {
     }
 
     /**
-     * Get documentation formats available
+     * Get available documentation formats
      * 
-     * @return Map of available documentation formats
+     * @return Map of documentation formats
      */
     public Map<String, Object> getDocumentationFormats() {
         Map<String, Object> formats = new HashMap<>();
         
-        Map<String, String> swaggerUi = new HashMap<>();
-        swaggerUi.put("description", "Interactive API documentation with Swagger UI");
-        swaggerUi.put("url-pattern", "/api/v1/docs/{service-name}/swagger-ui.html");
-        swaggerUi.put("features", Arrays.asList("Interactive testing", "Request/Response examples", "Authentication support"));
-        formats.put("swagger-ui", swaggerUi);
-        
-        Map<String, String> openApi = new HashMap<>();
-        openApi.put("description", "OpenAPI 3.0 specification in JSON format");
-        openApi.put("url-pattern", "/api/v1/openapi/{service-name}/v3/api-docs");
-        openApi.put("features", Arrays.asList("Machine-readable", "Code generation", "API client generation"));
-        formats.put("openapi-json", openApi);
-        
-        Map<String, String> openApiYaml = new HashMap<>();
-        openApiYaml.put("description", "OpenAPI 3.0 specification in YAML format");
-        openApiYaml.put("url-pattern", "/api/v1/openapi/{service-name}/v3/api-docs.yaml");
-        openApiYaml.put("features", Arrays.asList("Human-readable", "Version control friendly", "Easy editing"));
-        formats.put("openapi-yaml", openApiYaml);
+        formats.put("swagger-ui", "Interactive API documentation interface");
+        formats.put("openapi-json", "OpenAPI 3.0 specification in JSON format");
+        formats.put("openapi-yaml", "OpenAPI 3.0 specification in YAML format");
+        formats.put("postman-collection", "Postman collection for API testing");
+        formats.put("health-endpoints", "Service health and status endpoints");
         
         return formats;
     }

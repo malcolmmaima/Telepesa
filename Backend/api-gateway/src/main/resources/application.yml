@@ -3,6 +3,16 @@ spring:
     name: api-gateway
   profiles:
     active: dev
+  redis:
+    host: ${REDIS_HOST:localhost}
+    port: ${REDIS_PORT:6379}
+    password: ${REDIS_PASSWORD:}
+    timeout: 2000ms
+    lettuce:
+      pool:
+        max-active: 8
+        max-idle: 8
+        min-idle: 0
 
 eureka:
   client:
@@ -333,19 +343,6 @@ cloud:
             - "Access-Control-Allow-Credentials"
           allowCredentials: true
           maxAge: 3600
-
-# Redis Configuration for Rate Limiting
-spring:
-  redis:
-    host: ${REDIS_HOST:localhost}
-    port: ${REDIS_PORT:6379}
-    password: ${REDIS_PASSWORD:}
-    timeout: 2000ms
-    lettuce:
-      pool:
-        max-active: 8
-        max-idle: 8
-        min-idle: 0
 
 # JWT Configuration
 app:

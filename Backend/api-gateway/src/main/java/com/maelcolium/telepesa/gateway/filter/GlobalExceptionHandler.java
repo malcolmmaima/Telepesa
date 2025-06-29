@@ -69,7 +69,8 @@ public class GlobalExceptionHandler implements ErrorWebExceptionHandler {
         if (ex instanceof NotFoundException) {
             return HttpStatus.SERVICE_UNAVAILABLE;
         } else if (ex instanceof ResponseStatusException) {
-            return ((ResponseStatusException) ex).getStatusCode();
+            ResponseStatusException rse = (ResponseStatusException) ex;
+            return HttpStatus.valueOf(rse.getStatusCode().value());
         } else if (ex instanceof IllegalArgumentException) {
             return HttpStatus.BAD_REQUEST;
         } else if (ex instanceof SecurityException) {

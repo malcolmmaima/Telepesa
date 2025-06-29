@@ -3,6 +3,7 @@ package com.maelcolium.telepesa.gateway;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
+import org.springframework.context.annotation.ComponentScan;
 
 /**
  * API Gateway Application for Telepesa Microservices
@@ -22,6 +23,11 @@ import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
  */
 @SpringBootApplication
 @EnableDiscoveryClient
+@ComponentScan(basePackages = {
+    "com.maelcolium.telepesa.gateway",
+    "com.maelcolium.telepesa.gateway.config",
+    "com.maelcolium.telepesa.security"
+})
 public class ApiGatewayApplication {
 
     public static void main(String[] args) {

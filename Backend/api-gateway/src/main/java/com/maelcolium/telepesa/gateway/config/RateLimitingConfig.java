@@ -4,6 +4,7 @@ import org.springframework.cloud.gateway.filter.ratelimit.KeyResolver;
 import org.springframework.cloud.gateway.filter.ratelimit.RedisRateLimiter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
 import reactor.core.publisher.Mono;
 
 /**
@@ -24,6 +25,7 @@ public class RateLimitingConfig {
      * @return RedisRateLimiter with default settings
      */
     @Bean
+    @Primary
     public RedisRateLimiter redisRateLimiter() {
         return new RedisRateLimiter(10, 20); // replenishRate: 10, burstCapacity: 20
     }
@@ -46,6 +48,7 @@ public class RateLimitingConfig {
      * @return KeyResolver that uses IP address as the key
      */
     @Bean
+    @Primary
     public KeyResolver userKeyResolver() {
         return exchange -> {
             String ipAddress = exchange.getRequest().getRemoteAddress() != null 

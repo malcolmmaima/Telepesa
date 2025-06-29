@@ -63,42 +63,17 @@ public class ResponseTransformationFilter implements GlobalFilter, Ordered {
 
     private void transformResponse(ServerWebExchange exchange, long startTime) {
         ServerHttpResponse response = exchange.getResponse();
-        
         // Only transform JSON responses
         if (!isJsonResponse(response)) {
             return;
         }
-        
         // Get request ID from headers
         String requestId = exchange.getRequest().getHeaders().getFirst("X-Request-ID");
-        
         // Calculate processing time
         long processingTime = System.currentTimeMillis() - startTime;
-        
         // Add response headers
         addResponseHeaders(response, requestId, processingTime);
-        
-        // Transform response body if it exists
-        DataBuffer dataBuffer = response.getBufferFactory().wrap(new byte[0]);
-        if (response.getBody() != null) {
-            DataBufferUtils.join(response.getBody())
-                .flatMap(buffer -> {
-                    try {
-                        String responseBody = buffer.toString(StandardCharsets.UTF_8);
-                        String transformedBody = transformResponseBody(responseBody, requestId, processingTime);
-                        return Mono.just(response.getBufferFactory().wrap(transformedBody.getBytes(StandardCharsets.UTF_8)));
-                    } catch (Exception e) {
-                        log.error("Error transforming response body", e);
-                        return Mono.just(buffer);
-                    } finally {
-                        DataBufferUtils.release(buffer);
-                    }
-                })
-                .subscribe(transformedBuffer -> {
-                    response.getBody().subscribe();
-                    response.writeWith(Mono.just(transformedBuffer));
-                });
-        }
+        // TODO: For full response body transformation, use ServerHttpResponseDecorator in a WebFilter.
     }
 
     private boolean isJsonResponse(ServerHttpResponse response) {
