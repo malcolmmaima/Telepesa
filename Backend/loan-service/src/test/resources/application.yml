@@ -3,7 +3,7 @@ spring:
     active: test
   
   datasource:
-    url: jdbc:h2:mem:testdb
+    url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
     driver-class-name: org.h2.Driver
     username: sa
     password: password
@@ -13,13 +13,42 @@ spring:
       ddl-auto: create-drop
     database-platform: org.hibernate.dialect.H2Dialect
     show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.H2Dialect
+        format_sql: false
   
   h2:
     console:
-      enabled: true
+      enabled: false
+  
+  # Disable Redis for tests
+  cache:
+    type: none
+  
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      password: 
+      database: 2
 
 logging:
   level:
     com.maelcolium.telepesa.loan: DEBUG
     org.springframework.test: WARN
     org.hibernate: WARN
+    org.springframework.boot.autoconfigure: WARN
+
+# Override any environment variables that might interfere
+server:
+  port: 0  # Use random port for tests
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      show-details: never
