@@ -315,4 +315,45 @@ public class LoanController {
         Page<LoanDto> loans = loanService.searchLoans(userId, status, loanType, fromDate, toDate, pageable);
         return ResponseEntity.ok(loans);
     }
+
+    @Operation(
+        summary = "Get loans by type",
+        description = "Retrieve loans filtered by loan type",
+        responses = {
+            @ApiResponse(responseCode = "200", description = "Loans retrieved successfully")
+        }
+    )
+    @GetMapping("/type/{loanType}")
+    public ResponseEntity<Page<LoanDto>> getLoansByType(
+        @Parameter(description = "Loan type", example = "PERSONAL")
+        @PathVariable LoanType loanType,
+        
+        @RequestParam(defaultValue = "0") int page,
+        @RequestParam(defaultValue = "20") int size) {
+        
+        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
+        Page<LoanDto> loans = loanService.getLoansByType(loanType, pageable);
+        return ResponseEntity.ok(loans);
+    }
+
+    @Operation(
+        summary = "Update loan status",
+        description = "Update the status of a loan",
+        responses = {
+            @ApiResponse(responseCode = "200", description = "Loan status updated successfully"),
+            @ApiResponse(responseCode = "400", description = "Invalid status update"),
+            @ApiResponse(responseCode = "404", description = "Loan not found")
+        }
+    )
+    @PutMapping("/{id}/status")
+    public ResponseEntity<LoanDto> updateLoanStatus(
+        @Parameter(description = "Loan ID", example = "1")
+        @PathVariable Long id,
+        
+        @Parameter(description = "New loan status", example = "ACTIVE")
+        @RequestParam LoanStatus status) {
+        
+        LoanDto loan = loanService.updateLoanStatus(id, status);
+        return ResponseEntity.ok(loan);
+    }
 }

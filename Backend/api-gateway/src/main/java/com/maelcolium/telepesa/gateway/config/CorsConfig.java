@@ -7,7 +7,6 @@ import org.springframework.web.cors.reactive.CorsWebFilter;
 import org.springframework.web.cors.reactive.UrlBasedCorsConfigurationSource;
 
 import java.util.Arrays;
-import java.util.List;
 
 /**
  * CORS Configuration for API Gateway
@@ -30,38 +29,16 @@ public class CorsConfig {
     public CorsWebFilter corsWebFilter() {
         CorsConfiguration corsConfig = new CorsConfiguration();
         
-        // Allowed origins for different environments
-        List<String> allowedOrigins = Arrays.asList(
-            "http://localhost:3000",      // React development server
-            "http://localhost:8080",      // API Gateway
-            "https://telepesa.com",       // Production domain
-            "https://dashboard.telepesa.com" // Dashboard domain
-        );
-        corsConfig.setAllowedOriginPatterns(allowedOrigins);
+        // Allow all origins for development
+        corsConfig.addAllowedOriginPattern("*");
         
         // Allowed HTTP methods
-        corsConfig.setAllowedMethods(Arrays.asList(
-            "GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"
-        ));
+        corsConfig.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
         
         // Allowed headers
-        corsConfig.setAllowedHeaders(Arrays.asList(
-            "Authorization",
-            "Content-Type",
-            "X-Requested-With",
-            "Accept",
-            "Origin",
-            "Access-Control-Request-Method",
-            "Access-Control-Request-Headers"
-        ));
+        corsConfig.setAllowedHeaders(Arrays.asList("*"));
         
-        // Exposed headers
-        corsConfig.setExposedHeaders(Arrays.asList(
-            "Access-Control-Allow-Origin",
-            "Access-Control-Allow-Credentials"
-        ));
-        
-        // Allow credentials (cookies, authorization headers)
+        // Allow credentials
         corsConfig.setAllowCredentials(true);
         
         // Cache preflight requests for 1 hour
