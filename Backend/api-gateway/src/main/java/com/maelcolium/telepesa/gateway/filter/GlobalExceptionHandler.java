@@ -10,7 +10,7 @@ import org.springframework.core.io.buffer.DataBufferFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.server.reactive.ServerHttpResponse;
-import org.springframework.stereotype.Component;
+// import org.springframework.stereotype.Component;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
@@ -29,7 +29,7 @@ import java.util.Map;
  * @version 1.0.0
  */
 @Slf4j
-@Component
+// @Component
 @Order(-1)
 public class GlobalExceptionHandler implements ErrorWebExceptionHandler {
 

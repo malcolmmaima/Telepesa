@@ -13,7 +13,7 @@ import org.springframework.core.io.buffer.DataBufferUtils;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.server.reactive.ServerHttpResponse;
-import org.springframework.stereotype.Component;
+// import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
@@ -32,7 +32,7 @@ import java.time.format.DateTimeFormatter;
  * @version 1.0.0
  */
 @Slf4j
-@Component
+// @Component
 public class ResponseTransformationFilter implements GlobalFilter, Ordered {
 
     private final ObjectMapper objectMapper;

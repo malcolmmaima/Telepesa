@@ -28,12 +28,6 @@ eureka:
 
 server:
   port: 8080
-  servlet:
-    context-path: /
-  compression:
-    enabled: true
-  http2:
-    enabled: true
 
 cloud:
   gateway:
@@ -42,13 +36,13 @@ cloud:
         enabled: true
         lower-case-service-id: true
     routes:
-      # User Service Routes with Rate Limiting
-      - id: user-service-registration
+      # User Service Routes
+      - id: user-service
         uri: lb://user-service
         predicates:
-          - Path=/api/v1/users/register
-          - Method=POST
+          - Path=/api/v1/users/**
         filters:
+          - RewritePath=/api/v1/users/(?<remaining>.*), /api/users/${remaining}
           - name: RequestRateLimiter
             args:
               redis-rate-limiter.replenishRate: 10
@@ -56,34 +50,6 @@ cloud:
           - name: Retry
             args:
               retries: 3
-              statuses: BAD_GATEWAY,SERVICE_UNAVAILABLE
-              methods: POST
-      
-      - id: user-service-login
-        uri: lb://user-service
-        predicates:
-          - Path=/api/v1/users/login
-          - Method=POST
-        filters:
-          - name: RequestRateLimiter
-            args:
-              redis-rate-limiter.replenishRate: 5
-              redis-rate-limiter.burstCapacity: 10
-          - name: Retry
-            args:
-              retries: 2
-              statuses: BAD_GATEWAY,SERVICE_UNAVAILABLE
-              methods: POST
-      
-      - id: user-service-general
-        uri: lb://user-service
-        predicates:
-          - Path=/api/v1/users/**
-        filters:
-          - name: JwtAuthenticationFilter
-          - name: Retry
-            args:
-              retries: 2
               statuses: BAD_GATEWAY,SERVICE_UNAVAILABLE
               methods: GET,POST,PUT,DELETE
       
@@ -93,10 +59,14 @@ cloud:
         predicates:
           - Path=/api/v1/accounts/**
         filters:
-          - name: JwtAuthenticationFilter
+          - RewritePath=/api/v1/accounts/(?<remaining>.*), /api/accounts/${remaining}
+          - name: RequestRateLimiter
+            args:
+              redis-rate-limiter.replenishRate: 10
+              redis-rate-limiter.burstCapacity: 20
           - name: Retry
             args:
-              retries: 2
+              retries: 3
               statuses: BAD_GATEWAY,SERVICE_UNAVAILABLE
               methods: GET,POST,PUT,DELETE
       
@@ -106,10 +76,14 @@ cloud:
         predicates:
           - Path=/api/v1/transactions/**
         filters:
-          - name: JwtAuthenticationFilter
+          - RewritePath=/api/v1/transactions/(?<remaining>.*), /api/transactions/${remaining}
+          - name: RequestRateLimiter
+            args:
+              redis-rate-limiter.replenishRate: 10
+              redis-rate-limiter.burstCapacity: 20
           - name: Retry
             args:
-              retries: 2
+              retries: 3
               statuses: BAD_GATEWAY,SERVICE_UNAVAILABLE
               methods: GET,POST,PUT,DELETE
       
@@ -119,10 +93,14 @@ cloud:
         predicates:
           - Path=/api/v1/loans/**
         filters:
-          - name: JwtAuthenticationFilter
+          - RewritePath=/api/v1/loans/(?<remaining>.*), /api/loans/${remaining}
+          - name: RequestRateLimiter
+            args:
+              redis-rate-limiter.replenishRate: 10
+              redis-rate-limiter.burstCapacity: 20
           - name: Retry
             args:
-              retries: 2
+              retries: 3
               statuses: BAD_GATEWAY,SERVICE_UNAVAILABLE
               methods: GET,POST,PUT,DELETE
       
@@ -132,10 +110,14 @@ cloud:
         predicates:
           - Path=/api/v1/notifications/**
         filters:
-          - name: JwtAuthenticationFilter
+          - RewritePath=/api/v1/notifications/(?<remaining>.*), /api/notifications/${remaining}
+          - name: RequestRateLimiter
+            args:
+              redis-rate-limiter.replenishRate: 10
+              redis-rate-limiter.burstCapacity: 20
           - name: Retry
             args:
-              retries: 2
+              retries: 3
               statuses: BAD_GATEWAY,SERVICE_UNAVAILABLE
               methods: GET,POST,PUT,DELETE
       
@@ -145,6 +127,7 @@ cloud:
         predicates:
           - Path=/api/v1/health/**
         filters:
+          - RewritePath=/api/v1/health/(?<remaining>.*), /actuator/health/${remaining}
           - name: Retry
             args:
               retries: 1
@@ -157,6 +140,7 @@ cloud:
         predicates:
           - Path=/api/v1/docs/**
         filters:
+          - RewritePath=/api/v1/docs/(?<remaining>.*), /swagger-ui/${remaining}
           - name: Retry
             args:
               retries: 1
@@ -169,10 +153,7 @@ cloud:
         predicates:
           - Path=/api/v1/docs/user-service/**
         filters:
-          - name: RewritePath
-            args:
-              regexp: "/api/v1/docs/user-service/(?<remaining>.*)"
-              replacement: "/${remaining}"
+          - RewritePath=/api/v1/docs/user-service/(?<remaining>.*), /swagger-ui/${remaining}
           - name: Retry
             args:
               retries: 1
@@ -184,10 +165,7 @@ cloud:
         predicates:
           - Path=/api/v1/docs/account-service/**
         filters:
-          - name: RewritePath
-            args:
-              regexp: "/api/v1/docs/account-service/(?<remaining>.*)"
-              replacement: "/${remaining}"
+          - RewritePath=/api/v1/docs/account-service/(?<remaining>.*), /swagger-ui/${remaining}
           - name: Retry
             args:
               retries: 1
@@ -199,10 +177,7 @@ cloud:
         predicates:
           - Path=/api/v1/docs/transaction-service/**
         filters:
-          - name: RewritePath
-            args:
-              regexp: "/api/v1/docs/transaction-service/(?<remaining>.*)"
-              replacement: "/${remaining}"
+          - RewritePath=/api/v1/docs/transaction-service/(?<remaining>.*), /swagger-ui/${remaining}
           - name: Retry
             args:
               retries: 1
@@ -214,10 +189,7 @@ cloud:
         predicates:
           - Path=/api/v1/docs/loan-service/**
         filters:
-          - name: RewritePath
-            args:
-              regexp: "/api/v1/docs/loan-service/(?<remaining>.*)"
-              replacement: "/${remaining}"
+          - RewritePath=/api/v1/docs/loan-service/(?<remaining>.*), /swagger-ui/${remaining}
           - name: Retry
             args:
               retries: 1
@@ -229,86 +201,7 @@ cloud:
         predicates:
           - Path=/api/v1/docs/notification-service/**
         filters:
-          - name: RewritePath
-            args:
-              regexp: "/api/v1/docs/notification-service/(?<remaining>.*)"
-              replacement: "/${remaining}"
-          - name: Retry
-            args:
-              retries: 1
-              statuses: BAD_GATEWAY,SERVICE_UNAVAILABLE
-              methods: GET
-      
-      # OpenAPI Spec Routes for each service
-      - id: user-service-openapi
-        uri: lb://user-service
-        predicates:
-          - Path=/api/v1/openapi/user-service/**
-        filters:
-          - name: RewritePath
-            args:
-              regexp: "/api/v1/openapi/user-service/(?<remaining>.*)"
-              replacement: "/${remaining}"
-          - name: Retry
-            args:
-              retries: 1
-              statuses: BAD_GATEWAY,SERVICE_UNAVAILABLE
-              methods: GET
-      
-      - id: account-service-openapi
-        uri: lb://account-service
-        predicates:
-          - Path=/api/v1/openapi/account-service/**
-        filters:
-          - name: RewritePath
-            args:
-              regexp: "/api/v1/openapi/account-service/(?<remaining>.*)"
-              replacement: "/${remaining}"
-          - name: Retry
-            args:
-              retries: 1
-              statuses: BAD_GATEWAY,SERVICE_UNAVAILABLE
-              methods: GET
-      
-      - id: transaction-service-openapi
-        uri: lb://transaction-service
-        predicates:
-          - Path=/api/v1/openapi/transaction-service/**
-        filters:
-          - name: RewritePath
-            args:
-              regexp: "/api/v1/openapi/transaction-service/(?<remaining>.*)"
-              replacement: "/${remaining}"
-          - name: Retry
-            args:
-              retries: 1
-              statuses: BAD_GATEWAY,SERVICE_UNAVAILABLE
-              methods: GET
-      
-      - id: loan-service-openapi
-        uri: lb://loan-service
-        predicates:
-          - Path=/api/v1/openapi/loan-service/**
-        filters:
-          - name: RewritePath
-            args:
-              regexp: "/api/v1/openapi/loan-service/(?<remaining>.*)"
-              replacement: "/${remaining}"
-          - name: Retry
-            args:
-              retries: 1
-              statuses: BAD_GATEWAY,SERVICE_UNAVAILABLE
-              methods: GET
-      
-      - id: notification-service-openapi
-        uri: lb://notification-service
-        predicates:
-          - Path=/api/v1/openapi/notification-service/**
-        filters:
-          - name: RewritePath
-            args:
-              regexp: "/api/v1/openapi/notification-service/(?<remaining>.*)"
-              replacement: "/${remaining}"
+          - RewritePath=/api/v1/docs/notification-service/(?<remaining>.*), /swagger-ui/${remaining}
           - name: Retry
             args:
               retries: 1
@@ -350,11 +243,12 @@ app:
     secret: ${JWT_SECRET:myVerySecretJWTKeyForTelepesaUserService123!@#}
     expiration: ${JWT_EXPIRATION:86400}
 
+# Actuator Configuration
 management:
   endpoints:
     web:
       exposure:
-        include: health,info,metrics,prometheus,gateway
+        include: health,info,gateway,metrics
       base-path: /actuator
   endpoint:
     health:
@@ -365,16 +259,13 @@ management:
     export:
       prometheus:
         enabled: true
-    tags:
-      application: ${spring.application.name}
 
+# Logging Configuration
 logging:
   level:
     org.springframework.cloud.gateway: DEBUG
-    org.springframework.web: INFO
-    com.maelcolium.telepesa: DEBUG
-    com.netflix.discovery: INFO
-    com.netflix.eureka: INFO
+    org.springframework.web.reactive: DEBUG
+    com.maelcolium.telepesa.gateway: DEBUG
+    reactor.netty: DEBUG
   pattern:
-    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
-    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n" 
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"

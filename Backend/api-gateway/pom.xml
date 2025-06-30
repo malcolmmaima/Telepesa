@@ -101,16 +101,27 @@
             <scope>runtime</scope>
         </dependency>
 
-        <!-- Shared Libraries -->
+        <!-- Spring Security WebFlux for Gateway security -->
         <dependency>
-            <groupId>com.maelcolium.telepesa</groupId>
-            <artifactId>security-utils</artifactId>
-            <version>1.0.0</version>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-security</artifactId>
         </dependency>
         
         <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-webflux</artifactId>
+        </dependency>
+        
+        <!-- Spring Security OAuth2 Resource Server for JWT -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-oauth2-resource-server</artifactId>
+        </dependency>
+
+        <!-- Shared Security Utils -->
+        <dependency>
             <groupId>com.maelcolium.telepesa</groupId>
-            <artifactId>common-exceptions</artifactId>
+            <artifactId>security-utils</artifactId>
             <version>1.0.0</version>
         </dependency>
 
@@ -138,4 +149,4 @@
             </plugin>
         </plugins>
     </build>
-</project> 
+</project>
