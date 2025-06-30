@@ -11,6 +11,8 @@ import com.maelcolium.telepesa.models.enums.TransactionType;
 import com.maelcolium.telepesa.exceptions.ResourceNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -31,6 +33,7 @@ public class TransactionServiceImpl implements TransactionService {
     private final TransactionMapper transactionMapper;
 
     @Override
+    @CacheEvict(value = {"transactions", "transaction-history", "account-balances"}, allEntries = true)
     public TransactionDto createTransaction(CreateTransactionRequest request) {
         log.info("Creating transaction for user: {}, amount: {}", request.getUserId(), request.getAmount());
 
@@ -57,6 +60,7 @@ public class TransactionServiceImpl implements TransactionService {
 
     @Override
     @Transactional(readOnly = true)
+    @Cacheable(value = "transactions", key = "#id")
     public TransactionDto getTransaction(Long id) {
         Transaction transaction = transactionRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Transaction not found with id: " + id));
@@ -65,6 +69,7 @@ public class TransactionServiceImpl implements TransactionService {
 
     @Override
     @Transactional(readOnly = true)
+    @Cacheable(value = "transactions", key = "'transactionId:' + #transactionId")
     public TransactionDto getTransactionByTransactionId(String transactionId) {
         Transaction transaction = transactionRepository.findByTransactionId(transactionId)
                 .orElseThrow(() -> new ResourceNotFoundException("Transaction not found with transaction ID: " + transactionId));
@@ -80,6 +85,7 @@ public class TransactionServiceImpl implements TransactionService {
 
     @Override
     @Transactional(readOnly = true)
+    @Cacheable(value = "transaction-history", key = "'user:' + #userId + ':page:' + #pageable.pageNumber + ':size:' + #pageable.pageSize")
     public Page<TransactionDto> getTransactionsByUserId(Long userId, Pageable pageable) {
         Page<Transaction> transactions = transactionRepository.findByUserId(userId, pageable);
         return transactions.map(transactionMapper::toDto);
@@ -87,6 +93,7 @@ public class TransactionServiceImpl implements TransactionService {
 
     @Override
     @Transactional(readOnly = true)
+    @Cacheable(value = "transaction-history", key = "'account:' + #accountId + ':page:' + #pageable.pageNumber + ':size:' + #pageable.pageSize")
     public Page<TransactionDto> getTransactionsByAccountId(Long accountId, Pageable pageable) {
         Page<Transaction> transactions = transactionRepository.findByFromAccountIdOrToAccountId(accountId, accountId, pageable);
         return transactions.map(transactionMapper::toDto);
@@ -94,6 +101,7 @@ public class TransactionServiceImpl implements TransactionService {
 
     @Override
     @Transactional(readOnly = true)
+    @Cacheable(value = "transaction-history", key = "'status:' + #status + ':page:' + #pageable.pageNumber + ':size:' + #pageable.pageSize")
     public Page<TransactionDto> getTransactionsByStatus(TransactionStatus status, Pageable pageable) {
         Page<Transaction> transactions = transactionRepository.findByStatus(status, pageable);
         return transactions.map(transactionMapper::toDto);
@@ -101,6 +109,7 @@ public class TransactionServiceImpl implements TransactionService {
 
     @Override
     @Transactional(readOnly = true)
+    @Cacheable(value = "transaction-history", key = "'type:' + #transactionType + ':page:' + #pageable.pageNumber + ':size:' + #pageable.pageSize")
     public Page<TransactionDto> getTransactionsByType(TransactionType transactionType, Pageable pageable) {
         Page<Transaction> transactions = transactionRepository.findByTransactionType(transactionType, pageable);
         return transactions.map(transactionMapper::toDto);
@@ -108,12 +117,14 @@ public class TransactionServiceImpl implements TransactionService {
 
     @Override
     @Transactional(readOnly = true)
+    @Cacheable(value = "transaction-history", key = "'user:' + #userId + ':dateRange:' + #startDate + ':' + #endDate + ':page:' + #pageable.pageNumber + ':size:' + #pageable.pageSize")
     public Page<TransactionDto> getTransactionsByDateRange(Long userId, LocalDateTime startDate, LocalDateTime endDate, Pageable pageable) {
         Page<Transaction> transactions = transactionRepository.findByUserIdAndDateRange(userId, startDate, endDate, pageable);
         return transactions.map(transactionMapper::toDto);
     }
 
     @Override
+    @CacheEvict(value = {"transactions", "transaction-history", "account-balances"}, allEntries = true)
     public TransactionDto updateTransactionStatus(Long id, TransactionStatus status) {
         Transaction transaction = transactionRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Transaction not found with id: " + id));
@@ -131,6 +142,7 @@ public class TransactionServiceImpl implements TransactionService {
 
     @Override
     @Transactional(readOnly = true)
+    @Cacheable(value = "transaction-history", key = "'accountHistory:' + #accountId")
     public List<TransactionDto> getAccountTransactionHistory(Long accountId) {
         List<Transaction> transactions = transactionRepository.findAllByAccountId(accountId);
         return transactions.stream()
@@ -140,6 +152,7 @@ public class TransactionServiceImpl implements TransactionService {
 
     @Override
     @Transactional(readOnly = true)
+    @Cacheable(value = "account-balances", key = "#accountId")
     public BigDecimal getAccountBalance(Long accountId) {
         // Calculate balance by subtracting debits from credits
         BigDecimal credits = transactionRepository.getTotalCreditsByAccountId(accountId, LocalDateTime.of(2020, 1, 1, 0, 0));
@@ -153,6 +166,7 @@ public class TransactionServiceImpl implements TransactionService {
 
     @Override
     @Transactional(readOnly = true)
+    @Cacheable(value = "transaction-limits", key = "'debits:' + #accountId + ':' + #since")
     public BigDecimal getTotalDebitsByAccountId(Long accountId, LocalDateTime since) {
         BigDecimal total = transactionRepository.getTotalDebitsByAccountId(accountId, since);
         return total != null ? total : BigDecimal.ZERO;
@@ -160,6 +174,7 @@ public class TransactionServiceImpl implements TransactionService {
 
     @Override
     @Transactional(readOnly = true)
+    @Cacheable(value = "transaction-limits", key = "'credits:' + #accountId + ':' + #since")
     public BigDecimal getTotalCreditsByAccountId(Long accountId, LocalDateTime since) {
         BigDecimal total = transactionRepository.getTotalCreditsByAccountId(accountId, since);
         return total != null ? total : BigDecimal.ZERO;
@@ -167,6 +182,7 @@ public class TransactionServiceImpl implements TransactionService {
 
     @Override
     @Transactional(readOnly = true)
+    @Cacheable(value = "transaction-limits", key = "'count:' + #userId + ':' + #status")
     public long getTransactionCountByUserIdAndStatus(Long userId, TransactionStatus status) {
         return transactionRepository.countByUserIdAndStatus(userId, status);
     }
@@ -192,4 +208,4 @@ public class TransactionServiceImpl implements TransactionService {
                 return BigDecimal.ZERO;
         }
     }
-} 
+}

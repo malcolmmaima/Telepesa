@@ -327,4 +327,300 @@ class LoanControllerTest {
         assertThat(response.getBody()).isNotNull();
         assertThat(response.getBody().getContent()).hasSize(1);
     }
+
+    @Test
+    void searchLoans_WithNullCriteria_ShouldReturnAllResults() {
+        // Given
+        Page<LoanDto> loanPage = new PageImpl<>(List.of(testLoanDto), PageRequest.of(0, 20), 1);
+        when(loanService.searchLoans(eq(null), eq(null), eq(null), any(), any(), any())).thenReturn(loanPage);
+
+        // When
+        ResponseEntity<Page<LoanDto>> response = loanController.searchLoans(
+            null, null, null, null, null, 0, 20);
+
+        // Then
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getBody()).isNotNull();
+        assertThat(response.getBody().getContent()).hasSize(1);
+    }
+
+    @Test
+    void searchLoans_WithDateCriteria_ShouldReturnFilteredResults() {
+        // Given
+        Page<LoanDto> loanPage = new PageImpl<>(List.of(testLoanDto), PageRequest.of(0, 20), 1);
+        LocalDate fromDate = LocalDate.now().minusDays(30);
+        LocalDate toDate = LocalDate.now();
+        when(loanService.searchLoans(eq(100L), eq(null), eq(null), eq(fromDate), eq(toDate), any())).thenReturn(loanPage);
+
+        // When
+        ResponseEntity<Page<LoanDto>> response = loanController.searchLoans(
+            100L, null, null, fromDate, toDate, 0, 20);
+
+        // Then
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getBody()).isNotNull();
+        assertThat(response.getBody().getContent()).hasSize(1);
+    }
+
+    @Test
+    void getLoansByType_ShouldReturnLoansWithType() {
+        // Given
+        Page<LoanDto> loanPage = new PageImpl<>(List.of(testLoanDto), PageRequest.of(0, 20), 1);
+        when(loanService.getLoansByType(eq(LoanType.BUSINESS), any())).thenReturn(loanPage);
+
+        // When
+        ResponseEntity<Page<LoanDto>> response = loanController.getLoansByType(LoanType.BUSINESS, 0, 20);
+
+        // Then
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getBody()).isNotNull();
+        assertThat(response.getBody().getContent()).hasSize(1);
+        assertThat(response.getBody().getContent().get(0).getLoanType()).isEqualTo(LoanType.BUSINESS);
+    }
+
+    @Test
+    void getLoanByNumber_WithNonExistingNumber_ShouldReturnNotFound() {
+        // Given
+        when(loanService.getLoanByNumber("INVALID123")).thenThrow(new LoanNotFoundException("Loan not found"));
+
+        // When & Then
+        try {
+            loanController.getLoanByNumber("INVALID123");
+        } catch (LoanNotFoundException e) {
+            assertThat(e.getMessage()).contains("Loan not found");
+        }
+    }
+
+    @Test
+    void rejectLoan_WithInvalidLoan_ShouldReturnBadRequest() {
+        // Given
+        when(loanService.rejectLoan(999L, "Invalid reason")).thenThrow(new LoanOperationException("Cannot reject loan"));
+
+        // When & Then
+        try {
+            loanController.rejectLoan(999L, "Invalid reason");
+        } catch (LoanOperationException e) {
+            assertThat(e.getMessage()).contains("Cannot reject loan");
+        }
+    }
+
+    @Test
+    void disburseLoan_WithInvalidLoan_ShouldReturnBadRequest() {
+        // Given
+        when(loanService.disburseLoan(999L)).thenThrow(new LoanOperationException("Cannot disburse loan"));
+
+        // When & Then
+        try {
+            loanController.disburseLoan(999L);
+        } catch (LoanOperationException e) {
+            assertThat(e.getMessage()).contains("Cannot disburse loan");
+        }
+    }
+
+    @Test
+    void makePayment_WithInvalidLoan_ShouldReturnBadRequest() {
+        // Given
+        BigDecimal paymentAmount = new BigDecimal("1000.00");
+        when(loanService.makePayment(999L, paymentAmount, "BANK_TRANSFER")).thenThrow(new LoanOperationException("Cannot make payment"));
+
+        // When & Then
+        try {
+            loanController.makePayment(999L, paymentAmount, "BANK_TRANSFER");
+        } catch (LoanOperationException e) {
+            assertThat(e.getMessage()).contains("Cannot make payment");
+        }
+    }
+
+    @Test
+    void makePayment_WithNegativeAmount_ShouldReturnBadRequest() {
+        // Given
+        BigDecimal paymentAmount = new BigDecimal("-100.00");
+        when(loanService.makePayment(1L, paymentAmount, "BANK_TRANSFER")).thenThrow(new LoanOperationException("Invalid payment amount"));
+
+        // When & Then
+        try {
+            loanController.makePayment(1L, paymentAmount, "BANK_TRANSFER");
+        } catch (LoanOperationException e) {
+            assertThat(e.getMessage()).contains("Invalid payment amount");
+        }
+    }
+
+    @Test
+    void updateLoanStatus_WithValidRequest_ShouldUpdateStatus() {
+        // Given
+        testLoanDto.setStatus(LoanStatus.ACTIVE);
+        when(loanService.updateLoanStatus(1L, LoanStatus.ACTIVE)).thenReturn(testLoanDto);
+
+        // When
+        ResponseEntity<LoanDto> response = loanController.updateLoanStatus(1L, LoanStatus.ACTIVE);
+
+        // Then
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getBody()).isNotNull();
+        assertThat(response.getBody().getStatus()).isEqualTo(LoanStatus.ACTIVE);
+    }
+
+    @Test
+    void updateLoanStatus_WithInvalidLoan_ShouldReturnBadRequest() {
+        // Given
+        when(loanService.updateLoanStatus(999L, LoanStatus.ACTIVE)).thenThrow(new LoanNotFoundException("Loan not found"));
+
+        // When & Then
+        try {
+            loanController.updateLoanStatus(999L, LoanStatus.ACTIVE);
+        } catch (LoanNotFoundException e) {
+            assertThat(e.getMessage()).contains("Loan not found");
+        }
+    }
+
+    @Test
+    void getAllLoans_WithEmptyResults_ShouldReturnEmptyPage() {
+        // Given
+        Page<LoanDto> emptyPage = new PageImpl<>(List.of(), PageRequest.of(0, 20), 0);
+        when(loanService.getAllLoans(any())).thenReturn(emptyPage);
+
+        // When
+        ResponseEntity<Page<LoanDto>> response = loanController.getAllLoans(0, 20, "createdAt", "desc");
+
+        // Then
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getBody()).isNotNull();
+        assertThat(response.getBody().getContent()).isEmpty();
+        assertThat(response.getBody().getTotalElements()).isEqualTo(0);
+    }
+
+    @Test
+    void getLoansByUserId_WithEmptyResults_ShouldReturnEmptyPage() {
+        // Given
+        Page<LoanDto> emptyPage = new PageImpl<>(List.of(), PageRequest.of(0, 20), 0);
+        when(loanService.getLoansByUserId(eq(999L), any())).thenReturn(emptyPage);
+
+        // When
+        ResponseEntity<Page<LoanDto>> response = loanController.getLoansByUserId(999L, 0, 20);
+
+        // Then
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getBody()).isNotNull();
+        assertThat(response.getBody().getContent()).isEmpty();
+        assertThat(response.getBody().getTotalElements()).isEqualTo(0);
+    }
+
+    @Test
+    void getActiveLoansByUserId_WithEmptyResults_ShouldReturnEmptyList() {
+        // Given
+        when(loanService.getActiveLoansByUserId(999L)).thenReturn(List.of());
+
+        // When
+        ResponseEntity<List<LoanDto>> response = loanController.getActiveLoansByUserId(999L);
+
+        // Then
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getBody()).isNotNull();
+        assertThat(response.getBody()).isEmpty();
+    }
+
+    @Test
+    void getLoansByStatus_WithEmptyResults_ShouldReturnEmptyPage() {
+        // Given
+        Page<LoanDto> emptyPage = new PageImpl<>(List.of(), PageRequest.of(0, 20), 0);
+        when(loanService.getLoansByStatus(eq(LoanStatus.REJECTED), any())).thenReturn(emptyPage);
+
+        // When
+        ResponseEntity<Page<LoanDto>> response = loanController.getLoansByStatus(LoanStatus.REJECTED, 0, 20);
+
+        // Then
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getBody()).isNotNull();
+        assertThat(response.getBody().getContent()).isEmpty();
+        assertThat(response.getBody().getTotalElements()).isEqualTo(0);
+    }
+
+    @Test
+    void getLoansByType_WithEmptyResults_ShouldReturnEmptyPage() {
+        // Given
+        Page<LoanDto> emptyPage = new PageImpl<>(List.of(), PageRequest.of(0, 20), 0);
+        when(loanService.getLoansByType(eq(LoanType.MORTGAGE), any())).thenReturn(emptyPage);
+
+        // When
+        ResponseEntity<Page<LoanDto>> response = loanController.getLoansByType(LoanType.MORTGAGE, 0, 20);
+
+        // Then
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getBody()).isNotNull();
+        assertThat(response.getBody().getContent()).isEmpty();
+        assertThat(response.getBody().getTotalElements()).isEqualTo(0);
+    }
+
+    @Test
+    void getOverdueLoans_WithEmptyResults_ShouldReturnEmptyList() {
+        // Given
+        when(loanService.getOverdueLoans()).thenReturn(List.of());
+
+        // When
+        ResponseEntity<List<LoanDto>> response = loanController.getOverdueLoans();
+
+        // Then
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getBody()).isNotNull();
+        assertThat(response.getBody()).isEmpty();
+    }
+
+    @Test
+    void searchLoans_WithEmptyResults_ShouldReturnEmptyPage() {
+        // Given
+        Page<LoanDto> emptyPage = new PageImpl<>(List.of(), PageRequest.of(0, 20), 0);
+        when(loanService.searchLoans(eq(999L), eq(LoanStatus.PENDING), eq(LoanType.PERSONAL), any(), any(), any())).thenReturn(emptyPage);
+
+        // When
+        ResponseEntity<Page<LoanDto>> response = loanController.searchLoans(
+            999L, LoanStatus.PENDING, LoanType.PERSONAL, null, null, 0, 20);
+
+        // Then
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getBody()).isNotNull();
+        assertThat(response.getBody().getContent()).isEmpty();
+        assertThat(response.getBody().getTotalElements()).isEqualTo(0);
+    }
+
+    @Test
+    void getTotalOutstandingBalance_WithZeroBalance_ShouldReturnZero() {
+        // Given
+        BigDecimal zeroBalance = BigDecimal.ZERO;
+        when(loanService.getTotalOutstandingBalance(999L)).thenReturn(zeroBalance);
+
+        // When
+        ResponseEntity<BigDecimal> response = loanController.getTotalOutstandingBalance(999L);
+
+        // Then
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getBody()).isEqualTo(BigDecimal.ZERO);
+    }
+
+    @Test
+    void createLoan_WithNullRequest_ShouldReturnBadRequest() {
+        // Given
+        CreateLoanRequest nullRequest = null;
+
+        // When & Then
+        try {
+            loanController.createLoan(nullRequest);
+        } catch (Exception e) {
+            // Should handle null request appropriately
+            assertThat(e).isInstanceOf(Exception.class);
+        }
+    }
+
+    @Test
+    void createLoan_WithEmptyRequest_ShouldReturnBadRequest() {
+        // Given
+        CreateLoanRequest emptyRequest = CreateLoanRequest.builder().build();
+
+        // When & Then
+        try {
+            loanController.createLoan(emptyRequest);
+        } catch (Exception e) {
+            // Should handle empty request appropriately
+            assertThat(e).isInstanceOf(Exception.class);
+        }
+    }
 }

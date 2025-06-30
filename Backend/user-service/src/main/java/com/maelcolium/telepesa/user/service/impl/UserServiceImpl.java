@@ -16,8 +16,8 @@ import com.maelcolium.telepesa.user.service.DeviceFingerprintService;
 import com.maelcolium.telepesa.user.service.UserService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-// import org.springframework.cache.annotation.CacheEvict;
-// import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -240,7 +240,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional(readOnly = true)
-    // @Cacheable(value = "users", key = "#id")
+    @Cacheable(value = "users", key = "#id")
     public UserDto getUser(Long id) {
         log.debug("Fetching user with ID: {}", id);
         User user = userRepository.findById(id)
@@ -250,7 +250,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional(readOnly = true)
-    // @Cacheable(value = "users", key = "'username:' + #username")
+    @Cacheable(value = "users", key = "'username:' + #username")
     public UserDto getUserByUsername(String username) {
         log.debug("Fetching user with username: {}", username);
         User user = userRepository.findByUsername(username)
@@ -260,7 +260,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional(readOnly = true)
-    // @Cacheable(value = "users", key = "'email:' + #email")
+    @Cacheable(value = "users", key = "'email:' + #email")
     public UserDto getUserByEmail(String email) {
         log.debug("Fetching user with email: {}", email);
         User user = userRepository.findByEmail(email)
@@ -277,7 +277,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    // @CacheEvict(value = "users", allEntries = true)
+    @CacheEvict(value = "users", allEntries = true)
     public UserDto updateUser(Long id, CreateUserRequest request) {
         log.info("Updating user with ID: {}", id);
 
@@ -306,7 +306,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    // @CacheEvict(value = "users", allEntries = true)
+    @CacheEvict(value = "users", allEntries = true)
     public void deleteUser(Long id) {
         log.info("Deleting user with ID: {}", id);
 
@@ -319,7 +319,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    // @CacheEvict(value = "users", allEntries = true)
+    @CacheEvict(value = "users", allEntries = true)
     public void verifyEmail(String token) {
         log.info("Verifying email with token: {}", token);
 
@@ -375,7 +375,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    // @CacheEvict(value = "users", allEntries = true)
+    @CacheEvict(value = "users", allEntries = true)
     public void resetPassword(String token, String newPassword) {
         log.info("Resetting password with token: {}", token);
 
@@ -389,7 +389,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    // @CacheEvict(value = "users", allEntries = true)
+    @CacheEvict(value = "users", allEntries = true)
     public void lockUserAccount(Long id) {
         log.info("Locking user account: {}", id);
 
@@ -402,7 +402,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    // @CacheEvict(value = "users", allEntries = true)
+    @CacheEvict(value = "users", allEntries = true)
     public void unlockUserAccount(Long id) {
         log.info("Unlocking user account: {}", id);
 

@@ -12,6 +12,8 @@ import com.maelcolium.telepesa.loan.service.LoanService;
 import com.maelcolium.telepesa.models.enums.LoanStatus;
 import com.maelcolium.telepesa.models.enums.LoanType;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -24,7 +26,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 /**
- * Implementation of LoanService
+ * Implementation of LoanService with comprehensive caching
  */
 @Service
 @Transactional
@@ -44,6 +46,7 @@ public class LoanServiceImpl implements LoanService {
     }
 
     @Override
+    @CacheEvict(value = {"loans", "loan-applications", "credit-scores"}, allEntries = true)
     public LoanDto createLoan(CreateLoanRequest request) {
         log.info("Creating loan application for user: {} with amount: {}", 
                 request.getUserId(), request.getPrincipalAmount());
@@ -85,6 +88,7 @@ public class LoanServiceImpl implements LoanService {
 
     @Override
     @Transactional(readOnly = true)
+    @Cacheable(value = "loans", key = "#loanId")
     public LoanDto getLoan(Long loanId) {
         log.info("Retrieving loan with ID: {}", loanId);
         
@@ -96,6 +100,7 @@ public class LoanServiceImpl implements LoanService {
 
     @Override
     @Transactional(readOnly = true)
+    @Cacheable(value = "loans", key = "'loanNumber:' + #loanNumber")
     public LoanDto getLoanByNumber(String loanNumber) {
         log.info("Retrieving loan with number: {}", loanNumber);
         
@@ -116,6 +121,7 @@ public class LoanServiceImpl implements LoanService {
 
     @Override
     @Transactional(readOnly = true)
+    @Cacheable(value = "loan-applications", key = "'user:' + #userId + ':page:' + #pageable.pageNumber + ':size:' + #pageable.pageSize")
     public Page<LoanDto> getLoansByUserId(Long userId, Pageable pageable) {
         log.info("Retrieving loans for user: {}", userId);
         
@@ -125,6 +131,7 @@ public class LoanServiceImpl implements LoanService {
 
     @Override
     @Transactional(readOnly = true)
+    @Cacheable(value = "loan-applications", key = "'status:' + #status + ':page:' + #pageable.pageNumber + ':size:' + #pageable.pageSize")
     public Page<LoanDto> getLoansByStatus(LoanStatus status, Pageable pageable) {
         log.info("Retrieving loans with status: {}", status);
         
@@ -134,6 +141,7 @@ public class LoanServiceImpl implements LoanService {
 
     @Override
     @Transactional(readOnly = true)
+    @Cacheable(value = "loan-applications", key = "'type:' + #loanType + ':page:' + #pageable.pageNumber + ':size:' + #pageable.pageSize")
     public Page<LoanDto> getLoansByType(LoanType loanType, Pageable pageable) {
         log.info("Retrieving loans with type: {}", loanType);
         
@@ -143,6 +151,7 @@ public class LoanServiceImpl implements LoanService {
 
     @Override
     @Transactional(readOnly = true)
+    @Cacheable(value = "loan-applications", key = "'activeUser:' + #userId")
     public List<LoanDto> getActiveLoansByUserId(Long userId) {
         log.info("Retrieving active loans for user: {}", userId);
         
@@ -153,6 +162,7 @@ public class LoanServiceImpl implements LoanService {
     }
 
     @Override
+    @CacheEvict(value = {"loans", "loan-applications", "credit-scores"}, allEntries = true)
     public LoanDto approveLoan(Long loanId, Long approvedBy) {
         log.info("Approving loan: {} by user: {}", loanId, approvedBy);
         
@@ -174,6 +184,7 @@ public class LoanServiceImpl implements LoanService {
     }
 
     @Override
+    @CacheEvict(value = {"loans", "loan-applications", "credit-scores"}, allEntries = true)
     public LoanDto rejectLoan(Long loanId, String rejectionReason) {
         log.info("Rejecting loan: {} with reason: {}", loanId, rejectionReason);
         
@@ -194,6 +205,7 @@ public class LoanServiceImpl implements LoanService {
     }
 
     @Override
+    @CacheEvict(value = {"loans", "loan-applications", "credit-scores"}, allEntries = true)
     public LoanDto disburseLoan(Long loanId) {
         log.info("Disbursing loan: {}", loanId);
         
@@ -215,6 +227,7 @@ public class LoanServiceImpl implements LoanService {
     }
 
     @Override
+    @CacheEvict(value = {"loans", "loan-applications", "credit-scores"}, allEntries = true)
     public LoanDto makePayment(Long loanId, BigDecimal amount, String paymentMethod) {
         log.info("Making payment of {} for loan: {}", amount, loanId);
         
@@ -251,6 +264,7 @@ public class LoanServiceImpl implements LoanService {
     }
 
     @Override
+    @Cacheable(value = "loan-calculations", key = "'monthlyPayment:' + #principal + ':' + #interestRate + ':' + #termMonths")
     public BigDecimal calculateMonthlyPayment(BigDecimal principal, BigDecimal interestRate, Integer termMonths) {
         if (principal.compareTo(BigDecimal.ZERO) <= 0 || termMonths <= 0) {
             return BigDecimal.ZERO;
@@ -275,6 +289,7 @@ public class LoanServiceImpl implements LoanService {
 
     @Override
     @Transactional(readOnly = true)
+    @Cacheable(value = "credit-scores", key = "'outstandingBalance:' + #userId")
     public BigDecimal getTotalOutstandingBalance(Long userId) {
         log.info("Calculating total outstanding balance for user: {}", userId);
         
@@ -283,6 +298,7 @@ public class LoanServiceImpl implements LoanService {
 
     @Override
     @Transactional(readOnly = true)
+    @Cacheable(value = "loan-applications", key = "'overdue:' + #T(java.time.LocalDate).now()")
     public List<LoanDto> getOverdueLoans() {
         log.info("Retrieving overdue loans");
         
@@ -294,6 +310,7 @@ public class LoanServiceImpl implements LoanService {
 
     @Override
     @Transactional(readOnly = true)
+    @Cacheable(value = "loan-applications", key = "'search:' + #userId + ':' + #status + ':' + #loanType + ':' + #fromDate + ':' + #toDate + ':page:' + #pageable.pageNumber + ':size:' + #pageable.pageSize")
     public Page<LoanDto> searchLoans(Long userId, LoanStatus status, LoanType loanType, 
                                     LocalDate fromDate, LocalDate toDate, Pageable pageable) {
         log.info("Searching loans with criteria - userId: {}, status: {}, type: {}", userId, status, loanType);
@@ -303,6 +320,7 @@ public class LoanServiceImpl implements LoanService {
     }
 
     @Override
+    @CacheEvict(value = {"loans", "loan-applications", "credit-scores"}, allEntries = true)
     public LoanDto updateLoanStatus(Long loanId, LoanStatus status) {
         log.info("Updating loan status: {} to {}", loanId, status);
         
