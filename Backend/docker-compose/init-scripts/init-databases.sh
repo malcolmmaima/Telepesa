@@ -1,6 +1,7 @@
 #!/bin/bash
 set -e
 
+# Create multiple databases for different services
 psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-EOSQL
     CREATE DATABASE user_db;
     CREATE DATABASE account_db;
@@ -11,16 +12,21 @@ psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-E
     GRANT ALL PRIVILEGES ON DATABASE account_db TO $POSTGRES_USER;
     GRANT ALL PRIVILEGES ON DATABASE transaction_db TO $POSTGRES_USER;
     GRANT ALL PRIVILEGES ON DATABASE loan_db TO $POSTGRES_USER;
-    
-    \c user_db;
+EOSQL
+
+# Add UUID extension to each database
+psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "user_db" <<-EOSQL
     CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
-    
-    \c account_db;
+EOSQL
+
+psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "account_db" <<-EOSQL
     CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
-    
-    \c transaction_db;
+EOSQL
+
+psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "transaction_db" <<-EOSQL
     CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
-    
-    \c loan_db;
+EOSQL
+
+psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "loan_db" <<-EOSQL
     CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
-EOSQL 
+EOSQL

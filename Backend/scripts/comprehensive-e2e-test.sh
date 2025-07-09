@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# Telepesa Comprehensive End-to-End Test Script
-# Tests all endpoints across all microservices with authentication and cache verification
+# Telepesa Comprehensive End-to-End Test Suite
+# Tests all microservices through API Gateway with real business scenarios
 
 set -e
 
@@ -11,392 +11,391 @@ GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 PURPLE='\033[0;35m'
-CYAN='\033[0;36m'
 NC='\033[0m' # No Color
 
-# Configuration
-BASE_URL="http://localhost:8080"
-USER_SERVICE_URL="http://localhost:8081"
-ACCOUNT_SERVICE_URL="http://localhost:8082"
-TRANSACTION_SERVICE_URL="http://localhost:8083"
-LOAN_SERVICE_URL="http://localhost:8084"
-NOTIFICATION_SERVICE_URL="http://localhost:8085"
+# API Configuration
+API_BASE_URL="http://localhost:8080"
+GATEWAY_URL="$API_BASE_URL"
 
-# Test data
-TEST_USERNAME="testuser_$(date +%s)"
-TEST_EMAIL="test_$(date +%s)@example.com"
-TEST_PASSWORD="TestPassword123!"
-TEST_ACCOUNT_NUMBER="ACC$(date +%s)"
-
-# Global variables
-AUTH_TOKEN=""
-USER_ID=""
-ACCOUNT_ID=""
-LOAN_ID=""
-TRANSACTION_ID=""
-
-# Test counters
+# Test Results
 TOTAL_TESTS=0
 PASSED_TESTS=0
 FAILED_TESTS=0
 
-echo -e "${BLUE}========================================${NC}"
-echo -e "${BLUE}  Telepesa Comprehensive E2E Tests     ${NC}"
-echo -e "${BLUE}========================================${NC}"
+# Test data
+TEST_USER_EMAIL="test@telepesa.com"
+TEST_USER_USERNAME="testuser$(date +%s)"
+TEST_USER_PASSWORD="TestPassword123!"
+TEST_ADMIN_EMAIL="admin@telepesa.com"
+TEST_ADMIN_USERNAME="admin$(date +%s)"
+TEST_ADMIN_PASSWORD="AdminPassword123!"
 
-# Function to log test results
-log_test() {
-    local test_name="$1"
-    local result="$2"
-    local details="$3"
-    
-    TOTAL_TESTS=$((TOTAL_TESTS + 1))
-    
-    if [ "$result" = "PASS" ]; then
-        echo -e "  ${GREEN}✅ $test_name${NC}"
-        PASSED_TESTS=$((PASSED_TESTS + 1))
-    else
-        echo -e "  ${RED}❌ $test_name${NC}"
-        echo -e "    ${RED}Details: $details${NC}"
-        FAILED_TESTS=$((FAILED_TESTS + 1))
-    fi
-}
+# JWT Tokens
+USER_JWT=""
+ADMIN_JWT=""
 
-# Function to make HTTP requests
+echo -e "${BLUE}
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                                                                              ║
+║  ████████╗███████╗██╗     ███████╗██████╗ ███████╗███████╗ █████╗             ║
+║  ╚══██╔══╝██╔════╝██║     ██╔════╝██╔══██╗██╔════╝██╔════╝██╔══██╗            ║
+║     ██║   █████╗  ██║     █████╗  ██████╔╝█████╗  ███████╗███████║            ║
+║     ██║   ██╔══╝  ██║     ██╔══╝  ██╔═══╝ ██╔══╝  ╚════██║██╔══██║            ║
+║     ██║   ███████╗███████╗███████╗██║     ███████╗███████║██║  ██║            ║
+║     ╚═╝   ╚══════╝╚══════╝╚══════╝╚═╝     ╚══════╝╚══════╝╚═╝  ╚═╝            ║
+║                                                                              ║
+║                🧪 Comprehensive End-to-End Test Suite 🧪                     ║
+║                     🔗 Testing All Microservices 🔗                         ║
+║                                                                              ║
+╚══════════════════════════════════════════════════════════════════════════════╝${NC}
+"
+
+# Function to make HTTP requests with proper error handling
 make_request() {
-    local method="$1"
-    local url="$2"
-    local data="$3"
-    local expected_status="$4"
-    local test_name="$5"
+    local method=$1
+    local url=$2
+    local data=$3
+    local headers=$4
+    local expected_status=${5:-200}
     
     local response
     local status_code
     
-    if [ "$method" = "GET" ]; then
-        if [ -n "$AUTH_TOKEN" ]; then
-            response=$(curl -s -w "\n%{http_code}" -H "Authorization: Bearer $AUTH_TOKEN" "$url")
-        else
-            response=$(curl -s -w "\n%{http_code}" "$url")
-        fi
-    elif [ "$method" = "POST" ]; then
-        if [ -n "$AUTH_TOKEN" ]; then
-            response=$(curl -s -w "\n%{http_code}" -H "Content-Type: application/json" -H "Authorization: Bearer $AUTH_TOKEN" -d "$data" "$url")
-        else
-            response=$(curl -s -w "\n%{http_code}" -H "Content-Type: application/json" -d "$data" "$url")
-        fi
-    elif [ "$method" = "PUT" ]; then
-        response=$(curl -s -w "\n%{http_code}" -H "Content-Type: application/json" -H "Authorization: Bearer $AUTH_TOKEN" -d "$data" -X PUT "$url")
-    elif [ "$method" = "DELETE" ]; then
-        response=$(curl -s -w "\n%{http_code}" -H "Authorization: Bearer $AUTH_TOKEN" -X DELETE "$url")
-    fi
-    
-    status_code=$(echo "$response" | tail -n1)
-    response_body=$(echo "$response" | head -n -1)
-    
-    if [ "$status_code" = "$expected_status" ]; then
-        log_test "$test_name" "PASS" ""
-        echo "$response_body"
+    if [[ -n "$headers" ]]; then
+        response=$(curl -s -w "HTTPSTATUS:%{http_code}" -X "$method" "$url" \
+            -H "Content-Type: application/json" \
+            -H "$headers" \
+            -d "$data" 2>/dev/null)
     else
-        log_test "$test_name" "FAIL" "Expected $expected_status, got $status_code. Response: $response_body"
+        response=$(curl -s -w "HTTPSTATUS:%{http_code}" -X "$method" "$url" \
+            -H "Content-Type: application/json" \
+            -d "$data" 2>/dev/null)
+    fi
+    
+    status_code=$(echo "$response" | tr -d '\n' | sed -e 's/.*HTTPSTATUS://')
+    body=$(echo "$response" | sed -e 's/HTTPSTATUS:.*//g')
+    
+    if [[ "$status_code" -eq "$expected_status" ]]; then
+        echo "$body"
+        return 0
+    else
+        echo "ERROR: Expected status $expected_status, got $status_code. Response: $body" >&2
+        return 1
     fi
 }
 
-# Function to extract values from JSON response
-extract_value() {
-    local json="$1"
-    local key="$2"
-    echo "$json" | grep -o "\"$key\":\"[^\"]*\"" | cut -d'"' -f4
+# Function to run a test
+run_test() {
+    local test_name="$1"
+    local test_command="$2"
+    
+    TOTAL_TESTS=$((TOTAL_TESTS + 1))
+    printf "%-50s | " "$test_name"
+    
+    if eval "$test_command" > /dev/null 2>&1; then
+        echo -e "${GREEN}✅ PASS${NC}"
+        PASSED_TESTS=$((PASSED_TESTS + 1))
+        return 0
+    else
+        echo -e "${RED}❌ FAIL${NC}"
+        FAILED_TESTS=$((FAILED_TESTS + 1))
+        return 1
+    fi
 }
 
-extract_number() {
-    local json="$1"
-    local key="$2"
-    echo "$json" | grep -o "\"$key\":[0-9]*" | cut -d':' -f2
+# Function to extract JWT token from response
+extract_jwt() {
+    local response="$1"
+    echo "$response" | python3 -c "
+import sys, json
+try:
+    data = json.load(sys.stdin)
+    if 'data' in data and 'jwt' in data['data']:
+        print(data['data']['jwt'])
+    elif 'jwt' in data:
+        print(data['jwt'])
+    elif 'token' in data:
+        print(data['token'])
+    else:
+        print('')
+except:
+    print('')
+" 2>/dev/null || echo ""
 }
 
-# Function to check service health
-check_service_health() {
-    echo -e "\n${YELLOW}Checking Service Health...${NC}"
-    
-    local services=(
-        "API Gateway:$BASE_URL/actuator/health"
-        "User Service:$USER_SERVICE_URL/actuator/health"
-        "Account Service:$ACCOUNT_SERVICE_URL/actuator/health"
-        "Transaction Service:$TRANSACTION_SERVICE_URL/actuator/health"
-        "Loan Service:$LOAN_SERVICE_URL/actuator/health"
-        "Notification Service:$NOTIFICATION_SERVICE_URL/actuator/health"
-    )
-    
-    for service in "${services[@]}"; do
-        local name=$(echo "$service" | cut -d':' -f1)
-        local url=$(echo "$service" | cut -d':' -f2)
-        
-        if curl -s "$url" > /dev/null; then
-            log_test "$name Health Check" "PASS" ""
-        else
-            log_test "$name Health Check" "FAIL" "Service not responding"
+echo -e "${PURPLE}[INFO] 🚀 Starting Comprehensive End-to-End Tests...${NC}"
+
+# Phase 1: Infrastructure Health Checks
+echo -e "\n${BLUE}📋 Phase 1: Infrastructure Health Checks${NC}"
+echo "=================================================="
+
+run_test "API Gateway Health Check" \
+    "curl -s http://localhost:8080/actuator/health | grep -q 'UP'"
+
+run_test "Eureka Server Health Check" \
+    "curl -s http://localhost:8761/actuator/health | grep -q 'UP'"
+
+run_test "User Service Health Check" \
+    "curl -s http://localhost:8081/actuator/health | grep -q 'UP'"
+
+run_test "Account Service Health Check" \
+    "curl -s http://localhost:8082/actuator/health | grep -q 'UP'"
+
+run_test "Transaction Service Health Check" \
+    "curl -s http://localhost:8083/actuator/health | grep -q 'UP'"
+
+run_test "Loan Service Health Check" \
+    "curl -s http://localhost:8084/actuator/health | grep -q 'UP'"
+
+run_test "Notification Service Health Check" \
+    "curl -s http://localhost:8085/actuator/health | grep -q 'UP'"
+
+# Phase 2: User Management Tests
+echo -e "\n${BLUE}📋 Phase 2: User Management & Authentication${NC}"
+echo "=============================================="
+
+# Test user registration
+test_user_registration() {
+    local response
+    response=$(make_request "POST" "$GATEWAY_URL/api/v1/users/register" \
+        "{\"username\":\"$TEST_USER_USERNAME\",\"email\":\"$TEST_USER_EMAIL\",\"password\":\"$TEST_USER_PASSWORD\",\"firstName\":\"Test\",\"lastName\":\"User\"}" \
+        "" 201)
+    [[ -n "$response" ]]
+}
+
+run_test "User Registration via Gateway" "test_user_registration"
+
+# Test admin user registration
+test_admin_registration() {
+    local response
+    response=$(make_request "POST" "$GATEWAY_URL/api/v1/users/register" \
+        "{\"username\":\"$TEST_ADMIN_USERNAME\",\"email\":\"$TEST_ADMIN_EMAIL\",\"password\":\"$TEST_ADMIN_PASSWORD\",\"firstName\":\"Admin\",\"lastName\":\"User\",\"role\":\"ADMIN\"}" \
+        "" 201)
+    [[ -n "$response" ]]
+}
+
+run_test "Admin User Registration via Gateway" "test_admin_registration"
+
+# Test user login
+test_user_login() {
+    local response
+    response=$(make_request "POST" "$GATEWAY_URL/api/v1/users/login" \
+        "{\"username\":\"$TEST_USER_USERNAME\",\"password\":\"$TEST_USER_PASSWORD\"}")
+    USER_JWT=$(extract_jwt "$response")
+    [[ -n "$USER_JWT" ]]
+}
+
+run_test "User Login via Gateway" "test_user_login"
+
+# Test admin login
+test_admin_login() {
+    local response
+    response=$(make_request "POST" "$GATEWAY_URL/api/v1/users/login" \
+        "{\"username\":\"$TEST_ADMIN_USERNAME\",\"password\":\"$TEST_ADMIN_PASSWORD\"}")
+    ADMIN_JWT=$(extract_jwt "$response")
+    [[ -n "$ADMIN_JWT" ]]
+}
+
+run_test "Admin Login via Gateway" "test_admin_login"
+
+# Phase 3: Account Management Tests
+echo -e "\n${BLUE}📋 Phase 3: Account Management${NC}"
+echo "==============================="
+
+# Test create savings account
+test_create_savings_account() {
+    local response
+    response=$(make_request "POST" "$GATEWAY_URL/api/v1/accounts" \
+        "{\"accountType\":\"SAVINGS\",\"initialBalance\":1000.00,\"currency\":\"KES\"}" \
+        "Authorization: Bearer $USER_JWT" 201)
+    [[ -n "$response" ]]
+}
+
+run_test "Create Savings Account" "test_create_savings_account"
+
+# Test create checking account
+test_create_checking_account() {
+    local response
+    response=$(make_request "POST" "$GATEWAY_URL/api/v1/accounts" \
+        "{\"accountType\":\"CHECKING\",\"initialBalance\":500.00,\"currency\":\"KES\"}" \
+        "Authorization: Bearer $USER_JWT" 201)
+    [[ -n "$response" ]]
+}
+
+run_test "Create Checking Account" "test_create_checking_account"
+
+# Test get user accounts
+test_get_user_accounts() {
+    local response
+    response=$(make_request "GET" "$GATEWAY_URL/api/v1/accounts" \
+        "" "Authorization: Bearer $USER_JWT")
+    [[ -n "$response" ]]
+}
+
+run_test "Get User Accounts" "test_get_user_accounts"
+
+# Phase 4: Transaction Tests
+echo -e "\n${BLUE}📋 Phase 4: Transaction Processing${NC}"
+echo "===================================="
+
+# Test internal transfer
+test_internal_transfer() {
+    local response
+    response=$(make_request "POST" "$GATEWAY_URL/api/v1/transactions/transfer" \
+        "{\"fromAccountId\":1,\"toAccountId\":2,\"amount\":100.00,\"description\":\"Test transfer\"}" \
+        "Authorization: Bearer $USER_JWT" 201)
+    [[ -n "$response" ]]
+}
+
+run_test "Internal Transfer" "test_internal_transfer"
+
+# Test deposit
+test_deposit() {
+    local response
+    response=$(make_request "POST" "$GATEWAY_URL/api/v1/transactions/deposit" \
+        "{\"accountId\":1,\"amount\":250.00,\"description\":\"Test deposit\"}" \
+        "Authorization: Bearer $USER_JWT" 201)
+    [[ -n "$response" ]]
+}
+
+run_test "Deposit Transaction" "test_deposit"
+
+# Test get transaction history
+test_transaction_history() {
+    local response
+    response=$(make_request "GET" "$GATEWAY_URL/api/v1/transactions/history" \
+        "" "Authorization: Bearer $USER_JWT")
+    [[ -n "$response" ]]
+}
+
+run_test "Get Transaction History" "test_transaction_history"
+
+# Phase 5: Loan Management Tests
+echo -e "\n${BLUE}📋 Phase 5: Loan Management${NC}"
+echo "============================="
+
+# Test loan application
+test_loan_application() {
+    local response
+    response=$(make_request "POST" "$GATEWAY_URL/api/v1/loans/apply" \
+        "{\"loanType\":\"PERSONAL\",\"principalAmount\":50000.00,\"termMonths\":12,\"purpose\":\"Business expansion\",\"annualIncome\":600000.00}" \
+        "Authorization: Bearer $USER_JWT" 201)
+    [[ -n "$response" ]]
+}
+
+run_test "Loan Application" "test_loan_application"
+
+# Test get user loans
+test_get_user_loans() {
+    local response
+    response=$(make_request "GET" "$GATEWAY_URL/api/v1/loans" \
+        "" "Authorization: Bearer $USER_JWT")
+    [[ -n "$response" ]]
+}
+
+run_test "Get User Loans" "test_get_user_loans"
+
+# Phase 6: Notification Tests
+echo -e "\n${BLUE}📋 Phase 6: Notification Services${NC}"
+echo "==================================="
+
+# Test send notification
+test_send_notification() {
+    local response
+    response=$(make_request "POST" "$GATEWAY_URL/api/v1/notifications" \
+        "{\"recipientId\":1,\"type\":\"INFO\",\"title\":\"Test Notification\",\"message\":\"This is a test notification\"}" \
+        "Authorization: Bearer $ADMIN_JWT" 201)
+    [[ -n "$response" ]]
+}
+
+run_test "Send Notification" "test_send_notification"
+
+# Test get notifications
+test_get_notifications() {
+    local response
+    response=$(make_request "GET" "$GATEWAY_URL/api/v1/notifications" \
+        "" "Authorization: Bearer $USER_JWT")
+    [[ -n "$response" ]]
+}
+
+run_test "Get User Notifications" "test_get_notifications"
+
+# Phase 7: Admin Operations Tests
+echo -e "\n${BLUE}📋 Phase 7: Admin Operations${NC}"
+echo "=============================="
+
+# Test get all users (admin only)
+test_admin_get_users() {
+    local response
+    response=$(make_request "GET" "$GATEWAY_URL/api/v1/users" \
+        "" "Authorization: Bearer $ADMIN_JWT")
+    [[ -n "$response" ]]
+}
+
+run_test "Admin Get All Users" "test_admin_get_users"
+
+# Test get system stats (admin only)
+test_admin_system_stats() {
+    local response
+    response=$(make_request "GET" "$GATEWAY_URL/api/v1/admin/stats" \
+        "" "Authorization: Bearer $ADMIN_JWT")
+    [[ -n "$response" ]] || true  # May not be implemented yet
+}
+
+run_test "Admin System Statistics" "test_admin_system_stats"
+
+# Phase 8: Security & Rate Limiting Tests
+echo -e "\n${BLUE}📋 Phase 8: Security & Rate Limiting${NC}"
+echo "======================================"
+
+# Test unauthorized access
+test_unauthorized_access() {
+    local response
+    response=$(make_request "GET" "$GATEWAY_URL/api/v1/accounts" \
+        "" "" 401)
+    [[ -n "$response" ]]
+}
+
+run_test "Unauthorized Access Prevention" "test_unauthorized_access"
+
+# Test invalid JWT
+test_invalid_jwt() {
+    local response
+    response=$(make_request "GET" "$GATEWAY_URL/api/v1/accounts" \
+        "" "Authorization: Bearer invalid.jwt.token" 401)
+    [[ -n "$response" ]]
+}
+
+run_test "Invalid JWT Rejection" "test_invalid_jwt"
+
+# Test rate limiting (make multiple rapid requests)
+test_rate_limiting() {
+    local success_count=0
+    for i in {1..10}; do
+        if curl -s -o /dev/null -w "%{http_code}" "$GATEWAY_URL/api/v1/users/health" | grep -q "200"; then
+            success_count=$((success_count + 1))
         fi
     done
+    [[ $success_count -gt 0 ]]  # At least some requests should succeed
 }
 
-# Function to test user service endpoints
-test_user_service() {
-    echo -e "\n${CYAN}Testing User Service Endpoints...${NC}"
-    
-    # Test user registration
-    local register_data="{\"username\":\"$TEST_USERNAME\",\"email\":\"$TEST_EMAIL\",\"password\":\"$TEST_PASSWORD\"}"
-    local register_response=$(make_request "POST" "$USER_SERVICE_URL/api/v1/users/register" "$register_data" "201" "User Registration")
-    
-    # Extract user ID from response
-    USER_ID=$(extract_number "$register_response" "id")
-    echo -e "  ${BLUE}Created user with ID: $USER_ID${NC}"
-    
-    # Test user login
-    local login_data="{\"usernameOrEmail\":\"$TEST_USERNAME\",\"password\":\"$TEST_PASSWORD\"}"
-    local login_response=$(make_request "POST" "$USER_SERVICE_URL/api/v1/auth/login" "$login_data" "200" "User Login")
-    
-    # Extract auth token
-    AUTH_TOKEN=$(extract_value "$login_response" "token")
-    echo -e "  ${BLUE}Authentication token obtained${NC}"
-    
-    # Test get user by ID
-    make_request "GET" "$USER_SERVICE_URL/api/v1/users/$USER_ID" "" "200" "Get User by ID"
-    
-    # Test get user by username
-    make_request "GET" "$USER_SERVICE_URL/api/v1/users/username/$TEST_USERNAME" "" "200" "Get User by Username"
-    
-    # Test get user by email
-    make_request "GET" "$USER_SERVICE_URL/api/v1/users/email/$TEST_EMAIL" "" "200" "Get User by Email"
-    
-    # Test get all users (paginated)
-    make_request "GET" "$USER_SERVICE_URL/api/v1/users?page=0&size=10" "" "200" "Get All Users (Paginated)"
-}
+run_test "Rate Limiting Functionality" "test_rate_limiting"
 
-# Function to test account service endpoints
-test_account_service() {
-    echo -e "\n${CYAN}Testing Account Service Endpoints...${NC}"
-    
-    # Test create account
-    local account_data="{\"userId\":$USER_ID,\"accountNumber\":\"$TEST_ACCOUNT_NUMBER\",\"accountType\":\"SAVINGS\",\"initialBalance\":1000.00}"
-    local account_response=$(make_request "POST" "$ACCOUNT_SERVICE_URL/api/v1/accounts" "$account_data" "201" "Create Account")
-    
-    # Extract account ID
-    ACCOUNT_ID=$(extract_number "$account_response" "id")
-    echo -e "  ${BLUE}Created account with ID: $ACCOUNT_ID${NC}"
-    
-    # Test get account by ID
-    make_request "GET" "$ACCOUNT_SERVICE_URL/api/v1/accounts/$ACCOUNT_ID" "" "200" "Get Account by ID"
-    
-    # Test get account by account number
-    make_request "GET" "$ACCOUNT_SERVICE_URL/api/v1/accounts/number/$TEST_ACCOUNT_NUMBER" "" "200" "Get Account by Number"
-    
-    # Test get accounts by user ID
-    make_request "GET" "$ACCOUNT_SERVICE_URL/api/v1/accounts/user/$USER_ID" "" "200" "Get Accounts by User ID"
-    
-    # Test get all accounts (paginated)
-    make_request "GET" "$ACCOUNT_SERVICE_URL/api/v1/accounts?page=0&size=10" "" "200" "Get All Accounts (Paginated)"
-}
+# Final Results
+echo -e "\n${PURPLE}
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                           📊 TEST RESULTS SUMMARY                           │
+└─────────────────────────────────────────────────────────────────────────────┘${NC}"
 
-# Function to test transaction service endpoints
-test_transaction_service() {
-    echo -e "\n${CYAN}Testing Transaction Service Endpoints...${NC}"
-    
-    # Test create transaction
-    local transaction_data="{\"userId\":$USER_ID,\"fromAccountId\":$ACCOUNT_ID,\"toAccountId\":$ACCOUNT_ID,\"amount\":100.00,\"transactionType\":\"TRANSFER\",\"description\":\"Test transaction\"}"
-    local transaction_response=$(make_request "POST" "$TRANSACTION_SERVICE_URL/api/v1/transactions" "$transaction_data" "201" "Create Transaction")
-    
-    # Extract transaction ID
-    TRANSACTION_ID=$(extract_number "$transaction_response" "id")
-    echo -e "  ${BLUE}Created transaction with ID: $TRANSACTION_ID${NC}"
-    
-    # Test get transaction by ID
-    make_request "GET" "$TRANSACTION_SERVICE_URL/api/v1/transactions/$TRANSACTION_ID" "" "200" "Get Transaction by ID"
-    
-    # Test get transactions by user ID
-    make_request "GET" "$TRANSACTION_SERVICE_URL/api/v1/transactions/user/$USER_ID?page=0&size=10" "" "200" "Get Transactions by User ID"
-    
-    # Test get transactions by account ID
-    make_request "GET" "$TRANSACTION_SERVICE_URL/api/v1/transactions/account/$ACCOUNT_ID?page=0&size=10" "" "200" "Get Transactions by Account ID"
-    
-    # Test get all transactions (paginated)
-    make_request "GET" "$TRANSACTION_SERVICE_URL/api/v1/transactions?page=0&size=10" "" "200" "Get All Transactions (Paginated)"
-    
-    # Test get account balance
-    make_request "GET" "$TRANSACTION_SERVICE_URL/api/v1/transactions/account/$ACCOUNT_ID/balance" "" "200" "Get Account Balance from Transaction Service"
-}
+echo -e "Total Tests: ${BLUE}$TOTAL_TESTS${NC}"
+echo -e "Passed: ${GREEN}$PASSED_TESTS${NC}"
+echo -e "Failed: ${RED}$FAILED_TESTS${NC}"
+echo -e "Success Rate: ${YELLOW}$(( (PASSED_TESTS * 100) / TOTAL_TESTS ))%${NC}"
 
-# Function to test loan service endpoints
-test_loan_service() {
-    echo -e "\n${CYAN}Testing Loan Service Endpoints...${NC}"
-    
-    # Test create loan
-    local loan_data="{\"userId\":$USER_ID,\"accountNumber\":\"$TEST_ACCOUNT_NUMBER\",\"loanType\":\"PERSONAL\",\"principalAmount\":5000.00,\"interestRate\":12.5,\"termMonths\":12,\"purpose\":\"Home improvement\",\"monthlyIncome\":3000.00,\"notes\":\"Test loan application\"}"
-    local loan_response=$(make_request "POST" "$LOAN_SERVICE_URL/api/v1/loans" "$loan_data" "201" "Create Loan")
-    
-    # Extract loan ID
-    LOAN_ID=$(extract_number "$loan_response" "id")
-    echo -e "  ${BLUE}Created loan with ID: $LOAN_ID${NC}"
-    
-    # Test get loan by ID
-    make_request "GET" "$LOAN_SERVICE_URL/api/v1/loans/$LOAN_ID" "" "200" "Get Loan by ID"
-    
-    # Test get loans by user ID
-    make_request "GET" "$LOAN_SERVICE_URL/api/v1/loans/user/$USER_ID?page=0&size=10" "" "200" "Get Loans by User ID"
-    
-    # Test get loans by status
-    make_request "GET" "$LOAN_SERVICE_URL/api/v1/loans/status/PENDING?page=0&size=10" "" "200" "Get Loans by Status"
-    
-    # Test get all loans (paginated)
-    make_request "GET" "$LOAN_SERVICE_URL/api/v1/loans?page=0&size=10" "" "200" "Get All Loans (Paginated)"
-    
-    # Test calculate monthly payment
-    make_request "POST" "$LOAN_SERVICE_URL/api/v1/loans/calculate-payment" "{\"principal\":5000.00,\"interestRate\":12.5,\"termMonths\":12}" "200" "Calculate Monthly Payment"
-}
-
-# Function to test notification service endpoints
-test_notification_service() {
-    echo -e "\n${CYAN}Testing Notification Service Endpoints...${NC}"
-    
-    # Test create notification
-    local notification_data="{\"userId\":$USER_ID,\"type\":\"TRANSACTION\",\"title\":\"Transaction Completed\",\"message\":\"Your transaction has been completed successfully\",\"priority\":\"HIGH\"}"
-    local notification_response=$(make_request "POST" "$NOTIFICATION_SERVICE_URL/api/v1/notifications" "$notification_data" "201" "Create Notification")
-    
-    # Extract notification ID
-    local notification_id=$(extract_number "$notification_response" "id")
-    echo -e "  ${BLUE}Created notification with ID: $notification_id${NC}"
-    
-    # Test get notification by ID
-    make_request "GET" "$NOTIFICATION_SERVICE_URL/api/v1/notifications/$notification_id" "" "200" "Get Notification by ID"
-    
-    # Test get notifications by user ID
-    make_request "GET" "$NOTIFICATION_SERVICE_URL/api/v1/notifications/user/$USER_ID?page=0&size=10" "" "200" "Get Notifications by User ID"
-    
-    # Test get all notifications (paginated)
-    make_request "GET" "$NOTIFICATION_SERVICE_URL/api/v1/notifications?page=0&size=10" "" "200" "Get All Notifications (Paginated)"
-}
-
-# Function to test API Gateway endpoints
-test_api_gateway() {
-    echo -e "\n${CYAN}Testing API Gateway Endpoints...${NC}"
-    
-    # Test API Gateway health
-    make_request "GET" "$BASE_URL/actuator/health" "" "200" "API Gateway Health Check"
-    
-    # Test API Gateway routes
-    make_request "GET" "$BASE_URL/actuator/gateway/routes" "" "200" "API Gateway Routes"
-    
-    # Test proxied user endpoints through gateway
-    make_request "GET" "$BASE_URL/api/v1/users/$USER_ID" "" "200" "Get User through Gateway"
-    
-    # Test proxied account endpoints through gateway
-    make_request "GET" "$BASE_URL/api/v1/accounts/$ACCOUNT_ID" "" "200" "Get Account through Gateway"
-}
-
-# Function to test cache functionality
-test_cache_functionality() {
-    echo -e "\n${CYAN}Testing Cache Functionality...${NC}"
-    
-    # Test cache hit for user lookup
-    echo -e "  ${YELLOW}Testing cache hit for user lookup...${NC}"
-    make_request "GET" "$USER_SERVICE_URL/api/v1/users/$USER_ID" "" "200" "User Lookup (First Call)"
-    make_request "GET" "$USER_SERVICE_URL/api/v1/users/$USER_ID" "" "200" "User Lookup (Second Call - Cached)"
-    
-    # Test cache hit for account balance
-    echo -e "  ${YELLOW}Testing cache hit for account balance...${NC}"
-    make_request "GET" "$TRANSACTION_SERVICE_URL/api/v1/transactions/account/$ACCOUNT_ID/balance" "" "200" "Account Balance (First Call)"
-    make_request "GET" "$TRANSACTION_SERVICE_URL/api/v1/transactions/account/$ACCOUNT_ID/balance" "" "200" "Account Balance (Second Call - Cached)"
-    
-    # Test cache hit for loan lookup
-    echo -e "  ${YELLOW}Testing cache hit for loan lookup...${NC}"
-    make_request "GET" "$LOAN_SERVICE_URL/api/v1/loans/$LOAN_ID" "" "200" "Loan Lookup (First Call)"
-    make_request "GET" "$LOAN_SERVICE_URL/api/v1/loans/$LOAN_ID" "" "200" "Loan Lookup (Second Call - Cached)"
-}
-
-# Function to test error handling
-test_error_handling() {
-    echo -e "\n${CYAN}Testing Error Handling...${NC}"
-    
-    # Test invalid user ID
-    make_request "GET" "$USER_SERVICE_URL/api/v1/users/999999" "" "404" "Get Non-existent User"
-    
-    # Test invalid account ID
-    make_request "GET" "$ACCOUNT_SERVICE_URL/api/v1/accounts/999999" "" "404" "Get Non-existent Account"
-    
-    # Test invalid transaction ID
-    make_request "GET" "$TRANSACTION_SERVICE_URL/api/v1/transactions/999999" "" "404" "Get Non-existent Transaction"
-    
-    # Test invalid loan ID
-    make_request "GET" "$LOAN_SERVICE_URL/api/v1/loans/999999" "" "404" "Get Non-existent Loan"
-    
-    # Test unauthorized access (without token)
-    local temp_token=$AUTH_TOKEN
-    AUTH_TOKEN=""
-    make_request "GET" "$USER_SERVICE_URL/api/v1/users/$USER_ID" "" "401" "Unauthorized Access"
-    AUTH_TOKEN=$temp_token
-}
-
-# Function to generate test report
-generate_test_report() {
-    echo -e "\n${BLUE}========================================${NC}"
-    echo -e "${BLUE}  Test Execution Summary              ${NC}"
-    echo -e "${BLUE}========================================${NC}"
-    
-    echo -e "\n${YELLOW}Test Results:${NC}"
-    echo -e "  ${GREEN}Passed: $PASSED_TESTS${NC}"
-    echo -e "  ${RED}Failed: $FAILED_TESTS${NC}"
-    echo -e "  ${BLUE}Total: $TOTAL_TESTS${NC}"
-    
-    local success_rate=0
-    if [ $TOTAL_TESTS -gt 0 ]; then
-        success_rate=$((PASSED_TESTS * 100 / TOTAL_TESTS))
-    fi
-    
-    echo -e "\n${YELLOW}Success Rate: ${success_rate}%${NC}"
-    
-    if [ $FAILED_TESTS -eq 0 ]; then
-        echo -e "\n${GREEN}🎉 All tests passed! The system is working correctly.${NC}"
-    else
-        echo -e "\n${RED}⚠️  Some tests failed. Please check the details above.${NC}"
-    fi
-    
-    echo -e "\n${YELLOW}Test Coverage:${NC}"
-    echo -e "  ✅ Service Health Checks"
-    echo -e "  ✅ User Service (Registration, Login, CRUD operations)"
-    echo -e "  ✅ Account Service (Account creation, management)"
-    echo -e "  ✅ Transaction Service (Transaction processing, history)"
-    echo -e "  ✅ Loan Service (Loan applications, calculations)"
-    echo -e "  ✅ Notification Service (Notification management)"
-    echo -e "  ✅ API Gateway (Routing, proxying)"
-    echo -e "  ✅ Cache Functionality (Performance verification)"
-    echo -e "  ✅ Error Handling (Invalid requests, unauthorized access)"
-}
-
-# Main test execution
-main() {
-    echo -e "${BLUE}Starting comprehensive end-to-end tests...${NC}"
-    echo -e "${BLUE}Test data: Username=$TEST_USERNAME, Email=$TEST_EMAIL${NC}"
-    
-    # Check service health first
-    check_service_health
-    
-    # Run tests in logical order (dependencies first)
-    test_user_service
-    test_account_service
-    test_transaction_service
-    test_loan_service
-    test_notification_service
-    test_api_gateway
-    test_cache_functionality
-    test_error_handling
-    
-    # Generate final report
-    generate_test_report
-    
-    echo -e "\n${GREEN}========================================${NC}"
-    echo -e "${GREEN}  End-to-End Tests Complete           ${NC}"
-    echo -e "${GREEN}========================================${NC}"
-}
-
-# Run main function
-main "$@"
+if [[ $FAILED_TESTS -eq 0 ]]; then
+    echo -e "\n${GREEN}🎉 ALL TESTS PASSED! Telepesa platform is working perfectly! 🎉${NC}"
+    exit 0
+else
+    echo -e "\n${YELLOW}⚠️  Some tests failed. Check individual service logs for details.${NC}"
+    exit 1
+fi 

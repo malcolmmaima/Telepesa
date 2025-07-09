@@ -9,7 +9,7 @@ services:
       POSTGRES_DB: telepesa_db
       POSTGRES_USER: telepesa_user
       POSTGRES_PASSWORD: telepesa_password
-      POSTGRES_MULTIPLE_DATABASES: user_db,account_db,transaction_db
+      POSTGRES_MULTIPLE_DATABASES: user_db,account_db,transaction_db,loan_db
     ports:
       - "5432:5432"
     volumes:
@@ -17,6 +17,11 @@ services:
       - ./init-scripts:/docker-entrypoint-initdb.d
     networks:
       - telepesa-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U telepesa_user -d telepesa_db"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
   mongodb:
     image: mongo:6.0
@@ -31,6 +36,11 @@ services:
       - mongodb_data:/data/db
     networks:
       - telepesa-network
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
   redis:
     image: redis:7-alpine
@@ -42,6 +52,11 @@ services:
     command: redis-server --appendonly yes --requirepass telepesa_redis_password
     networks:
       - telepesa-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
   zipkin:
     image: openzipkin/zipkin:latest
@@ -50,13 +65,35 @@ services:
       - "9411:9411"
     networks:
       - telepesa-network
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:9411/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
   # Message Queue
+  zookeeper:
+    image: confluentinc/cp-zookeeper:latest
+    container_name: telepesa-zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    ports:
+      - "2181:2181"
+    networks:
+      - telepesa-network
+    healthcheck:
+      test: ["CMD", "echo", "ruok", "|", "nc", "localhost", "2181"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
   kafka:
     image: confluentinc/cp-kafka:latest
     container_name: telepesa-kafka
     depends_on:
-      - zookeeper
+      zookeeper:
+        condition: service_healthy
     environment:
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
@@ -68,19 +105,35 @@ services:
       - "29092:29092"
     networks:
       - telepesa-network
+    healthcheck:
+      test: ["CMD", "kafka-broker-api-versions", "--bootstrap-server", "localhost:9092"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
-  zookeeper:
-    image: confluentinc/cp-zookeeper:latest
-    container_name: telepesa-zookeeper
-    environment:
-      ZOOKEEPER_CLIENT_PORT: 2181
-      ZOOKEEPER_TICK_TIME: 2000
+  # Service Discovery
+  eureka-server:
+    build:
+      context: ../eureka-server
+      dockerfile: Dockerfile
+    container_name: telepesa-eureka-server
     ports:
-      - "2181:2181"
+      - "8761:8761"
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      EUREKA_CLIENT_REGISTER_WITH_EUREKA: false
+      EUREKA_CLIENT_FETCH_REGISTRY: false
+      EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE: http://eureka-server:8761/eureka/
     networks:
       - telepesa-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8761/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
 
-  # Microservices
+  # API Gateway
   api-gateway:
     build:
       context: ../api-gateway
@@ -90,15 +143,27 @@ services:
       - "8080:8080"
     environment:
       SPRING_PROFILES_ACTIVE: docker
+      EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE: http://eureka-server:8761/eureka/
       ZIPKIN_BASE_URL: http://zipkin:9411
       REDIS_HOST: redis
       REDIS_PASSWORD: telepesa_redis_password
     depends_on:
-      - redis
-      - zipkin
+      eureka-server:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      zipkin:
+        condition: service_healthy
     networks:
       - telepesa-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 90s
 
+  # Microservices
   user-service:
     build:
       context: ../user-service
@@ -111,17 +176,30 @@ services:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/user_db
       SPRING_DATASOURCE_USERNAME: telepesa_user
       SPRING_DATASOURCE_PASSWORD: telepesa_password
+      EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE: http://eureka-server:8761/eureka/
       ZIPKIN_BASE_URL: http://zipkin:9411
       REDIS_HOST: redis
       REDIS_PASSWORD: telepesa_redis_password
       KAFKA_BOOTSTRAP_SERVERS: kafka:9092
     depends_on:
-      - postgres
-      - redis
-      - kafka
-      - zipkin
+      postgres:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      zipkin:
+        condition: service_healthy
     networks:
       - telepesa-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8081/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 90s
 
   account-service:
     build:
@@ -135,17 +213,30 @@ services:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/account_db
       SPRING_DATASOURCE_USERNAME: telepesa_user
       SPRING_DATASOURCE_PASSWORD: telepesa_password
+      EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE: http://eureka-server:8761/eureka/
       ZIPKIN_BASE_URL: http://zipkin:9411
       REDIS_HOST: redis
       REDIS_PASSWORD: telepesa_redis_password
       KAFKA_BOOTSTRAP_SERVERS: kafka:9092
     depends_on:
-      - postgres
-      - redis
-      - kafka
-      - zipkin
+      postgres:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      zipkin:
+        condition: service_healthy
     networks:
       - telepesa-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8082/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 90s
 
   transaction-service:
     build:
@@ -159,17 +250,30 @@ services:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/transaction_db
       SPRING_DATASOURCE_USERNAME: telepesa_user
       SPRING_DATASOURCE_PASSWORD: telepesa_password
+      EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE: http://eureka-server:8761/eureka/
       ZIPKIN_BASE_URL: http://zipkin:9411
       REDIS_HOST: redis
       REDIS_PASSWORD: telepesa_redis_password
       KAFKA_BOOTSTRAP_SERVERS: kafka:9092
     depends_on:
-      - postgres
-      - redis
-      - kafka
-      - zipkin
+      postgres:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      zipkin:
+        condition: service_healthy
     networks:
       - telepesa-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8083/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 90s
 
   loan-service:
     build:
@@ -177,23 +281,36 @@ services:
       dockerfile: Dockerfile
     container_name: telepesa-loan-service
     ports:
-      - "8085:8085"
+      - "8084:8084"
     environment:
       SPRING_PROFILES_ACTIVE: docker
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/loan_db
       SPRING_DATASOURCE_USERNAME: telepesa_user
       SPRING_DATASOURCE_PASSWORD: telepesa_password
+      EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE: http://eureka-server:8761/eureka/
       ZIPKIN_BASE_URL: http://zipkin:9411
       REDIS_HOST: redis
       REDIS_PASSWORD: telepesa_redis_password
       KAFKA_BOOTSTRAP_SERVERS: kafka:9092
     depends_on:
-      - postgres
-      - redis
-      - kafka
-      - zipkin
+      postgres:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      zipkin:
+        condition: service_healthy
     networks:
       - telepesa-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8084/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 90s
 
   notification-service:
     build:
@@ -201,21 +318,34 @@ services:
       dockerfile: Dockerfile
     container_name: telepesa-notification-service
     ports:
-      - "8084:8084"
+      - "8085:8085"
     environment:
       SPRING_PROFILES_ACTIVE: docker
       SPRING_DATA_MONGODB_URI: mongodb://telepesa_admin:telepesa_password@mongodb:27017/notification_db?authSource=admin
+      EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE: http://eureka-server:8761/eureka/
       ZIPKIN_BASE_URL: http://zipkin:9411
       REDIS_HOST: redis
       REDIS_PASSWORD: telepesa_redis_password
       KAFKA_BOOTSTRAP_SERVERS: kafka:9092
     depends_on:
-      - mongodb
-      - redis
-      - kafka
-      - zipkin
+      mongodb:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      zipkin:
+        condition: service_healthy
     networks:
       - telepesa-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8085/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 90s
 
 volumes:
   postgres_data:

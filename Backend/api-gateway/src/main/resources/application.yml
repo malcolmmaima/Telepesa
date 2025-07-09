@@ -4,7 +4,7 @@ spring:
   redis:
     host: ${REDIS_HOST:localhost}
     port: ${REDIS_PORT:6379}
-    password: ${REDIS_PASSWORD:}
+    password: ${REDIS_PASSWORD:telepesa_redis_password}
     timeout: 2000ms
     lettuce:
       pool:
@@ -41,10 +41,6 @@ cloud:
           - Path=/api/v1/users/**
         filters:
           - RewritePath=/api/v1/users/(?<remaining>.*), /api/users/${remaining}
-          - name: RequestRateLimiter
-            args:
-              redis-rate-limiter.replenishRate: 10
-              redis-rate-limiter.burstCapacity: 20
           - name: Retry
             args:
               retries: 3
@@ -58,10 +54,6 @@ cloud:
           - Path=/api/v1/accounts/**
         filters:
           - RewritePath=/api/v1/accounts/(?<remaining>.*), /api/accounts/${remaining}
-          - name: RequestRateLimiter
-            args:
-              redis-rate-limiter.replenishRate: 10
-              redis-rate-limiter.burstCapacity: 20
           - name: Retry
             args:
               retries: 3
@@ -75,10 +67,6 @@ cloud:
           - Path=/api/v1/transactions/**
         filters:
           - RewritePath=/api/v1/transactions/(?<remaining>.*), /api/transactions/${remaining}
-          - name: RequestRateLimiter
-            args:
-              redis-rate-limiter.replenishRate: 10
-              redis-rate-limiter.burstCapacity: 20
           - name: Retry
             args:
               retries: 3
@@ -92,10 +80,6 @@ cloud:
           - Path=/api/v1/loans/**
         filters:
           - RewritePath=/api/v1/loans/(?<remaining>.*), /api/loans/${remaining}
-          - name: RequestRateLimiter
-            args:
-              redis-rate-limiter.replenishRate: 10
-              redis-rate-limiter.burstCapacity: 20
           - name: Retry
             args:
               retries: 3
@@ -109,161 +93,20 @@ cloud:
           - Path=/api/v1/notifications/**
         filters:
           - RewritePath=/api/v1/notifications/(?<remaining>.*), /api/notifications/${remaining}
-          - name: RequestRateLimiter
-            args:
-              redis-rate-limiter.replenishRate: 10
-              redis-rate-limiter.burstCapacity: 20
           - name: Retry
             args:
               retries: 3
               statuses: BAD_GATEWAY,SERVICE_UNAVAILABLE
               methods: GET,POST,PUT,DELETE
-      
-      # Health Check Routes (Public)
-      - id: health-checks
-        uri: lb://user-service
-        predicates:
-          - Path=/api/v1/health/**
-        filters:
-          - RewritePath=/api/v1/health/(?<remaining>.*), /actuator/health/${remaining}
-          - name: Retry
-            args:
-              retries: 1
-              statuses: BAD_GATEWAY,SERVICE_UNAVAILABLE
-              methods: GET
-      
-      # API Documentation Routes
-      - id: api-docs
-        uri: lb://user-service
-        predicates:
-          - Path=/api/v1/docs/**
-        filters:
-          - RewritePath=/api/v1/docs/(?<remaining>.*), /swagger-ui/${remaining}
-          - name: Retry
-            args:
-              retries: 1
-              statuses: BAD_GATEWAY,SERVICE_UNAVAILABLE
-              methods: GET
-      
-      # Swagger UI Routes for each service
-      - id: user-service-swagger-ui
-        uri: lb://user-service
-        predicates:
-          - Path=/api/v1/docs/user-service/**
-        filters:
-          - RewritePath=/api/v1/docs/user-service/(?<remaining>.*), /swagger-ui/${remaining}
-          - name: Retry
-            args:
-              retries: 1
-              statuses: BAD_GATEWAY,SERVICE_UNAVAILABLE
-              methods: GET
-      
-      - id: account-service-swagger-ui
-        uri: lb://account-service
-        predicates:
-          - Path=/api/v1/docs/account-service/**
-        filters:
-          - RewritePath=/api/v1/docs/account-service/(?<remaining>.*), /swagger-ui/${remaining}
-          - name: Retry
-            args:
-              retries: 1
-              statuses: BAD_GATEWAY,SERVICE_UNAVAILABLE
-              methods: GET
-      
-      - id: transaction-service-swagger-ui
-        uri: lb://transaction-service
-        predicates:
-          - Path=/api/v1/docs/transaction-service/**
-        filters:
-          - RewritePath=/api/v1/docs/transaction-service/(?<remaining>.*), /swagger-ui/${remaining}
-          - name: Retry
-            args:
-              retries: 1
-              statuses: BAD_GATEWAY,SERVICE_UNAVAILABLE
-              methods: GET
-      
-      - id: loan-service-swagger-ui
-        uri: lb://loan-service
-        predicates:
-          - Path=/api/v1/docs/loan-service/**
-        filters:
-          - RewritePath=/api/v1/docs/loan-service/(?<remaining>.*), /swagger-ui/${remaining}
-          - name: Retry
-            args:
-              retries: 1
-              statuses: BAD_GATEWAY,SERVICE_UNAVAILABLE
-              methods: GET
-      
-      - id: notification-service-swagger-ui
-        uri: lb://notification-service
-        predicates:
-          - Path=/api/v1/docs/notification-service/**
-        filters:
-          - RewritePath=/api/v1/docs/notification-service/(?<remaining>.*), /swagger-ui/${remaining}
-          - name: Retry
-            args:
-              retries: 1
-              statuses: BAD_GATEWAY,SERVICE_UNAVAILABLE
-              methods: GET
-    
-    globalcors:
-      corsConfigurations:
-        '[/**]':
-          allowedOrigins: 
-            - "http://localhost:3000"
-            - "http://localhost:8080"
-            - "https://telepesa.com"
-            - "https://dashboard.telepesa.com"
-          allowedMethods:
-            - GET
-            - POST
-            - PUT
-            - DELETE
-            - OPTIONS
-            - PATCH
-          allowedHeaders: 
-            - "Authorization"
-            - "Content-Type"
-            - "X-Requested-With"
-            - "Accept"
-            - "Origin"
-            - "Access-Control-Request-Method"
-            - "Access-Control-Request-Headers"
-          exposedHeaders:
-            - "Access-Control-Allow-Origin"
-            - "Access-Control-Allow-Credentials"
-          allowCredentials: true
-          maxAge: 3600
 
 # JWT Configuration
 app:
   jwt:
-    secret: ${JWT_SECRET:myVerySecretJWTKeyForTelepesaUserService123!@#}
-    expiration: ${JWT_EXPIRATION:86400}
+    secret: ${JWT_SECRET:default-secret-key-for-development-only-change-in-production}
 
-# Actuator Configuration
-management:
-  endpoints:
-    web:
-      exposure:
-        include: health,info,gateway,metrics
-      base-path: /actuator
-  endpoint:
-    health:
-      show-details: always
-    gateway:
-      enabled: true
-  metrics:
-    export:
-      prometheus:
-        enabled: true
-
-# Logging Configuration
+# Logging for debugging
 logging:
   level:
     org.springframework.cloud.gateway: DEBUG
-    org.springframework.web.reactive: DEBUG
+    org.springframework.security: DEBUG
     com.maelcolium.telepesa.gateway: DEBUG
-    reactor.netty: DEBUG
-  pattern:
-    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"

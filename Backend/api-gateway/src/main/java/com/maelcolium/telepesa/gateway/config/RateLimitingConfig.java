@@ -14,68 +14,63 @@ import reactor.core.publisher.Mono;
  * to prevent abuse and ensure fair usage of the API endpoints.
  * 
  * @author Telepesa Development Team
- * @version 1.0.0
+ * @version 1.0
  */
 @Configuration
 public class RateLimitingConfig {
 
     /**
-     * Creates a Redis-based rate limiter for general API endpoints
-     * 
-     * @return RedisRateLimiter with default settings
+     * Creates a rate limiter for public endpoints
+     * Allows 100 requests per minute for public endpoints
      */
     @Bean
     @Primary
-    public RedisRateLimiter redisRateLimiter() {
-        return new RedisRateLimiter(10, 20); // replenishRate: 10, burstCapacity: 20
+    public RedisRateLimiter publicRateLimiter() {
+        return new RedisRateLimiter(100, 120, 1);
     }
 
     /**
-     * Creates a Redis-based rate limiter for authentication endpoints
-     * with stricter limits to prevent brute force attacks
-     * 
-     * @return RedisRateLimiter with strict settings
+     * Creates a rate limiter for authenticated endpoints
+     * Allows 300 requests per minute for authenticated users
      */
     @Bean
-    public RedisRateLimiter authRateLimiter() {
-        return new RedisRateLimiter(5, 10); // replenishRate: 5, burstCapacity: 10
+    public RedisRateLimiter authenticatedRateLimiter() {
+        return new RedisRateLimiter(300, 350, 1);
     }
 
     /**
-     * Key resolver for rate limiting based on user IP address
-     * This ensures rate limiting is applied per IP address
-     * 
-     * @return KeyResolver that uses IP address as the key
+     * Creates a rate limiter for admin endpoints
+     * Allows 500 requests per minute for admin users
+     */
+    @Bean
+    public RedisRateLimiter adminRateLimiter() {
+        return new RedisRateLimiter(500, 600, 1);
+    }
+
+    /**
+     * Key resolver for IP-based rate limiting
+     * Uses client IP address as the key for rate limiting
      */
     @Bean
     @Primary
+    public KeyResolver ipKeyResolver() {
+        return exchange -> {
+            String clientIp = exchange.getRequest().getRemoteAddress() != null
+                ? exchange.getRequest().getRemoteAddress().getAddress().getHostAddress()
+                : "unknown";
+            return Mono.just(clientIp);
+        };
+    }
+
+    /**
+     * Key resolver for user-based rate limiting
+     * Uses authenticated user ID as the key for rate limiting
+     */
+    @Bean
     public KeyResolver userKeyResolver() {
-        return exchange -> {
-            String ipAddress = exchange.getRequest().getRemoteAddress() != null 
-                ? exchange.getRequest().getRemoteAddress().getAddress().getHostAddress()
-                : "unknown";
-            return Mono.just(ipAddress);
-        };
-    }
-
-    /**
-     * Key resolver for rate limiting based on JWT token (user ID)
-     * This provides user-specific rate limiting when authentication is available
-     * 
-     * @return KeyResolver that uses JWT token as the key
-     */
-    @Bean
-    public KeyResolver userTokenKeyResolver() {
-        return exchange -> {
-            String token = exchange.getRequest().getHeaders().getFirst("Authorization");
-            if (token != null && token.startsWith("Bearer ")) {
-                return Mono.just(token.substring(7)); // Remove "Bearer " prefix
-            }
-            // Fallback to IP address if no token is present
-            String ipAddress = exchange.getRequest().getRemoteAddress() != null 
-                ? exchange.getRequest().getRemoteAddress().getAddress().getHostAddress()
-                : "unknown";
-            return Mono.just(ipAddress);
-        };
+        return exchange -> exchange.getPrincipal()
+            .cast(Object.class)
+            .map(Object::toString)
+            .switchIfEmpty(Mono.just("anonymous"));
     }
 } 
