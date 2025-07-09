@@ -68,12 +68,31 @@ check_service_health() {
 # Function to start a service
 start_service() {
     local service_name=$1
-    local service_dir=$2
-    local port=$3
+    local port=$2
     
     echo -e "${BLUE}[INFO] 🚀 Starting $service_name...${NC}"
     
-    cd "$service_dir"
+    # Determine the correct relative path for each service (from Backend/scripts/)
+    case "$service_name" in
+        "Eureka-Server")
+            service_dir="../eureka-server" ;;
+        "API-Gateway")
+            service_dir="../api-gateway" ;;
+        "User-Service")
+            service_dir="../user-service" ;;
+        "Account-Service")
+            service_dir="../account-service" ;;
+        "Transaction-Service")
+            service_dir="../transaction-service" ;;
+        "Loan-Service")
+            service_dir="../loan-service" ;;
+        "Notification-Service")
+            service_dir="../notification-service" ;;
+        *)
+            echo "[ERROR] Unknown service: $service_name" ; return 1 ;;
+    esac
+
+    cd "$service_dir" || { echo "[ERROR] Could not cd to $service_dir"; return 1; }
     
     # Kill any existing process on the port
     if lsof -ti:$port > /dev/null 2>&1; then
@@ -83,9 +102,11 @@ start_service() {
     fi
     
     # Start the service in background
-    nohup mvn spring-boot:run -Dspring.profiles.active=dev > "../logs/${service_name,,}.log" 2>&1 &
+    log_name=$(echo "$service_name" | tr '[:upper:]' '[:lower:]')
+    nohup mvn spring-boot:run -Dspring.profiles.active=dev > "../logs/${log_name}.log" 2>&1 &
     local pid=$!
-    echo "$pid" > "../logs/${service_name,,}.pid"
+    echo "$pid" > "../logs/${log_name}.pid"
+    cd - > /dev/null
     
     echo -e "${GREEN}[INFO] Started $service_name with PID $pid${NC}"
     
@@ -122,25 +143,26 @@ fi
 echo -e "${GREEN}[SUCCESS] ✅ Docker infrastructure is ready${NC}"
 
 # Step 2: Build shared libraries
-echo -e "${BLUE}[INFO] 🔧 Building shared libraries...${NC}"
-cd shared-libraries
+echo -e "${BLUE}[INFO] Building Telepesa Shared Libraries...${NC}"
+pushd ../shared-libraries > /dev/null
 chmod +x build-shared-libs.sh
 if ./build-shared-libs.sh; then
     echo -e "${GREEN}[SUCCESS] ✅ Shared libraries built successfully${NC}"
 else
     echo -e "${RED}[ERROR] ❌ Failed to build shared libraries${NC}"
+    popd > /dev/null
     exit 1
 fi
-cd ..
+popd > /dev/null
 
 # Step 3: Start Eureka Server (Service Discovery)
-if ! start_service "Eureka-Server" "eureka-server" $EUREKA_PORT; then
+if ! start_service "Eureka-Server" $EUREKA_PORT; then
     echo -e "${RED}[FATAL] ❌ Eureka Server failed to start. Cannot continue.${NC}"
     exit 1
 fi
 
 # Step 4: Start API Gateway
-if ! start_service "API-Gateway" "api-gateway" $GATEWAY_PORT; then
+if ! start_service "API-Gateway" $GATEWAY_PORT; then
     echo -e "${RED}[FATAL] ❌ API Gateway failed to start. Cannot continue.${NC}"
     exit 1
 fi
@@ -149,23 +171,23 @@ fi
 echo -e "${PURPLE}[INFO] 🔄 Starting core microservices...${NC}"
 
 # Start User Service
-start_service "User-Service" "user-service" $USER_SERVICE_PORT &
+start_service "User-Service" $USER_SERVICE_PORT &
 USER_PID=$!
 
 # Start Account Service
-start_service "Account-Service" "account-service" $ACCOUNT_SERVICE_PORT &
+start_service "Account-Service" $ACCOUNT_SERVICE_PORT &
 ACCOUNT_PID=$!
 
 # Start Transaction Service
-start_service "Transaction-Service" "transaction-service" $TRANSACTION_SERVICE_PORT &
+start_service "Transaction-Service" $TRANSACTION_SERVICE_PORT &
 TRANSACTION_PID=$!
 
 # Start Loan Service
-start_service "Loan-Service" "loan-service" $LOAN_SERVICE_PORT &
+start_service "Loan-Service" $LOAN_SERVICE_PORT &
 LOAN_PID=$!
 
 # Start Notification Service
-start_service "Notification-Service" "notification-service" $NOTIFICATION_SERVICE_PORT &
+start_service "Notification-Service" $NOTIFICATION_SERVICE_PORT &
 NOTIFICATION_PID=$!
 
 # Wait for all services to complete
