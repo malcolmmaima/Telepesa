@@ -11,102 +11,96 @@ spring:
         max-active: 8
         max-idle: 8
         min-idle: 0
-
-eureka:
-  client:
-    service-url:
-      defaultZone: http://localhost:8761/eureka/
-    fetch-registry: true
-    register-with-eureka: true
-  instance:
-    prefer-ip-address: true
-    instance-id: ${spring.application.name}:${server.port}
-    health-check-url-path: /actuator/health
-    status-page-url-path: /actuator/info
-
-server:
-  port: 8080
-
-cloud:
-  gateway:
-    discovery:
-      locator:
-        enabled: true
-        lower-case-service-id: true
-    routes:
-      # User Service Routes
-      - id: user-service
-        uri: lb://user-service
-        predicates:
-          - Path=/api/v1/users/**
-        filters:
-          - RewritePath=/api/v1/users/(?<remaining>.*), /api/users/${remaining}
-          - name: Retry
-            args:
-              retries: 3
-              statuses: BAD_GATEWAY,SERVICE_UNAVAILABLE
-              methods: GET,POST,PUT,DELETE
-      
-      # Account Service Routes
-      - id: account-service
-        uri: lb://account-service
-        predicates:
-          - Path=/api/v1/accounts/**
-        filters:
-          - RewritePath=/api/v1/accounts/(?<remaining>.*), /api/accounts/${remaining}
-          - name: Retry
-            args:
-              retries: 3
-              statuses: BAD_GATEWAY,SERVICE_UNAVAILABLE
-              methods: GET,POST,PUT,DELETE
-      
-      # Transaction Service Routes
-      - id: transaction-service
-        uri: lb://transaction-service
-        predicates:
-          - Path=/api/v1/transactions/**
-        filters:
-          - RewritePath=/api/v1/transactions/(?<remaining>.*), /api/transactions/${remaining}
-          - name: Retry
-            args:
-              retries: 3
-              statuses: BAD_GATEWAY,SERVICE_UNAVAILABLE
-              methods: GET,POST,PUT,DELETE
-      
-      # Loan Service Routes
-      - id: loan-service
-        uri: lb://loan-service
-        predicates:
-          - Path=/api/v1/loans/**
-        filters:
-          - RewritePath=/api/v1/loans/(?<remaining>.*), /api/loans/${remaining}
-          - name: Retry
-            args:
-              retries: 3
-              statuses: BAD_GATEWAY,SERVICE_UNAVAILABLE
-              methods: GET,POST,PUT,DELETE
-      
-      # Notification Service Routes
-      - id: notification-service
-        uri: lb://notification-service
-        predicates:
-          - Path=/api/v1/notifications/**
-        filters:
-          - RewritePath=/api/v1/notifications/(?<remaining>.*), /api/notifications/${remaining}
-          - name: Retry
-            args:
-              retries: 3
-              statuses: BAD_GATEWAY,SERVICE_UNAVAILABLE
-              methods: GET,POST,PUT,DELETE
-
+  cloud:
+    gateway:
+      discovery:
+        locator:
+          enabled: true
+          lower-case-service-id: true
+      routes:
+        # User Service Routes
+        - id: user-service
+          uri: lb://user-service
+          predicates:
+            - Path=/api/v1/users/**
+          filters:
+            - RewritePath=/api/v1/users/(?<remaining>.*),/api/users/${remaining}
+            - name: Retry
+              args:
+                retries: 3
+                statuses: BAD_GATEWAY,SERVICE_UNAVAILABLE
+                methods: GET,POST,PUT,DELETE
+        # Account Service Routes
+        - id: account-service
+          uri: lb://account-service
+          predicates:
+            - Path=/api/v1/accounts/**
+          filters:
+            - RewritePath=/api/v1/accounts/(?<remaining>.*),/api/accounts/${remaining}
+            - name: Retry
+              args:
+                retries: 3
+                statuses: BAD_GATEWAY,SERVICE_UNAVAILABLE
+                methods: GET,POST,PUT,DELETE
+        # Transaction Service Routes
+        - id: transaction-service
+          uri: lb://transaction-service
+          predicates:
+            - Path=/api/v1/transactions/**
+          filters:
+            - RewritePath=/api/v1/transactions/(?<remaining>.*),/api/transactions/${remaining}
+            - name: Retry
+              args:
+                retries: 3
+                statuses: BAD_GATEWAY,SERVICE_UNAVAILABLE
+                methods: GET,POST,PUT,DELETE
+        # Loan Service Routes
+        - id: loan-service
+          uri: lb://loan-service
+          predicates:
+            - Path=/api/v1/loans/**
+          filters:
+            - RewritePath=/api/v1/loans/(?<remaining>.*),/api/loans/${remaining}
+            - name: Retry
+              args:
+                retries: 3
+                statuses: BAD_GATEWAY,SERVICE_UNAVAILABLE
+                methods: GET,POST,PUT,DELETE
+        # Notification Service Routes
+        - id: notification-service
+          uri: lb://notification-service
+          predicates:
+            - Path=/api/v1/notifications/**
+          filters:
+            - RewritePath=/api/v1/notifications/(?<remaining>.*),/api/notifications/${remaining}
+            - name: Retry
+              args:
+                retries: 3
+                statuses: BAD_GATEWAY,SERVICE_UNAVAILABLE
+                methods: GET,POST,PUT,DELETE
+        # User Service Debug Route
+        # - id: user-service-debug
+        #   uri: http://httpbin.org/status/418
+        #   predicates:
+        #     - Path=/api/v1/users/**
 # JWT Configuration
 app:
   jwt:
     secret: ${JWT_SECRET:default-secret-key-for-development-only-change-in-production}
-
 # Logging for debugging
 logging:
   level:
+    root: INFO
     org.springframework.cloud.gateway: DEBUG
     org.springframework.security: DEBUG
     com.maelcolium.telepesa.gateway: DEBUG
+management:
+  server:
+    port: 8080
+  endpoints:
+    web:
+      exposure:
+        include: "*,info,env"
+  endpoint:
+    gateway:
+      enabled: true

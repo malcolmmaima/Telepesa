@@ -17,6 +17,14 @@ import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.cloud.gateway.filter.GlobalFilter;
+import org.springframework.cloud.gateway.filter.GatewayFilterChain;
+import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
+import org.springframework.web.server.ServerWebExchange;
+import reactor.core.publisher.Mono;
 
 @Configuration
 @EnableWebFluxSecurity
@@ -94,5 +102,21 @@ public class GatewayConfig {
         return WebClient.builder()
             .codecs(configurer -> configurer.defaultCodecs().maxInMemorySize(2 * 1024 * 1024))
             .build();
+    }
+
+    // Add this bean for logging
+    @Bean
+    @Order(Ordered.HIGHEST_PRECEDENCE)
+    public GlobalFilter loggingFilter() {
+        Logger logger = LoggerFactory.getLogger(GatewayConfig.class);
+        return (exchange, chain) -> {
+            String method = exchange.getRequest().getMethod() != null ? exchange.getRequest().getMethod().name() : "UNKNOWN";
+            String path = exchange.getRequest().getPath().toString();
+            logger.info("[Gateway] Incoming request: {} {}", method, path);
+            return chain.filter(exchange).then(Mono.fromRunnable(() -> {
+                int status = exchange.getResponse().getStatusCode() != null ? exchange.getResponse().getStatusCode().value() : 0;
+                logger.info("[Gateway] Outgoing response: {} {} -> {}", method, path, status);
+            }));
+        };
     }
 }
