@@ -4,35 +4,28 @@ server:
 spring:
   application:
     name: user-service
-  
   profiles:
     active: ${SPRING_PROFILES_ACTIVE:dev}
-  
   datasource:
-    url: ${DATABASE_URL:jdbc:h2:mem:testdb}
-    username: ${DATABASE_USERNAME:sa}
-    password: ${DATABASE_PASSWORD:}
-    driver-class-name: ${DATABASE_DRIVER:org.h2.Driver}
-    h2:
-      console:
-        enabled: true
+    url: ${SPRING_DATASOURCE_URL}
+    username: ${SPRING_DATASOURCE_USERNAME}
+    password: ${SPRING_DATASOURCE_PASSWORD}
+    driver-class-name: ${DATABASE_DRIVER:org.postgresql.Driver}
     hikari:
       maximum-pool-size: 20
       minimum-idle: 5
       connection-timeout: 30000
       idle-timeout: 600000
       max-lifetime: 1800000
-  
   jpa:
     hibernate:
-      ddl-auto: ${DDL_AUTO:create-drop}
+      ddl-auto: ${DDL_AUTO:update}
     properties:
       hibernate:
-        dialect: ${JPA_DIALECT:org.hibernate.dialect.H2Dialect}
+        dialect: ${JPA_DIALECT:org.hibernate.dialect.PostgreSQLDialect}
         format_sql: true
         show_sql: false
     show-sql: false
-  
   data:
     redis:
       host: ${REDIS_HOST:localhost}
@@ -44,7 +37,6 @@ spring:
           max-active: 8
           max-idle: 8
           min-idle: 0
-  
   kafka:
     bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
     producer:
@@ -57,11 +49,10 @@ spring:
       properties:
         spring.json.trusted.packages: com.maelcolium.telepesa
 
-# Eureka Service Discovery Configuration
 eureka:
   client:
     service-url:
-      defaultZone: http://localhost:8761/eureka/
+      defaultZone: ${EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE:http://localhost:8761/eureka/}
     fetch-registry: true
     register-with-eureka: true
   instance:
@@ -70,19 +61,16 @@ eureka:
     health-check-url-path: /actuator/health
     status-page-url-path: /actuator/info
 
-# Application-specific configuration
 app:
   jwt:
     secret: ${JWT_SECRET:myVerySecretJWTKeyForTelepesaUserService123!@#}
-    expiration: ${JWT_EXPIRATION:86400} # 24 hours in seconds
-  
+    expiration: ${JWT_EXPIRATION:86400}
   user:
     max-failed-attempts: ${MAX_FAILED_ATTEMPTS:5}
-    account-lock-duration: ${ACCOUNT_LOCK_DURATION:30} # minutes
-    password-reset-expiry: ${PASSWORD_RESET_EXPIRY:3600} # 1 hour in seconds
-    email-verification-expiry: ${EMAIL_VERIFICATION_EXPIRY:86400} # 24 hours in seconds
+    account-lock-duration: ${ACCOUNT_LOCK_DURATION:30}
+    password-reset-expiry: ${PASSWORD_RESET_EXPIRY:3600}
+    email-verification-expiry: ${EMAIL_VERIFICATION_EXPIRY:86400}
 
-# Management endpoints
 management:
   endpoints:
     web:
@@ -97,7 +85,6 @@ management:
       prometheus:
         enabled: true
 
-# Logging configuration
 logging:
   level:
     com.maelcolium.telepesa: ${LOG_LEVEL:DEBUG}
@@ -107,7 +94,6 @@ logging:
   pattern:
     console: "%clr(%d{HH:mm:ss.SSS}){faint} %clr(${LOG_LEVEL_PATTERN:-%5p}) %clr(${PID:- }){magenta} %clr(---){faint} %clr([%15.15t]){faint} %clr(%-40.40logger{39}){cyan} %clr(:){faint} %m%n${LOG_EXCEPTION_CONVERSION_WORD:-%wEx}"
 
-# OpenAPI Documentation
 springdoc:
   api-docs:
     path: /api-docs

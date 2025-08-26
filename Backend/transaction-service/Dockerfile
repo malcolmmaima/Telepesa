@@ -1,17 +1,17 @@
 # Runtime stage for CI/CD (JAR already built)
-FROM eclipse-temurin:17-jre-alpine
+FROM eclipse-temurin:17-jre
 
 # Install security updates and required packages
-RUN apk update && apk upgrade && \
-    apk add --no-cache curl && \
-    addgroup -g 1001 -S telepesa && \
-    adduser -S telepesa -u 1001 -G telepesa
+RUN apt-get update && apt-get upgrade -y && \
+    apt-get install -y curl && \
+    groupadd -g 1001 telepesa && \
+    useradd -m -u 1001 -g telepesa telepesa
 
 # Set working directory
 WORKDIR /app
 
 # Copy the pre-built JAR file from CI/CD artifacts
-COPY target/transaction-service-*.jar app.jar
+COPY target/*.jar app.jar
 
 # Change ownership to telepesa user
 RUN chown -R telepesa:telepesa /app
@@ -30,4 +30,4 @@ EXPOSE 8083
 ENV JAVA_OPTS="-Xms512m -Xmx1024m -XX:+UseG1GC -XX:+UseContainerSupport"
 
 # Run the application
-ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar app.jar"] 
+ENTRYPOINT ["java", "-jar", "app.jar"] 

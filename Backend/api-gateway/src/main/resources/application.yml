@@ -4,7 +4,7 @@ spring:
   redis:
     host: ${REDIS_HOST:localhost}
     port: ${REDIS_PORT:6379}
-    password: ${REDIS_PASSWORD:telepesa_redis_password}
+    password: telepesa_redis_password
     timeout: 2000ms
     lettuce:
       pool:
@@ -104,3 +104,5 @@ management:
   endpoint:
     gateway:
       enabled: true
+    health:
+      show-details: always

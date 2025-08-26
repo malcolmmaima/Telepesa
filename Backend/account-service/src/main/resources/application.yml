@@ -2,12 +2,12 @@ spring:
   application:
     name: account-service
   profiles:
-    active: dev
+    active: ${SPRING_PROFILES_ACTIVE:dev}
   
   datasource:
-    url: jdbc:postgresql://localhost:5432/telepesa_accounts
-    username: ${DB_USERNAME:telepesa}
-    password: ${DB_PASSWORD:password}
+    url: ${SPRING_DATASOURCE_URL}
+    username: ${SPRING_DATASOURCE_USERNAME}
+    password: ${SPRING_DATASOURCE_PASSWORD}
     driver-class-name: org.postgresql.Driver
     hikari:
       maximum-pool-size: 20
@@ -18,7 +18,7 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: create-drop
+      ddl-auto: ${DDL_AUTO:update}
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
@@ -30,11 +30,6 @@ spring:
         order_updates: true
         batch_versioned_data: true
     show-sql: true
-
-  h2:
-    console:
-      enabled: true
-      path: /h2-console
 
   flyway:
     locations: classpath:db/migration
@@ -115,7 +110,7 @@ app:
 eureka:
   client:
     service-url:
-      defaultZone: http://localhost:8761/eureka/
+      defaultZone: ${EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE:http://localhost:8761/eureka/}
     fetch-registry: true
     register-with-eureka: true
   instance:
