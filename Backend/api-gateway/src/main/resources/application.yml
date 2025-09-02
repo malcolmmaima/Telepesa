@@ -15,16 +15,36 @@ spring:
     gateway:
       discovery:
         locator:
-          enabled: true
+          enabled: false
           lower-case-service-id: true
       routes:
+        # Explicit pass-through for public auth endpoints
+        - id: user-register
+          uri: lb://user-service
+          predicates:
+            - Path=/api/v1/users/register
+          filters:
+            - name: SetPath
+              args:
+                path: /api/users/register
+        - id: user-login
+          uri: lb://user-service
+          predicates:
+            - Path=/api/v1/users/login
+          filters:
+            - name: SetPath
+              args:
+                path: /api/users/login
         # User Service Routes
         - id: user-service
           uri: lb://user-service
           predicates:
             - Path=/api/v1/users/**
           filters:
-            - RewritePath=/api/v1/users/(?<remaining>.*),/api/users/${remaining}
+            - name: RewritePath
+              args:
+                regexp: /api/v1/users/(?<remaining>.*)
+                replacement: /api/users/${remaining}
             - name: Retry
               args:
                 retries: 3
@@ -36,7 +56,10 @@ spring:
           predicates:
             - Path=/api/v1/accounts/**
           filters:
-            - RewritePath=/api/v1/accounts/(?<remaining>.*),/api/accounts/${remaining}
+            - name: RewritePath
+              args:
+                regexp: /api/v1/accounts/(?<remaining>.*)
+                replacement: /api/accounts/${remaining}
             - name: Retry
               args:
                 retries: 3
@@ -48,7 +71,10 @@ spring:
           predicates:
             - Path=/api/v1/transactions/**
           filters:
-            - RewritePath=/api/v1/transactions/(?<remaining>.*),/api/transactions/${remaining}
+            - name: RewritePath
+              args:
+                regexp: /api/v1/transactions/(?<remaining>.*)
+                replacement: /api/transactions/${remaining}
             - name: Retry
               args:
                 retries: 3
@@ -60,7 +86,10 @@ spring:
           predicates:
             - Path=/api/v1/loans/**
           filters:
-            - RewritePath=/api/v1/loans/(?<remaining>.*),/api/loans/${remaining}
+            - name: RewritePath
+              args:
+                regexp: /api/v1/loans/(?<remaining>.*)
+                replacement: /api/loans/${remaining}
             - name: Retry
               args:
                 retries: 3
@@ -72,7 +101,10 @@ spring:
           predicates:
             - Path=/api/v1/notifications/**
           filters:
-            - RewritePath=/api/v1/notifications/(?<remaining>.*),/api/notifications/${remaining}
+            - name: RewritePath
+              args:
+                regexp: /api/v1/notifications/(?<remaining>.*)
+                replacement: /api/notifications/${remaining}
             - name: Retry
               args:
                 retries: 3

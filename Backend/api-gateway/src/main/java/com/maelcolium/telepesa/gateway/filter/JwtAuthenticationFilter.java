@@ -33,12 +33,14 @@ public class JwtAuthenticationFilter implements GlobalFilter, Ordered {
     
     // Public endpoints that don't require authentication
     private static final List<String> PUBLIC_ENDPOINTS = Arrays.asList(
+        "/api/v1/users/register",
+        "/api/v1/users/login",
         "/api/users/register",
         "/api/users/login",
-        "/api/users/verify-email",
-        "/api/users/resend-verification",
-        "/api/users/forgot-password",
-        "/api/users/reset-password",
+        "/api/v1/users/verify-email",
+        "/api/v1/users/resend-verification",
+        "/api/v1/users/forgot-password",
+        "/api/v1/users/reset-password",
         "/actuator/health",
         "/actuator/info",
         "/swagger-ui",

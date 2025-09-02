@@ -55,6 +55,8 @@ public class GatewayConfig {
                 .pathMatchers("/v3/api-docs/**").permitAll()
                 .pathMatchers("/api/v1/users/register").permitAll()
                 .pathMatchers("/api/v1/users/login").permitAll()
+                .pathMatchers("/api/users/register").permitAll()
+                .pathMatchers("/api/users/login").permitAll()
                 .pathMatchers("/api/v1/users/verify/**").permitAll()
                 .pathMatchers("/api/v1/users/reset-password/**").permitAll()
                 .pathMatchers("/api/v1/users/forgot-password/**").permitAll()

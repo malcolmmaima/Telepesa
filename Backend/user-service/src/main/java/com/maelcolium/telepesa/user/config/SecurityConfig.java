@@ -73,9 +73,12 @@ public class SecurityConfig {
             
             .authorizeHttpRequests(authz -> authz
                 // Public endpoints
-                .requestMatchers("/api/users/register", "/api/users/login").permitAll()
+                .requestMatchers("/api/users/register", "/api/users/login",
+                                "/api/v1/users/register", "/api/v1/users/login").permitAll()
                 .requestMatchers("/api/users/verify-email", "/api/users/resend-verification").permitAll()
                 .requestMatchers("/api/users/forgot-password", "/api/users/reset-password").permitAll()
+                .requestMatchers("/api/v1/users/verify-email", "/api/v1/users/resend-verification").permitAll()
+                .requestMatchers("/api/v1/users/forgot-password", "/api/v1/users/reset-password").permitAll()
                 
                 // Actuator endpoints
                 .requestMatchers("/actuator/health", "/actuator/info").permitAll()
@@ -86,6 +89,7 @@ public class SecurityConfig {
                 
                 // Admin-only endpoints
                 .requestMatchers("/api/users/admin/**").hasRole("ADMIN")
+                .requestMatchers("/api/v1/users/admin/**").hasRole("ADMIN")
                 
                 // All other endpoints require authentication
                 .anyRequest().authenticated()

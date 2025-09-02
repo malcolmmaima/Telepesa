@@ -25,7 +25,7 @@ import org.springframework.web.bind.annotation.*;
  * REST Controller for user management operations
  */
 @RestController
-@RequestMapping("/api/users")
+@RequestMapping({"/api/users", "/api/v1/users"})
 @Tag(name = "User Management", description = "User registration, authentication, and management APIs")
 @Slf4j
 public class UserController {
