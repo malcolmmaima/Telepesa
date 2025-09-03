@@ -365,6 +365,7 @@ class LoanControllerTest {
     @Test
     void getLoansByType_ShouldReturnLoansWithType() {
         // Given
+        testLoanDto.setLoanType(LoanType.BUSINESS);
         Page<LoanDto> loanPage = new PageImpl<>(List.of(testLoanDto), PageRequest.of(0, 20), 1);
         when(loanService.getLoansByType(eq(LoanType.BUSINESS), any())).thenReturn(loanPage);
 

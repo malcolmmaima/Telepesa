@@ -424,150 +424,75 @@
 			]
 		},
 		{
-			"name": "3. Account Management",
+			"name": "3. Account Management (Gateway)",
 			"item": [
 				{
-					"name": "Create Bank Account",
-					"event": [
-						{
-							"listen": "test",
-							"script": {
-								"exec": [
-									"pm.test(\"Status code is 201\", function () {",
-									"    pm.response.to.have.status(201);",
-									"});",
-									"",
-									"pm.test(\"Account created successfully\", function () {",
-									"    const jsonData = pm.response.json();",
-									"    pm.expect(jsonData).to.have.property(\"id\");",
-									"    pm.expect(jsonData).to.have.property(\"accountNumber\");",
-									"    pm.expect(jsonData).to.have.property(\"balance\");",
-									"    pm.expect(jsonData.userId).to.eql(parseInt(pm.globals.get(\"test_user_id\")));",
-									"});",
-									"",
-									"// Store account ID for later tests",
-									"if (pm.response.code === 201) {",
-									"    const jsonData = pm.response.json();",
-									"    pm.globals.set(\"test_account_id\", jsonData.id);",
-									"}"
-								],
-								"type": "text/javascript"
-							}
-						}
-					],
+					"name": "Create Account",
 					"request": {
 						"method": "POST",
 						"header": [
-							{
-								"key": "Content-Type",
-								"value": "application/json"
-							},
-							{
-								"key": "Authorization",
-								"value": "Bearer {{jwt_token}}"
-							}
+							{ "key": "Content-Type", "value": "application/json" },
+							{ "key": "Authorization", "value": "Bearer {{jwt_token}}" }
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"userId\": {{test_user_id}},\n    \"accountType\": \"SAVINGS\",\n    \"currency\": \"KES\",\n    \"initialBalance\": 10000.00\n}"
+							"raw": "{\n  \"accountType\": \"SAVINGS\",\n  \"userId\": {{test_user_id}},\n  \"currencyCode\": \"KES\",\n  \"initialDeposit\": 1000.00,\n  \"accountName\": \"Primary Savings\"\n}"
 						},
 						"url": {
-							"raw": "{{account_service_url}}/api/accounts",
-							"host": [
-								"{{account_service_url}}"
-							],
-							"path": [
-								"api",
-								"accounts"
+							"raw": "{{gateway_url}}/api/v1/accounts",
+							"host": ["{{gateway_url}}"],
+							"path": ["api","v1","accounts"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "List Accounts By User",
+					"request": {
+						"method": "GET",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{jwt_token}}" }
+						],
+						"url": {
+							"raw": "{{gateway_url}}/api/v1/accounts/user/{{test_user_id}}?page=0&size=10&sortBy=createdAt&sortDir=desc",
+							"host": ["{{gateway_url}}"],
+							"path": ["api","v1","accounts","user","{{test_user_id}}"],
+							"query": [
+								{"key":"page","value":"0"},
+								{"key":"size","value":"10"},
+								{"key":"sortBy","value":"createdAt"},
+								{"key":"sortDir","value":"desc"}
 							]
 						}
 					},
 					"response": []
 				},
 				{
-					"name": "Get Account Details",
-					"event": [
-						{
-							"listen": "test",
-							"script": {
-								"exec": [
-									"pm.test(\"Status code is 200\", function () {",
-									"    pm.response.to.have.status(200);",
-									"});",
-									"",
-									"pm.test(\"Account details retrieved\", function () {",
-									"    const jsonData = pm.response.json();",
-									"    pm.expect(jsonData).to.have.property(\"id\");",
-									"    pm.expect(jsonData).to.have.property(\"balance\");",
-									"    pm.expect(jsonData).to.have.property(\"accountNumber\");",
-									"});"
-								],
-								"type": "text/javascript"
-							}
-						}
-					],
+					"name": "Get Total Balance",
 					"request": {
 						"method": "GET",
 						"header": [
-							{
-								"key": "Authorization",
-								"value": "Bearer {{jwt_token}}"
-							}
+							{ "key": "Authorization", "value": "Bearer {{jwt_token}}" }
 						],
 						"url": {
-							"raw": "{{account_service_url}}/api/accounts/{{test_account_id}}",
-							"host": [
-								"{{account_service_url}}"
-							],
-							"path": [
-								"api",
-								"accounts",
-								"{{test_account_id}}"
-							]
+							"raw": "{{gateway_url}}/api/v1/accounts/user/{{test_user_id}}/total-balance",
+							"host": ["{{gateway_url}}"],
+							"path": ["api","v1","accounts","user","{{test_user_id}}","total-balance"]
 						}
 					},
 					"response": []
 				},
 				{
-					"name": "Get User Accounts",
-					"event": [
-						{
-							"listen": "test",
-							"script": {
-								"exec": [
-									"pm.test(\"Status code is 200\", function () {",
-									"    pm.response.to.have.status(200);",
-									"});",
-									"",
-									"pm.test(\"User accounts retrieved\", function () {",
-									"    const jsonData = pm.response.json();",
-									"    pm.expect(jsonData).to.have.property(\"content\");",
-									"    pm.expect(jsonData.content).to.be.an('array');",
-									"});"
-								],
-								"type": "text/javascript"
-							}
-						}
-					],
+					"name": "Activate Account",
 					"request": {
-						"method": "GET",
+						"method": "POST",
 						"header": [
-							{
-								"key": "Authorization",
-								"value": "Bearer {{jwt_token}}"
-							}
+							{ "key": "Authorization", "value": "Bearer {{jwt_token}}" }
 						],
 						"url": {
-							"raw": "{{account_service_url}}/api/accounts/user/{{test_user_id}}",
-							"host": [
-								"{{account_service_url}}"
-							],
-							"path": [
-								"api",
-								"accounts",
-								"user",
-								"{{test_user_id}}"
-							]
+							"raw": "{{gateway_url}}/api/v1/accounts/{{test_account_id}}/activate",
+							"host": ["{{gateway_url}}"],
+							"path": ["api","v1","accounts","{{test_account_id}}","activate"]
 						}
 					},
 					"response": []
@@ -1129,8 +1054,10 @@
 			"script": {
 				"type": "text/javascript",
 				"exec": [
-					"// Global pre-request script",
-					"console.log('Starting API test for:', pm.request.url);"
+					"// Ensure gateway base URL and JWT are set",
+					"if (!pm.globals.has('gateway_url')) { pm.globals.set('gateway_url', 'http://localhost:8080'); }",
+					"if (!pm.globals.has('jwt_token')) { pm.globals.set('jwt_token', ''); }",
+					"// Optionally mint a dev JWT in UI-only (manual paste for security)"
 				]
 			}
 		},
@@ -1148,10 +1075,14 @@
 		}
 	],
 	"variable": [
-		{
-			"key": "base_url",
-			"value": "http://localhost:8081",
-			"type": "string"
-		}
+		{ "key": "gateway_url", "value": "http://localhost:8080", "type": "string" },
+		{ "key": "user_service_url", "value": "http://localhost:8081", "type": "string" },
+		{ "key": "account_service_url", "value": "http://localhost:8082", "type": "string" },
+		{ "key": "transaction_service_url", "value": "http://localhost:8083", "type": "string" },
+		{ "key": "loan_service_url", "value": "http://localhost:8084", "type": "string" },
+		{ "key": "notification_service_url", "value": "http://localhost:8085", "type": "string" },
+		{ "key": "test_user_id", "value": "2", "type": "string" },
+		{ "key": "test_account_id", "value": "1", "type": "string" },
+		{ "key": "jwt_token", "value": "", "type": "string" }
 	]
 } 
