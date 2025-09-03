@@ -12,7 +12,13 @@ import org.springframework.test.context.TestPropertySource;
 @ActiveProfiles("test")
 @TestPropertySource(properties = {
     "spring.datasource.url=jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE",
+    "spring.datasource.driver-class-name=org.h2.Driver",
     "spring.jpa.hibernate.ddl-auto=create-drop",
+    "spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.H2Dialect",
+    "eureka.client.enabled=false",
+    "spring.cloud.discovery.enabled=false",
+    "spring.main.web-application-type=servlet",
+    "spring.security.jwt.secret=test-secret",
     "logging.level.org.springframework.security=WARN",
     "logging.level.org.springframework=WARN",
     "logging.level.org.hibernate=WARN",

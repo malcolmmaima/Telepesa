@@ -260,12 +260,13 @@
 							"raw": "{\n    \"username\": \"{{test_username}}\",\n    \"email\": \"{{test_email}}\",\n    \"password\": \"SecureP@ssw0rd123!\",\n    \"firstName\": \"Test\",\n    \"lastName\": \"User\",\n    \"phoneNumber\": \"{{test_phone}}\"\n}"
 						},
 						"url": {
-							"raw": "{{user_service_url}}/api/users/register",
+							"raw": "{{gateway_url}}/api/v1/users/register",
 							"host": [
-								"{{user_service_url}}"
+								"{{gateway_url}}"
 							],
 							"path": [
 								"api",
+								"v1",
 								"users",
 								"register"
 							]
@@ -306,12 +307,13 @@
 							"raw": "{\n    \"usernameOrEmail\": \"{{test_username}}\",\n    \"password\": \"SecureP@ssw0rd123!\"\n}"
 						},
 						"url": {
-							"raw": "{{user_service_url}}/api/users/login",
+							"raw": "{{gateway_url}}/api/v1/users/login",
 							"host": [
-								"{{user_service_url}}"
+								"{{gateway_url}}"
 							],
 							"path": [
 								"api",
+								"v1",
 								"users",
 								"login"
 							]
@@ -408,12 +410,13 @@
 							"raw": "{\n    \"usernameOrEmail\": \"{{test_username}}\",\n    \"password\": \"SecureP@ssw0rd123!\"\n}"
 						},
 						"url": {
-							"raw": "{{user_service_url}}/api/users/login",
+							"raw": "{{gateway_url}}/api/v1/users/login",
 							"host": [
-								"{{user_service_url}}"
+								"{{gateway_url}}"
 							],
 							"path": [
 								"api",
+								"v1",
 								"users",
 								"login"
 							]
