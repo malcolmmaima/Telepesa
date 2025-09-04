@@ -67,7 +67,7 @@ public class LoanController {
     @GetMapping("/{id}")
     public ResponseEntity<LoanDto> getLoan(
         @Parameter(description = "Loan ID", example = "1")
-        @PathVariable Long id) {
+        @PathVariable("id") Long id) {
         
         LoanDto loan = loanService.getLoan(id);
         return ResponseEntity.ok(loan);
@@ -84,7 +84,7 @@ public class LoanController {
     @GetMapping("/number/{loanNumber}")
     public ResponseEntity<LoanDto> getLoanByNumber(
         @Parameter(description = "Loan number", example = "PL202412001234")
-        @PathVariable String loanNumber) {
+        @PathVariable("loanNumber") String loanNumber) {
         
         LoanDto loan = loanService.getLoanByNumber(loanNumber);
         return ResponseEntity.ok(loan);
@@ -100,16 +100,16 @@ public class LoanController {
     @GetMapping
     public ResponseEntity<Page<LoanDto>> getAllLoans(
         @Parameter(description = "Page number (0-based)", example = "0")
-        @RequestParam(defaultValue = "0") int page,
+        @RequestParam(name = "page", defaultValue = "0") int page,
         
         @Parameter(description = "Page size", example = "20")
-        @RequestParam(defaultValue = "20") int size,
+        @RequestParam(name = "size", defaultValue = "20") int size,
         
         @Parameter(description = "Sort field", example = "createdAt")
-        @RequestParam(defaultValue = "createdAt") String sortBy,
+        @RequestParam(name = "sortBy", defaultValue = "createdAt") String sortBy,
         
         @Parameter(description = "Sort direction", example = "desc")
-        @RequestParam(defaultValue = "desc") String sortDir) {
+        @RequestParam(name = "sortDir", defaultValue = "desc") String sortDir) {
         
         Sort sort = Sort.by(Sort.Direction.fromString(sortDir), sortBy);
         Pageable pageable = PageRequest.of(page, size, sort);
@@ -128,10 +128,10 @@ public class LoanController {
     @GetMapping("/user/{userId}")
     public ResponseEntity<Page<LoanDto>> getLoansByUserId(
         @Parameter(description = "User ID", example = "100")
-        @PathVariable Long userId,
+        @PathVariable("userId") Long userId,
         
-        @RequestParam(defaultValue = "0") int page,
-        @RequestParam(defaultValue = "20") int size) {
+        @RequestParam(name = "page", defaultValue = "0") int page,
+        @RequestParam(name = "size", defaultValue = "20") int size) {
         
         Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
         Page<LoanDto> loans = loanService.getLoansByUserId(userId, pageable);
@@ -148,7 +148,7 @@ public class LoanController {
     @GetMapping("/user/{userId}/active")
     public ResponseEntity<List<LoanDto>> getActiveLoansByUserId(
         @Parameter(description = "User ID", example = "100")
-        @PathVariable Long userId) {
+        @PathVariable("userId") Long userId) {
         
         List<LoanDto> loans = loanService.getActiveLoansByUserId(userId);
         return ResponseEntity.ok(loans);
@@ -164,10 +164,10 @@ public class LoanController {
     @GetMapping("/status/{status}")
     public ResponseEntity<Page<LoanDto>> getLoansByStatus(
         @Parameter(description = "Loan status", example = "ACTIVE")
-        @PathVariable LoanStatus status,
+        @PathVariable("status") LoanStatus status,
         
-        @RequestParam(defaultValue = "0") int page,
-        @RequestParam(defaultValue = "20") int size) {
+        @RequestParam(name = "page", defaultValue = "0") int page,
+        @RequestParam(name = "size", defaultValue = "20") int size) {
         
         Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
         Page<LoanDto> loans = loanService.getLoansByStatus(status, pageable);
@@ -186,10 +186,10 @@ public class LoanController {
     @PostMapping("/{id}/approve")
     public ResponseEntity<LoanDto> approveLoan(
         @Parameter(description = "Loan ID", example = "1")
-        @PathVariable Long id,
+        @PathVariable("id") Long id,
         
         @Parameter(description = "Approver user ID", example = "200")
-        @RequestParam Long approvedBy) {
+        @RequestParam(name = "approvedBy") Long approvedBy) {
         
         LoanDto loan = loanService.approveLoan(id, approvedBy);
         return ResponseEntity.ok(loan);
@@ -207,10 +207,10 @@ public class LoanController {
     @PostMapping("/{id}/reject")
     public ResponseEntity<LoanDto> rejectLoan(
         @Parameter(description = "Loan ID", example = "1")
-        @PathVariable Long id,
+        @PathVariable("id") Long id,
         
         @Parameter(description = "Rejection reason", example = "Insufficient credit score")
-        @RequestParam String rejectionReason) {
+        @RequestParam(name = "rejectionReason") String rejectionReason) {
         
         LoanDto loan = loanService.rejectLoan(id, rejectionReason);
         return ResponseEntity.ok(loan);
@@ -228,7 +228,7 @@ public class LoanController {
     @PostMapping("/{id}/disburse")
     public ResponseEntity<LoanDto> disburseLoan(
         @Parameter(description = "Loan ID", example = "1")
-        @PathVariable Long id) {
+        @PathVariable("id") Long id) {
         
         LoanDto loan = loanService.disburseLoan(id);
         return ResponseEntity.ok(loan);
@@ -246,13 +246,13 @@ public class LoanController {
     @PostMapping("/{id}/payment")
     public ResponseEntity<LoanDto> makePayment(
         @Parameter(description = "Loan ID", example = "1")
-        @PathVariable Long id,
+        @PathVariable("id") Long id,
         
         @Parameter(description = "Payment amount", example = "2347.50")
-        @RequestParam BigDecimal amount,
+        @RequestParam(name = "amount") BigDecimal amount,
         
         @Parameter(description = "Payment method", example = "BANK_TRANSFER")
-        @RequestParam(defaultValue = "BANK_TRANSFER") String paymentMethod) {
+        @RequestParam(name = "paymentMethod", defaultValue = "BANK_TRANSFER") String paymentMethod) {
         
         LoanDto loan = loanService.makePayment(id, amount, paymentMethod);
         return ResponseEntity.ok(loan);
@@ -268,7 +268,7 @@ public class LoanController {
     @GetMapping("/user/{userId}/outstanding-balance")
     public ResponseEntity<BigDecimal> getTotalOutstandingBalance(
         @Parameter(description = "User ID", example = "100")
-        @PathVariable Long userId) {
+        @PathVariable("userId") Long userId) {
         
         BigDecimal balance = loanService.getTotalOutstandingBalance(userId);
         return ResponseEntity.ok(balance);
@@ -296,20 +296,20 @@ public class LoanController {
     )
     @GetMapping("/search")
     public ResponseEntity<Page<LoanDto>> searchLoans(
-        @RequestParam(required = false) Long userId,
-        @RequestParam(required = false) LoanStatus status,
-        @RequestParam(required = false) LoanType loanType,
+        @RequestParam(name = "userId", required = false) Long userId,
+        @RequestParam(name = "status", required = false) LoanStatus status,
+        @RequestParam(name = "loanType", required = false) LoanType loanType,
         
-        @RequestParam(required = false)
+        @RequestParam(name = "fromDate", required = false)
         @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
         LocalDate fromDate,
         
-        @RequestParam(required = false)
+        @RequestParam(name = "toDate", required = false)
         @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
         LocalDate toDate,
         
-        @RequestParam(defaultValue = "0") int page,
-        @RequestParam(defaultValue = "20") int size) {
+        @RequestParam(name = "page", defaultValue = "0") int page,
+        @RequestParam(name = "size", defaultValue = "20") int size) {
         
         Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
         Page<LoanDto> loans = loanService.searchLoans(userId, status, loanType, fromDate, toDate, pageable);
@@ -326,10 +326,10 @@ public class LoanController {
     @GetMapping("/type/{loanType}")
     public ResponseEntity<Page<LoanDto>> getLoansByType(
         @Parameter(description = "Loan type", example = "PERSONAL")
-        @PathVariable LoanType loanType,
+        @PathVariable("loanType") LoanType loanType,
         
-        @RequestParam(defaultValue = "0") int page,
-        @RequestParam(defaultValue = "20") int size) {
+        @RequestParam(name = "page", defaultValue = "0") int page,
+        @RequestParam(name = "size", defaultValue = "20") int size) {
         
         Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
         Page<LoanDto> loans = loanService.getLoansByType(loanType, pageable);
@@ -348,10 +348,10 @@ public class LoanController {
     @PutMapping("/{id}/status")
     public ResponseEntity<LoanDto> updateLoanStatus(
         @Parameter(description = "Loan ID", example = "1")
-        @PathVariable Long id,
+        @PathVariable("id") Long id,
         
         @Parameter(description = "New loan status", example = "ACTIVE")
-        @RequestParam LoanStatus status) {
+        @RequestParam(name = "status") LoanStatus status) {
         
         LoanDto loan = loanService.updateLoanStatus(id, status);
         return ResponseEntity.ok(loan);
