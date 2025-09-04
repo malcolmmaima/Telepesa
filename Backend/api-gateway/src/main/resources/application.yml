@@ -20,7 +20,7 @@ spring:
       routes:
         # Explicit pass-through for public auth endpoints
         - id: user-register
-          uri: http://localhost:8081
+          uri: lb://user-service
           predicates:
             - Path=/api/v1/users/register
           filters:
@@ -28,7 +28,7 @@ spring:
               args:
                 template: /api/users/register
         - id: user-login
-          uri: http://localhost:8081
+          uri: lb://user-service
           predicates:
             - Path=/api/v1/users/login
           filters:
@@ -37,7 +37,7 @@ spring:
                 template: /api/users/login
         # User Service Routes
         - id: user-service
-          uri: http://localhost:8081
+          uri: lb://user-service
           predicates:
             - Path=/api/v1/users/**
           filters:
@@ -52,7 +52,7 @@ spring:
                 methods: GET,POST,PUT,DELETE
         # Account Service Routes
         - id: account-service
-          uri: http://localhost:8082
+          uri: lb://account-service
           predicates:
             - Path=/api/v1/accounts/**
           filters:

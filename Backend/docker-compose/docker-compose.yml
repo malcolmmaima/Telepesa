@@ -147,6 +147,7 @@ services:
       ZIPKIN_BASE_URL: http://zipkin:9411
       REDIS_HOST: redis
       REDIS_PASSWORD: telepesa_redis_password
+      JWT_SECRET: myVerySecretJWTKeyForTelepesaUserService123!@#
     depends_on:
       eureka-server:
         condition: service_healthy
@@ -184,6 +185,7 @@ services:
       SPRING_DATA_REDIS_HOST: redis
       SPRING_DATA_REDIS_PASSWORD: telepesa_redis_password
       KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      JWT_SECRET: myVerySecretJWTKeyForTelepesaUserService123!@#
     depends_on:
       postgres:
         condition: service_healthy
@@ -224,6 +226,7 @@ services:
       SPRING_DATA_REDIS_HOST: redis
       SPRING_DATA_REDIS_PASSWORD: telepesa_redis_password
       KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      JWT_SECRET: myVerySecretJWTKeyForTelepesaUserService123!@#
     depends_on:
       postgres:
         condition: service_healthy
