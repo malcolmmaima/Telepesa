@@ -1,38 +1,25 @@
 # Multi-stage Docker build for API Gateway
 # Build stage
-FROM amazoncorretto:17-alpine-jdk as build
-
-# Install Maven
-RUN apk add --no-cache maven
-
-# Set working directory
+FROM eclipse-temurin:17-jre as build
 WORKDIR /workspace/app
-
-# Copy pom file and download dependencies
-COPY pom.xml .
-RUN mvn dependency:go-offline -B
-
-# Copy source code
-COPY src src
-
-# Build the application
-RUN mvn clean package -DskipTests
-RUN mkdir -p target/dependency && (cd target/dependency; jar -xf ../*.jar)
+# Expect prebuilt jar provided by CI or local build
+COPY target/api-gateway-*.jar app.jar
 
 # Runtime stage
-FROM amazoncorretto:17-alpine
+FROM eclipse-temurin:17-jre
 
 # Install security updates and required packages
-RUN apk update && apk upgrade && \
-    apk add --no-cache curl && \
-    addgroup -g 1001 -S telepesa && \
-    adduser -S telepesa -u 1001 -G telepesa
+RUN apt-get update && apt-get upgrade -y && \
+    apt-get install -y --no-install-recommends curl && \
+    groupadd -g 1001 telepesa && \
+    useradd -m -u 1001 -g 1001 telepesa && \
+    rm -rf /var/lib/apt/lists/*
 
 # Set working directory
 WORKDIR /app
 
 # Copy the JAR from build stage
-COPY --from=build /workspace/app/target/api-gateway-*.jar app.jar
+COPY --from=build /workspace/app/app.jar app.jar
 
 # Change ownership to telepesa user
 RUN chown -R telepesa:telepesa /app
