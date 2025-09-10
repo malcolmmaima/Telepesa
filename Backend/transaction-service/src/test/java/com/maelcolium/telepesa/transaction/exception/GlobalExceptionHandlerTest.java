@@ -27,17 +27,17 @@ class GlobalExceptionHandlerTest {
         ResourceNotFoundException exception = new ResourceNotFoundException("Transaction not found");
 
         // When
-        ResponseEntity<Map<String, Object>> response = globalExceptionHandler.handleResourceNotFound(exception);
+        ResponseEntity<com.maelcolium.telepesa.exceptions.ErrorResponse> response = globalExceptionHandler.handleResourceNotFound(exception);
 
         // Then
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
         
-        Map<String, Object> body = response.getBody();
+        com.maelcolium.telepesa.exceptions.ErrorResponse body = response.getBody();
         assertThat(body).isNotNull();
-        assertThat(body.get("status")).isEqualTo(404);
-        assertThat(body.get("error")).isEqualTo("Resource Not Found");
-        assertThat(body.get("message")).isEqualTo("Transaction not found");
-        assertThat(body.get("timestamp")).isInstanceOf(LocalDateTime.class);
+        assertThat(body.getStatus()).isEqualTo(404);
+        assertThat(body.getError()).isEqualTo("Resource Not Found");
+        assertThat(body.getMessage()).isEqualTo("Transaction not found");
+        assertThat(body.getTimestamp()).isInstanceOf(LocalDateTime.class);
     }
 
     @Test
@@ -46,17 +46,17 @@ class GlobalExceptionHandlerTest {
         MethodArgumentNotValidException exception = mock(MethodArgumentNotValidException.class);
 
         // When
-        ResponseEntity<Map<String, Object>> response = globalExceptionHandler.handleValidationExceptions(exception);
+        ResponseEntity<com.maelcolium.telepesa.exceptions.ErrorResponse> response = globalExceptionHandler.handleValidationExceptions(exception);
 
         // Then
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
         
-        Map<String, Object> body = response.getBody();
+        com.maelcolium.telepesa.exceptions.ErrorResponse body = response.getBody();
         assertThat(body).isNotNull();
-        assertThat(body.get("status")).isEqualTo(400);
-        assertThat(body.get("error")).isEqualTo("Validation Failed");
-        assertThat(body.get("message")).isEqualTo("Invalid input data");
-        assertThat(body.get("timestamp")).isInstanceOf(LocalDateTime.class);
+        assertThat(body.getStatus()).isEqualTo(400);
+        assertThat(body.getError()).isEqualTo("Validation Failed");
+        assertThat(body.getMessage()).isEqualTo("Invalid input data");
+        assertThat(body.getTimestamp()).isInstanceOf(LocalDateTime.class);
     }
 
     @Test
@@ -65,16 +65,16 @@ class GlobalExceptionHandlerTest {
         Exception exception = new RuntimeException("Unexpected error occurred");
 
         // When
-        ResponseEntity<Map<String, Object>> response = globalExceptionHandler.handleGeneral(exception);
+        ResponseEntity<com.maelcolium.telepesa.exceptions.ErrorResponse> response = globalExceptionHandler.handleGeneral(exception);
 
         // Then
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR);
         
-        Map<String, Object> body = response.getBody();
+        com.maelcolium.telepesa.exceptions.ErrorResponse body = response.getBody();
         assertThat(body).isNotNull();
-        assertThat(body.get("status")).isEqualTo(500);
-        assertThat(body.get("error")).isEqualTo("Internal Server Error");
-        assertThat(body.get("message")).isEqualTo("Unexpected error occurred");
-        assertThat(body.get("timestamp")).isInstanceOf(LocalDateTime.class);
+        assertThat(body.getStatus()).isEqualTo(500);
+        assertThat(body.getError()).isEqualTo("Internal Server Error");
+        assertThat(body.getMessage()).isEqualTo("Unexpected error occurred");
+        assertThat(body.getTimestamp()).isInstanceOf(LocalDateTime.class);
     }
 }
