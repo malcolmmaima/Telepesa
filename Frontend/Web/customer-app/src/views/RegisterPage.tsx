@@ -10,14 +10,22 @@ import { Input } from '../components/ui/Input'
 import { Button } from '../components/ui/Button'
 import type { ApiError } from '../types'
 
-const loginSchema = z.object({
-  usernameOrEmail: z.string().min(1, 'Username or email is required'),
-  password: z.string().min(1, 'Password is required'),
+const registerSchema = z.object({
+  firstName: z.string().min(1, 'First name is required'),
+  lastName: z.string().min(1, 'Last name is required'),
+  email: z.string().email('Please enter a valid email address'),
+  username: z.string().min(3, 'Username must be at least 3 characters'),
+  password: z.string().min(6, 'Password must be at least 6 characters'),
+  confirmPassword: z.string().min(6, 'Please confirm your password'),
+  phoneNumber: z.string().min(10, 'Please enter a valid phone number'),
+}).refine((data) => data.password === data.confirmPassword, {
+  message: "Passwords don't match",
+  path: ["confirmPassword"],
 })
 
-type LoginForm = z.infer<typeof loginSchema>
+type RegisterForm = z.infer<typeof registerSchema>
 
-export function LoginPage() {
+export function RegisterPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [serverError, setServerError] = useState<string | null>(null)
   const navigate = useNavigate()
@@ -27,37 +35,44 @@ export function LoginPage() {
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm<LoginForm>({
-    resolver: zodResolver(loginSchema),
+  } = useForm<RegisterForm>({
+    resolver: zodResolver(registerSchema),
   })
 
-  const onSubmit = async (data: LoginForm) => {
+  const onSubmit = async (data: RegisterForm) => {
     setIsLoading(true)
     setServerError(null)
     
     try {
-      const response = await api.post('/users/login', data)
-      const { accessToken, refreshToken, user } = response.data
+      const { confirmPassword, ...registrationData } = data
+      const response = await api.post('/users/register', registrationData)
       
+      // Auto-login after successful registration
+      const loginResponse = await api.post('/users/login', {
+        usernameOrEmail: data.email,
+        password: data.password
+      })
+      
+      const { accessToken, refreshToken, user } = loginResponse.data
       setSession({ accessToken, refreshToken, user })
       navigate('/', { replace: true })
     } catch (error: unknown) {
       const apiError = error as ApiError
-      setServerError(apiError.message || 'Login failed. Please try again.')
+      setServerError(apiError.message || 'Registration failed. Please try again.')
     } finally {
       setIsLoading(false)
     }
   }
 
-  // Simple financial Lottie animation data (inline for now)
-  const financialAnimationData = {
+  // Growth-themed Lottie animation
+  const growthAnimationData = {
     v: '5.5.7',
     fr: 30,
     ip: 0,
-    op: 90,
+    op: 120,
     w: 400,
     h: 400,
-    nm: 'Financial Animation',
+    nm: 'Growth Animation',
     ddd: 0,
     assets: [],
     layers: [
@@ -65,25 +80,26 @@ export function LoginPage() {
         ddd: 0,
         ind: 1,
         ty: 4,
-        nm: 'Circle',
+        nm: 'Plant Growing',
         sr: 1,
         ks: {
           o: { a: 0, k: 100, ix: 11 },
-          r: { a: 1, k: [{ i: { x: [0.833], y: [0.833] }, o: { x: [0.167], y: [0.167] }, t: 0, s: [0] }, { t: 90, s: [360] }], ix: 10 },
-          p: { a: 0, k: [200, 200, 0], ix: 2 },
+          r: { a: 0, k: 0, ix: 10 },
+          p: { a: 0, k: [200, 300, 0], ix: 2 },
           a: { a: 0, k: [0, 0, 0], ix: 1 },
-          s: { a: 0, k: [100, 100, 100], ix: 6 }
+          s: { a: 1, k: [{ i: { x: [0.833], y: [0.833] }, o: { x: [0.167], y: [0.167] }, t: 0, s: [0, 0, 100] }, { t: 120, s: [100, 100, 100] }], ix: 6 }
         },
         ao: 0,
         shapes: [
           {
-            ty: 'el',
+            ty: 'rc',
             p: { a: 0, k: [0, 0], ix: 3 },
-            s: { a: 0, k: [100, 100], ix: 2 }
+            s: { a: 0, k: [20, 80], ix: 2 },
+            r: { a: 0, k: 10, ix: 4 }
           },
           {
             ty: 'fl',
-            c: { a: 0, k: [0.043, 0.231, 0.369, 1], ix: 4 },
+            c: { a: 0, k: [0.067, 0.733, 0.504, 1], ix: 4 },
             o: { a: 0, k: 100, ix: 5 },
             r: 1,
             bm: 0,
@@ -93,7 +109,7 @@ export function LoginPage() {
           }
         ],
         ip: 0,
-        op: 91,
+        op: 121,
         st: 0,
         bm: 0
       }
@@ -104,12 +120,12 @@ export function LoginPage() {
   return (
     <div className="min-h-screen flex">
       {/* Left Side - Animation */}
-      <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-financial-navy via-financial-blue to-primary-600 relative overflow-hidden">
+      <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-financial-success via-financial-blue to-primary-500 relative overflow-hidden">
         <div className="absolute inset-0">
           {/* Decorative elements */}
-          <div className="absolute top-20 left-20 w-32 h-32 bg-white/10 rounded-full blur-xl"></div>
-          <div className="absolute bottom-32 right-16 w-48 h-48 bg-white/5 rounded-full blur-2xl"></div>
-          <div className="absolute top-1/2 left-8 w-24 h-24 bg-financial-warning/20 rounded-full blur-lg"></div>
+          <div className="absolute top-16 right-20 w-40 h-40 bg-white/10 rounded-full blur-xl"></div>
+          <div className="absolute bottom-20 left-16 w-56 h-56 bg-white/5 rounded-full blur-2xl"></div>
+          <div className="absolute top-1/3 right-8 w-28 h-28 bg-financial-warning/20 rounded-full blur-lg"></div>
         </div>
         
         <div className="relative z-10 flex flex-col justify-center items-center p-16 text-white">
@@ -118,14 +134,14 @@ export function LoginPage() {
             <div className="w-20 h-20 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center mb-6">
               <span className="text-white font-bold text-3xl">T</span>
             </div>
-            <h1 className="text-4xl font-bold mb-2">Telepesa</h1>
-            <p className="text-white/90 text-lg">Your Money, Your Way</p>
+            <h1 className="text-4xl font-bold mb-2">Join Telepesa</h1>
+            <p className="text-white/90 text-lg">Start Your Financial Journey</p>
           </div>
 
           {/* Animation Container */}
           <div className="w-80 h-80 mb-8">
             <Lottie
-              animationData={financialAnimationData}
+              animationData={growthAnimationData}
               className="w-full h-full"
               loop={true}
             />
@@ -133,10 +149,10 @@ export function LoginPage() {
 
           {/* Features */}
           <div className="text-center max-w-md">
-            <h2 className="text-2xl font-semibold mb-4">💰 Smart Banking</h2>
+            <h2 className="text-2xl font-semibold mb-4">🌱 Grow Your Wealth</h2>
             <p className="text-white/80 text-base leading-relaxed">
-              Experience seamless banking with our fun, secure, and user-friendly platform. 
-              Your financial journey starts here! 🚀
+              Join thousands of happy customers who trust us with their financial growth. 
+              Your success story starts today! ✨
             </p>
           </div>
         </div>
@@ -144,29 +160,65 @@ export function LoginPage() {
 
       {/* Right Side - Form */}
       <div className="w-full lg:w-1/2 flex items-center justify-center p-8 bg-gradient-to-br from-white via-financial-background to-gray-50">
-        <div className="w-full max-w-md space-y-8">
+        <div className="w-full max-w-md space-y-6">
           {/* Mobile Logo */}
           <div className="lg:hidden text-center">
             <div className="w-16 h-16 bg-financial-gradient rounded-2xl flex items-center justify-center mx-auto mb-4">
               <span className="text-white font-bold text-2xl">T</span>
             </div>
-            <h1 className="text-3xl font-bold text-financial-navy mb-2">Telepesa</h1>
-            <p className="text-financial-gray">Your Money, Your Way</p>
+            <h1 className="text-3xl font-bold text-financial-navy mb-2">Join Telepesa</h1>
+            <p className="text-financial-gray">Start Your Financial Journey</p>
           </div>
 
-          {/* Welcome Card */}
+          {/* Registration Card */}
           <div className="card p-8 space-y-6">
             <div className="text-center lg:text-left">
-              <h2 className="text-2xl font-bold text-financial-navy mb-2">Welcome back! 👋</h2>
-              <p className="text-financial-gray">Ready to manage your finances? Let's get you signed in!</p>
+              <h2 className="text-2xl font-bold text-financial-navy mb-2">Create Your Account 🎉</h2>
+              <p className="text-financial-gray">Let's get you set up with your new Telepesa account!</p>
             </div>
 
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <Input
+                  label="First Name"
+                  placeholder="John"
+                  error={errors.firstName?.message}
+                  {...register('firstName')}
+                  className="text-base"
+                />
+                
+                <Input
+                  label="Last Name"
+                  placeholder="Doe"
+                  error={errors.lastName?.message}
+                  {...register('lastName')}
+                  className="text-base"
+                />
+              </div>
+
               <Input
-                label="Username or Email"
-                placeholder="you@example.com"
-                error={errors.usernameOrEmail?.message}
-                {...register('usernameOrEmail')}
+                label="Email Address"
+                type="email"
+                placeholder="john@example.com"
+                error={errors.email?.message}
+                {...register('email')}
+                className="text-base"
+              />
+
+              <Input
+                label="Username"
+                placeholder="johndoe123"
+                error={errors.username?.message}
+                {...register('username')}
+                className="text-base"
+              />
+
+              <Input
+                label="Phone Number"
+                type="tel"
+                placeholder="+1 (555) 123-4567"
+                error={errors.phoneNumber?.message}
+                {...register('phoneNumber')}
                 className="text-base"
               />
               
@@ -176,6 +228,15 @@ export function LoginPage() {
                 placeholder="••••••••"
                 error={errors.password?.message}
                 {...register('password')}
+                className="text-base"
+              />
+
+              <Input
+                type="password"
+                label="Confirm Password"
+                placeholder="••••••••"
+                error={errors.confirmPassword?.message}
+                {...register('confirmPassword')}
                 className="text-base"
               />
 
@@ -194,20 +255,11 @@ export function LoginPage() {
                 loading={isLoading}
                 disabled={isLoading}
               >
-                {isLoading ? '🚀 Signing you in...' : '🔐 Sign In'}
+                {isLoading ? '🚀 Creating your account...' : '🎉 Create Account'}
               </Button>
             </form>
 
             <div className="space-y-4">
-              <div className="text-center">
-                <Link 
-                  to="/forgot-password" 
-                  className="text-financial-blue hover:text-financial-navy transition-colors text-sm font-medium"
-                >
-                  🔑 Forgot your password?
-                </Link>
-              </div>
-              
               <div className="relative">
                 <div className="absolute inset-0 flex items-center">
                   <div className="w-full border-t border-gray-300"></div>
@@ -219,12 +271,12 @@ export function LoginPage() {
               
               <div className="text-center">
                 <p className="text-financial-gray text-sm">
-                  New to Telepesa?
+                  Already have an account?
                   <Link 
-                    to="/register" 
+                    to="/login" 
                     className="ml-1 text-financial-blue hover:text-financial-navy transition-colors font-medium"
                   >
-                    Create your account 🎉
+                    Sign in here 👈
                   </Link>
                 </p>
               </div>
@@ -233,7 +285,7 @@ export function LoginPage() {
 
           {/* Footer */}
           <div className="text-center text-xs text-financial-gray">
-            <p>🔒 Secured by industry-standard encryption</p>
+            <p>🔒 Your data is protected with bank-level security</p>
             <p className="mt-1">© 2024 Telepesa. All rights reserved.</p>
           </div>
         </div>
@@ -241,5 +293,3 @@ export function LoginPage() {
     </div>
   )
 }
-
-

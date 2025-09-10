@@ -18,44 +18,210 @@
   
   body {
     font-family: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Arial, 'Apple Color Emoji', 'Segoe UI Emoji';
-    background-color: theme('colors.financial.background');
-    color: theme('colors.financial.navy');
+    background-color: #f6f9fb;
+    color: #0b3b5e;
   }
 }
 
 @layer components {
   .input {
-    @apply w-full px-3 py-3 bg-white border border-gray-200 rounded-financial text-financial-navy placeholder-financial-gray-lighter focus:outline-none focus:ring-2 focus:ring-financial-navy focus:border-transparent transition-all duration-200;
+    width: 100%;
+    padding: 0.75rem;
+    background-color: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 0.75rem;
+    color: #0b3b5e;
+    transition: all 0.2s;
+  }
+  
+  .input:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px #0b3b5e;
+    border-color: transparent;
+  }
+  
+  .input::placeholder {
+    color: #9ca3af;
   }
   
   .btn-primary {
-    @apply bg-financial-navy text-white border-none px-4 py-3 rounded-financial cursor-pointer font-medium transition-all duration-200 hover:bg-financial-navy-light focus:outline-none focus:ring-2 focus:ring-financial-navy focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed;
+    background-color: #0b3b5e;
+    color: white;
+    border: none;
+    padding: 0.75rem 1rem;
+    border-radius: 0.75rem;
+    cursor: pointer;
+    font-weight: 500;
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .btn-primary:hover {
+    background-color: #0a3553;
+  }
+  
+  .btn-primary:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px #0b3b5e, 0 0 0 4px rgba(11, 59, 94, 0.1);
+  }
+  
+  .btn-primary:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
   }
   
   .btn-secondary {
-    @apply bg-white text-financial-navy border border-financial-navy px-4 py-3 rounded-financial cursor-pointer font-medium transition-all duration-200 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-financial-navy focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed;
+    background-color: white;
+    color: #0b3b5e;
+    border: 1px solid #0b3b5e;
+    padding: 0.75rem 1rem;
+    border-radius: 0.75rem;
+    cursor: pointer;
+    font-weight: 500;
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .btn-secondary:hover {
+    background-color: #f9fafb;
+  }
+  
+  .btn-secondary:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px #0b3b5e, 0 0 0 4px rgba(11, 59, 94, 0.1);
+  }
+  
+  .btn-secondary:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
   }
   
   .card {
-    @apply bg-white rounded-financial-lg shadow-financial border border-gray-100;
+    background-color: white;
+    border-radius: 1rem;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    border: 1px solid #f3f4f6;
   }
   
   .card-header {
-    @apply px-6 py-4 border-b border-gray-100;
+    padding: 1.5rem;
+    border-bottom: 1px solid #f3f4f6;
   }
   
   .card-body {
-    @apply p-6;
+    padding: 1.5rem;
   }
   
   .financial-gradient {
-    @apply bg-gradient-to-br from-financial-navy via-financial-blue to-primary-600;
+    background: linear-gradient(135deg, #0b3b5e 0%, #1e40af 50%, #0284c7 100%);
   }
 }
 
 @layer utilities {
   .text-balance {
     text-wrap: balance;
+  }
+  
+  /* Enhanced animations */
+  .animate-fade-in {
+    animation: fadeIn 0.5s ease-in-out;
+  }
+  
+  .animate-slide-up {
+    animation: slideUp 0.6s ease-out;
+  }
+  
+  .animate-bounce-in {
+    animation: bounceIn 0.8s ease-out;
+  }
+  
+  /* Smooth hover transitions */
+  .hover-lift {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+  
+  .hover-lift:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+  }
+  
+  /* Custom scrollbar */
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+  }
+  
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: #f1f5f9;
+    border-radius: 3px;
+  }
+  
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 3px;
+  }
+  
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes bounceIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.3) translateY(-50px);
+  }
+  50% {
+    opacity: 0.9;
+    transform: scale(1.05) translateY(0);
+  }
+  70% {
+    transform: scale(0.97);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+/* Mobile responsiveness improvements */
+@media (max-width: 640px) {
+  .card {
+    margin: 0.5rem;
+    border-radius: 1rem;
+  }
+  
+  .btn-primary, .btn-secondary {
+    padding: 1rem;
+    font-size: 1rem;
+  }
+  
+  .input {
+    padding: 1rem 0.75rem;
+    font-size: 1rem;
   }
 }
 
