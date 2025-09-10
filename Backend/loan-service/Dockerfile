@@ -2,10 +2,11 @@
 FROM eclipse-temurin:17-jre
 
 # Install security updates and required packages
-RUN apk update && apk upgrade && \
-    apk add --no-cache curl && \
-    addgroup -g 1001 -S telepesa && \
-    adduser -S telepesa -u 1001 -G telepesa
+RUN apt-get update && apt-get upgrade -y && \
+    apt-get install -y --no-install-recommends curl && \
+    groupadd -g 1001 telepesa && \
+    useradd -m -u 1001 -g 1001 telepesa && \
+    rm -rf /var/lib/apt/lists/*
 
 # Set working directory
 WORKDIR /app
