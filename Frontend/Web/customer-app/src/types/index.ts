@@ -243,8 +243,9 @@ export interface InputProps extends BaseComponentProps {
   required?: boolean
   disabled?: boolean
   value?: any
-  onChange?: (value: any) => void
-  onBlur?: () => void
+  onChange?: (event: React.ChangeEvent<HTMLInputElement>) => void
+  onBlur?: (event: React.FocusEvent<HTMLInputElement>) => void
+  name?: string
 }
 
 export interface CardProps extends BaseComponentProps {

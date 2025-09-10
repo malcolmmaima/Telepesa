@@ -40,7 +40,7 @@ export function formatDate(date: string | Date, format: 'short' | 'medium' | 'lo
     short: { month: 'short', day: 'numeric', year: '2-digit' },
     medium: { month: 'short', day: 'numeric', year: 'numeric' },
     long: { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' }
-  }[format]
+  }[format] as Intl.DateTimeFormatOptions
   
   return new Intl.DateTimeFormat('en-KE', options).format(dateObj)
 }
@@ -139,7 +139,7 @@ export function getTransactionStatusColor(status: string): string {
  */
 export function truncate(text: string, maxLength: number): string {
   if (text.length <= maxLength) return text
-  return text.substring(0, maxLength) + '...'
+  return `${text.substring(0, maxLength)}...`
 }
 
 /**
