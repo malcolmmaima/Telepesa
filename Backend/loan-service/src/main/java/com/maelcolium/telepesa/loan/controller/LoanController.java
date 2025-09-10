@@ -2,6 +2,7 @@ package com.maelcolium.telepesa.loan.controller;
 
 import com.maelcolium.telepesa.loan.dto.CreateLoanRequest;
 import com.maelcolium.telepesa.loan.dto.LoanDto;
+import com.maelcolium.telepesa.loan.dto.LoanProductDto;
 import com.maelcolium.telepesa.loan.service.LoanService;
 import com.maelcolium.telepesa.models.enums.LoanStatus;
 import com.maelcolium.telepesa.models.enums.LoanType;
@@ -39,6 +40,20 @@ public class LoanController {
 
     public LoanController(LoanService loanService) {
         this.loanService = loanService;
+    }
+
+    @Operation(
+        summary = "Get loan products",
+        description = "Retrieve all available loan products",
+        responses = {
+            @ApiResponse(responseCode = "200", description = "Loan products retrieved successfully")
+        }
+    )
+    @GetMapping("/products")
+    public ResponseEntity<List<LoanProductDto>> getLoanProducts() {
+        log.info("Retrieving all loan products");
+        List<LoanProductDto> products = loanService.getAllLoanProducts();
+        return ResponseEntity.ok(products);
     }
 
     @Operation(

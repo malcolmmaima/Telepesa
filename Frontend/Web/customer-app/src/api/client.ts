@@ -88,12 +88,23 @@ api.interceptors.response.use(
       }
     }
 
-    // Transform error response
+// Transform error response
     const apiError: ApiError = {
       message: error.response?.data?.message || error.message || 'An error occurred',
       code: error.response?.data?.errors?.[0] || error.code,
       statusCode: error.response?.status || 500,
     }
+
+    // Enhanced error logging for debugging
+    console.error('API Error Details:', {
+      url: error.config?.url,
+      method: error.config?.method?.toUpperCase(),
+      status: error.response?.status,
+      statusText: error.response?.statusText,
+      data: error.response?.data,
+      message: apiError.message,
+      timestamp: new Date().toISOString()
+    })
 
     return Promise.reject(apiError)
   }

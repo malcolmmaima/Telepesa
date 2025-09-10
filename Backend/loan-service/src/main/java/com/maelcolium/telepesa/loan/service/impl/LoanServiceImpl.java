@@ -2,6 +2,7 @@ package com.maelcolium.telepesa.loan.service.impl;
 
 import com.maelcolium.telepesa.loan.dto.CreateLoanRequest;
 import com.maelcolium.telepesa.loan.dto.LoanDto;
+import com.maelcolium.telepesa.loan.dto.LoanProductDto;
 import com.maelcolium.telepesa.loan.exception.LoanNotFoundException;
 import com.maelcolium.telepesa.loan.exception.LoanOperationException;
 import com.maelcolium.telepesa.loan.mapper.LoanMapper;
@@ -43,6 +44,65 @@ public class LoanServiceImpl implements LoanService {
         this.loanRepository = loanRepository;
         this.loanMapper = loanMapper;
         this.loanNumberService = loanNumberService;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    @Cacheable(value = "loan-products")
+    public List<LoanProductDto> getAllLoanProducts() {
+        log.info("Retrieving all loan products");
+        
+        // Return sample loan products - in production, this would come from database
+        return List.of(
+            LoanProductDto.builder()
+                .id(1L)
+                .name("Personal Loan")
+                .loanType(LoanType.PERSONAL)
+                .minAmount(new BigDecimal("10000"))
+                .maxAmount(new BigDecimal("500000"))
+                .minInterestRate(new BigDecimal("12.0"))
+                .maxInterestRate(new BigDecimal("18.0"))
+                .minTermMonths(6)
+                .maxTermMonths(36)
+                .description("Quick personal loans for your immediate needs")
+                .requirements(List.of("Valid ID", "Proof of income", "Bank statements"))
+                .features(List.of("Quick approval", "Flexible terms", "No collateral required"))
+                .isActive(true)
+                .currency("KES")
+                .build(),
+            LoanProductDto.builder()
+                .id(2L)
+                .name("Business Loan")
+                .loanType(LoanType.BUSINESS)
+                .minAmount(new BigDecimal("50000"))
+                .maxAmount(new BigDecimal("2000000"))
+                .minInterestRate(new BigDecimal("14.0"))
+                .maxInterestRate(new BigDecimal("20.0"))
+                .minTermMonths(12)
+                .maxTermMonths(60)
+                .description("Grow your business with our competitive business loans")
+                .requirements(List.of("Business registration", "Financial statements", "Business plan"))
+                .features(List.of("Higher amounts", "Longer terms", "Business support"))
+                .isActive(true)
+                .currency("KES")
+                .build(),
+            LoanProductDto.builder()
+                .id(3L)
+                .name("Emergency Loan")
+                .loanType(LoanType.EMERGENCY)
+                .minAmount(new BigDecimal("5000"))
+                .maxAmount(new BigDecimal("100000"))
+                .minInterestRate(new BigDecimal("10.0"))
+                .maxInterestRate(new BigDecimal("15.0"))
+                .minTermMonths(3)
+                .maxTermMonths(12)
+                .description("Fast cash for unexpected expenses")
+                .requirements(List.of("Valid ID", "Active account"))
+                .features(List.of("Same day approval", "Quick disbursement", "Lower rates"))
+                .isActive(true)
+                .currency("KES")
+                .build()
+        );
     }
 
     @Override

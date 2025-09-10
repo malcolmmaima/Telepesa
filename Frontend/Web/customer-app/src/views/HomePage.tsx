@@ -95,15 +95,19 @@ export function HomePage() {
         console.log('Transactions API not available yet')
       }
 
-      setAccounts(accountsData.content)
+      // Ensure arrays are always defined
+      const safeAccounts = Array.isArray(accountsData.content) ? accountsData.content : []
+      const safeTransactions = Array.isArray(transactionsData.content) ? transactionsData.content : []
+      
+      setAccounts(safeAccounts)
       setTotalBalance(balanceData)
-      setRecentTransactions(transactionsData.content)
+      setRecentTransactions(safeTransactions)
 
       // Calculate stats
       setStats({
-        activeAccounts: accountsData.content.filter(acc => acc.status === 'ACTIVE').length,
+        activeAccounts: safeAccounts.filter(acc => acc.status === 'ACTIVE').length,
         activeLoans: 0, // TODO: Implement loans API
-        totalTransactions: transactionsData.totalElements,
+        totalTransactions: transactionsData.totalElements || 0,
       })
     } catch (err: any) {
       // Only show error for critical failures
@@ -221,7 +225,7 @@ export function HomePage() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Your Accounts */}
         <Card title="Your Accounts" description="Balances and account status">
-          {accounts.length === 0 ? (
+          {(!accounts || accounts.length === 0) ? (
             <div className="text-center py-8">
               <div className="text-4xl mb-3">🏦</div>
               <p className="text-financial-gray mb-4">No accounts found</p>
@@ -231,7 +235,7 @@ export function HomePage() {
             </div>
           ) : (
             <div className="space-y-4">
-              {accounts.slice(0, 3).map(account => (
+              {accounts && accounts.slice(0, 3).map(account => (
                 <div
                   key={account.id}
                   className="border rounded-financial p-4 bg-white hover:bg-gray-50 cursor-pointer transition-colors"
@@ -273,7 +277,7 @@ export function HomePage() {
                   </div>
                 </div>
               ))}
-              {accounts.length > 3 && (
+              {accounts && accounts.length > 3 && (
                 <Button
                   variant="ghost"
                   size="sm"
@@ -289,7 +293,7 @@ export function HomePage() {
 
         {/* Recent Transactions */}
         <Card title="Recent Transactions" description="Your latest activity">
-          {recentTransactions.length === 0 ? (
+          {(!recentTransactions || recentTransactions.length === 0) ? (
             <div className="text-center py-8">
               <div className="text-4xl mb-3">📊</div>
               <p className="text-financial-gray mb-4">No recent transactions</p>
@@ -299,7 +303,7 @@ export function HomePage() {
             </div>
           ) : (
             <div className="space-y-3">
-              {recentTransactions.map(transaction => {
+              {recentTransactions && recentTransactions.map(transaction => {
                 const isIncoming = ['DEPOSIT', 'LOAN_DISBURSEMENT'].includes(
                   transaction.transactionType
                 )

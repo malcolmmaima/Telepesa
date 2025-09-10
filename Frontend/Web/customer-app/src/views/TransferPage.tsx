@@ -77,9 +77,11 @@ export function TransferPage() {
   const loadUserAccounts = async () => {
     try {
       const userAccounts = await accountsApi.getUserActiveAccounts(user!.id)
-      setAccounts(userAccounts)
-      if (userAccounts.length > 0 && !transferForm.fromAccountId) {
-        setTransferForm(prev => ({ ...prev, fromAccountId: userAccounts[0].id }))
+      // Ensure we always get an array
+      const accountsArray = Array.isArray(userAccounts) ? userAccounts : []
+      setAccounts(accountsArray)
+      if (accountsArray.length > 0 && !transferForm.fromAccountId) {
+        setTransferForm(prev => ({ ...prev, fromAccountId: accountsArray[0].id }))
       }
     } catch (err: any) {
       // Silently handle - use fallback empty accounts for now
@@ -91,7 +93,9 @@ export function TransferPage() {
   const loadSavedRecipients = async () => {
     try {
       const recipients = await transfersApi.getSavedRecipients(user!.id)
-      setSavedRecipients(recipients)
+      // Ensure we always get an array
+      const recipientsArray = Array.isArray(recipients) ? recipients : []
+      setSavedRecipients(recipientsArray)
     } catch (err: any) {
       // Silently handle - feature not yet implemented
       setSavedRecipients([])
@@ -102,7 +106,9 @@ export function TransferPage() {
   const loadSupportedBanks = async () => {
     try {
       const bankList = await transfersApi.getSupportedBanks()
-      setBanks(bankList)
+      // Ensure we always get an array
+      const banksArray = Array.isArray(bankList) ? bankList : []
+      setBanks(banksArray)
     } catch (err: any) {
       // Silently handle - feature not yet implemented
       setBanks([])
@@ -114,9 +120,12 @@ export function TransferPage() {
     try {
       setLoading(true)
       const response = await transfersApi.getUserTransfers(user!.id, 0, 50)
-      setTransfers(response.content)
+      // Ensure we always get an array
+      const transfersArray = Array.isArray(response?.content) ? response.content : []
+      setTransfers(transfersArray)
     } catch (err: any) {
       setError(err.message || 'Failed to load transfer history')
+      setTransfers([])
     } finally {
       setLoading(false)
     }
@@ -187,7 +196,7 @@ export function TransferPage() {
 
       // Reset form
       setTransferForm({
-        fromAccountId: accounts[0]?.id || 0,
+        fromAccountId: Array.isArray(accounts) && accounts.length > 0 ? accounts[0].id : 0,
         recipientName: '',
         amount: 0,
         transferType: 'INTERNAL',
@@ -245,7 +254,7 @@ export function TransferPage() {
         <Card className="p-6">
           <h3 className="text-lg font-semibold text-financial-navy mb-4">💰 From Account</h3>
           <div className="grid gap-3">
-            {accounts.map(account => (
+            {Array.isArray(accounts) && accounts.length > 0 ? accounts.map(account => (
               <div
                 key={account.id}
                 onClick={() => setTransferForm(prev => ({ ...prev, fromAccountId: account.id }))}
@@ -271,7 +280,15 @@ export function TransferPage() {
                   </div>
                 </div>
               </div>
-            ))}
+            )) : (
+              <div className="p-8 text-center">
+                <div className="text-4xl mb-3">💳</div>
+                <h3 className="font-semibold text-financial-navy mb-2">No accounts available</h3>
+                <p className="text-financial-gray text-sm">
+                  You need at least one active account to make transfers.
+                </p>
+              </div>
+            )}
           </div>
         </Card>
 
@@ -299,7 +316,7 @@ export function TransferPage() {
         </Card>
 
         {/* Saved Recipients (if any) */}
-        {savedRecipients.length > 0 && (
+        {Array.isArray(savedRecipients) && savedRecipients.length > 0 && (
           <Card className="p-6">
             <h3 className="text-lg font-semibold text-financial-navy mb-4">
               👥 Quick Select Recipient
@@ -365,11 +382,11 @@ export function TransferPage() {
                     required
                   >
                     <option value="">Select Bank</option>
-                    {banks.map(bank => (
+                    {Array.isArray(banks) ? banks.map(bank => (
                       <option key={bank.bankCode} value={bank.bankCode}>
                         {bank.bankName}
                       </option>
-                    ))}
+                    )) : null}
                   </select>
                 </div>
                 <Input
@@ -545,7 +562,7 @@ export function TransferPage() {
         </Button>
       </div>
 
-      {transfers.length === 0 && !loading ? (
+      {(!Array.isArray(transfers) || transfers.length === 0) && !loading ? (
         <div className="text-center py-12">
           <div className="text-6xl mb-4">💸</div>
           <h3 className="text-xl font-semibold text-financial-navy mb-2">No transfers yet</h3>
@@ -556,7 +573,7 @@ export function TransferPage() {
         </div>
       ) : (
         <div className="space-y-4">
-          {transfers.map(transfer => (
+          {Array.isArray(transfers) ? transfers.map(transfer => (
             <Card key={transfer.id} className="p-6">
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-4">
@@ -629,7 +646,7 @@ export function TransferPage() {
                 </div>
               )}
             </Card>
-          ))}
+          )) : null}
         </div>
       )}
     </div>
@@ -644,7 +661,7 @@ export function TransferPage() {
         </Button>
       </div>
 
-      {savedRecipients.length === 0 ? (
+      {!Array.isArray(savedRecipients) || savedRecipients.length === 0 ? (
         <div className="text-center py-12">
           <div className="text-6xl mb-4">👥</div>
           <h3 className="text-xl font-semibold text-financial-navy mb-2">No saved recipients</h3>
@@ -655,7 +672,7 @@ export function TransferPage() {
         </div>
       ) : (
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {savedRecipients.map(recipient => (
+          {Array.isArray(savedRecipients) ? savedRecipients.map(recipient => (
             <Card key={recipient.id} className="p-4">
               <div className="flex justify-between items-start mb-3">
                 <div className="flex-1">
@@ -707,7 +724,7 @@ export function TransferPage() {
                 </Button>
               </div>
             </Card>
-          ))}
+          )) : null}
         </div>
       )}
     </div>

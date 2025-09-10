@@ -46,8 +46,10 @@ export function AccountsPage() {
     try {
       setLoading(true)
       const response = await accountsApi.getUserAccounts(user!.id, 0, 50)
-      setAccounts(response.content)
+      const accountsArray = Array.isArray(response.content) ? response.content : []
+      setAccounts(accountsArray)
     } catch (err: any) {
+      setAccounts([]) // Ensure accounts is always an array
       setError(err.message || 'Failed to load accounts')
     } finally {
       setLoading(false)
@@ -90,7 +92,7 @@ export function AccountsPage() {
     }
   }
 
-  if (loading && accounts.length === 0) {
+  if (loading && (!accounts || accounts.length === 0)) {
     return (
       <div className="max-w-7xl mx-auto p-6">
         <div className="animate-pulse space-y-6">
@@ -144,7 +146,7 @@ export function AccountsPage() {
       )}
 
       {/* Accounts Grid */}
-      {accounts.length === 0 && !loading ? (
+      {(!accounts || accounts.length === 0) && !loading ? (
         <div className="text-center py-12">
           <div className="text-6xl mb-4">🏦</div>
           <h3 className="text-xl font-semibold text-financial-navy mb-2">No accounts available</h3>
@@ -163,7 +165,7 @@ export function AccountsPage() {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {accounts.map(account => (
+          {accounts && accounts.map(account => (
             <Card
               key={account.id}
               className="hover-lift cursor-pointer relative overflow-hidden"
