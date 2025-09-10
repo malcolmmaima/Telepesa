@@ -1,5 +1,13 @@
 # Telepesa - Modern Banking Platform for Africa
 
+[![Backend CI](https://github.com/malcolmmiyare/Telepesa/actions/workflows/ci.yml/badge.svg)](https://github.com/malcolmmiyare/Telepesa/actions/workflows/ci.yml)
+[![Web Frontend CI](https://github.com/malcolmmiyare/Telepesa/actions/workflows/web-frontend.yml/badge.svg)](https://github.com/malcolmmiyare/Telepesa/actions/workflows/web-frontend.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Java](https://img.shields.io/badge/Java-17+-blue.svg)](https://openjdk.org/projects/jdk/17/)
+[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.4-green.svg)](https://spring.io/projects/spring-boot)
+[![React](https://img.shields.io/badge/React-18+-blue.svg)](https://reactjs.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5+-blue.svg)](https://www.typescriptlang.org/)
+
 Telepesa is a modular, microservices-based digital banking platform. It provides secure, scalable services for user management, accounts, transactions, loans, notifications, transfers, and bill payments, routed through a centralized API Gateway and discovered via Eureka.
 
 ## Architecture Overview
@@ -176,12 +184,56 @@ bash Backend/scripts/realistic-e2e-test.sh
 
 Postman collection: `Backend/Telepesa_API_Collection_Complete.postman_collection.json`
 
-## CI/CD
-- **Backend CI**: `.github/workflows/ci.yml`
-- **Web Frontend CI**: `.github/workflows/web-frontend.yml` builds React app and runs quality checks
-- To enable container image push:
-  - Docker Hub: set repository secrets `DOCKERHUB_USERNAME` and `DOCKERHUB_TOKEN`
-  - Or GHCR: set repository secret `GHCR_PAT` (Personal Access Token with write:packages scope)
+## CI/CD Pipeline Overview
+
+### 🔄 Automated Pipelines
+
+| Pipeline | Status | Coverage | Security | Docker |
+|----------|---------|----------|----------|---------|
+| **Backend Services** | [![Backend CI](https://github.com/malcolmmiyare/Telepesa/actions/workflows/ci.yml/badge.svg)](https://github.com/malcolmmiyare/Telepesa/actions/workflows/ci.yml) | JaCoCo Reports | Security Audit | ✅ Multi-service |
+| **Web Frontend** | [![Frontend CI](https://github.com/malcolmmiyare/Telepesa/actions/workflows/web-frontend.yml/badge.svg)](https://github.com/malcolmmiyare/Telepesa/actions/workflows/web-frontend.yml) | Vitest Coverage | npm audit | ✅ Nginx + SPA |
+
+### 📊 Pipeline Statistics
+
+#### Backend CI (`ci.yml`)
+- **Services Tested**: 7 microservices + API Gateway + Eureka + Transfer Service
+- **Test Types**: Unit, Integration, E2E Infrastructure
+- **Quality Gates**: Code coverage, security audit, dependency check
+- **Deployment**: Docker multi-service build and push (includes transfer-service)
+- **Triggers**: Push to `main`/`develop`, PRs
+
+#### Frontend CI (`web-frontend.yml`)
+- **Framework**: React 18 + TypeScript 5 + Vite
+- **Test Suite**: ESLint, Prettier, Vitest unit tests
+- **Coverage**: HTML/LCOV reports with Codecov integration
+- **Bundle Analysis**: Size limits and optimization checks
+- **Deployment**: Nginx-based Docker container
+- **Triggers**: Changes to `Frontend/Web/**`
+
+
+### 🚀 Container Registry Setup
+
+**Docker Hub** (Recommended):
+```bash
+# Repository Secrets Required:
+DOCKER_USERNAME=<your-dockerhub-username>
+DOCKER_PASSWORD=<your-dockerhub-token>
+```
+
+**GitHub Container Registry** (Alternative):
+```bash
+# Repository Secret Required:
+GHCR_PAT=<github-personal-access-token>
+# Token needs: write:packages, read:packages
+```
+
+### 📈 Quality Metrics
+
+- **Code Coverage**: >80% target across all services
+- **Security Scanning**: Automated vulnerability detection
+- **Bundle Size**: Frontend <5MB JavaScript bundle limit
+- **Build Time**: Average <10 minutes per pipeline
+- **Deployment**: Zero-downtime with health checks
 
 ## End-to-End Testing Status
 
