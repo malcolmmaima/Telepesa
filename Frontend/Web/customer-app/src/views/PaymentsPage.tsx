@@ -15,14 +15,78 @@ interface Biller {
 }
 
 const popularBillers: Biller[] = [
-  { id: 'kplc', name: 'Kenya Power (KPLC)', category: 'Utilities', logo: '⚡', requiresAccount: true, accountLabel: 'Account Number', accountPlaceholder: 'Enter your KPLC account number' },
-  { id: 'nairobi-water', name: 'Nairobi Water', category: 'Utilities', logo: '💧', requiresAccount: true, accountLabel: 'Account Number', accountPlaceholder: 'Enter your water account number' },
-  { id: 'safaricom', name: 'Safaricom Postpaid', category: 'Telecom', logo: '📱', requiresAccount: true, accountLabel: 'Phone Number', accountPlaceholder: 'Enter phone number' },
-  { id: 'airtel', name: 'Airtel', category: 'Telecom', logo: '📶', requiresAccount: true, accountLabel: 'Phone Number', accountPlaceholder: 'Enter phone number' },
-  { id: 'gotv', name: 'GOtv', category: 'Entertainment', logo: '📺', requiresAccount: true, accountLabel: 'Smart Card Number', accountPlaceholder: 'Enter smart card number' },
-  { id: 'dstv', name: 'DStv', category: 'Entertainment', logo: '📡', requiresAccount: true, accountLabel: 'Smart Card Number', accountPlaceholder: 'Enter smart card number' },
-  { id: 'zuku', name: 'Zuku', category: 'Internet', logo: '🌐', requiresAccount: true, accountLabel: 'Account Number', accountPlaceholder: 'Enter account number' },
-  { id: 'liquid-telecom', name: 'Liquid Telecom', category: 'Internet', logo: '📡', requiresAccount: true, accountLabel: 'Account Number', accountPlaceholder: 'Enter account number' },
+  {
+    id: 'kplc',
+    name: 'Kenya Power (KPLC)',
+    category: 'Utilities',
+    logo: '⚡',
+    requiresAccount: true,
+    accountLabel: 'Account Number',
+    accountPlaceholder: 'Enter your KPLC account number',
+  },
+  {
+    id: 'nairobi-water',
+    name: 'Nairobi Water',
+    category: 'Utilities',
+    logo: '💧',
+    requiresAccount: true,
+    accountLabel: 'Account Number',
+    accountPlaceholder: 'Enter your water account number',
+  },
+  {
+    id: 'safaricom',
+    name: 'Safaricom Postpaid',
+    category: 'Telecom',
+    logo: '📱',
+    requiresAccount: true,
+    accountLabel: 'Phone Number',
+    accountPlaceholder: 'Enter phone number',
+  },
+  {
+    id: 'airtel',
+    name: 'Airtel',
+    category: 'Telecom',
+    logo: '📶',
+    requiresAccount: true,
+    accountLabel: 'Phone Number',
+    accountPlaceholder: 'Enter phone number',
+  },
+  {
+    id: 'gotv',
+    name: 'GOtv',
+    category: 'Entertainment',
+    logo: '📺',
+    requiresAccount: true,
+    accountLabel: 'Smart Card Number',
+    accountPlaceholder: 'Enter smart card number',
+  },
+  {
+    id: 'dstv',
+    name: 'DStv',
+    category: 'Entertainment',
+    logo: '📡',
+    requiresAccount: true,
+    accountLabel: 'Smart Card Number',
+    accountPlaceholder: 'Enter smart card number',
+  },
+  {
+    id: 'zuku',
+    name: 'Zuku',
+    category: 'Internet',
+    logo: '🌐',
+    requiresAccount: true,
+    accountLabel: 'Account Number',
+    accountPlaceholder: 'Enter account number',
+  },
+  {
+    id: 'liquid-telecom',
+    name: 'Liquid Telecom',
+    category: 'Internet',
+    logo: '📡',
+    requiresAccount: true,
+    accountLabel: 'Account Number',
+    accountPlaceholder: 'Enter account number',
+  },
 ]
 
 export function PaymentsPage() {
@@ -34,9 +98,10 @@ export function PaymentsPage() {
   const [billDetails, setBillDetails] = useState<any>(null)
   const [searchQuery, setSearchQuery] = useState('')
 
-  const filteredBillers = popularBillers.filter(biller => 
-    biller.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    biller.category.toLowerCase().includes(searchQuery.toLowerCase())
+  const filteredBillers = popularBillers.filter(
+    biller =>
+      biller.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      biller.category.toLowerCase().includes(searchQuery.toLowerCase())
   )
 
   const categories = Array.from(new Set(popularBillers.map(b => b.category)))
@@ -53,13 +118,13 @@ export function PaymentsPage() {
     try {
       // TODO: Implement API call to fetch bill details
       // const response = await fetchBillDetails(selectedBiller.id, accountNumber)
-      
+
       // Mock bill details for demo
       setBillDetails({
         accountName: 'John Doe',
         outstandingAmount: 2500,
         dueDate: '2025-01-15',
-        accountStatus: 'Active'
+        accountStatus: 'Active',
       })
       setStep('confirm')
     } catch (error: any) {
@@ -80,7 +145,7 @@ export function PaymentsPage() {
       //   accountNumber,
       //   amount: parseFloat(amount)
       // })
-      
+
       alert('Payment successful!')
       // Reset form
       setSelectedBiller(null)
@@ -99,11 +164,7 @@ export function PaymentsPage() {
     return (
       <div className="max-w-2xl mx-auto p-6 space-y-6">
         <div className="flex items-center space-x-4 mb-6">
-          <Button
-            variant="ghost"
-            onClick={() => setStep('select')}
-            className="p-2"
-          >
+          <Button variant="ghost" onClick={() => setStep('select')} className="p-2">
             ← Back
           </Button>
           <div>
@@ -126,11 +187,11 @@ export function PaymentsPage() {
               label={selectedBiller.accountLabel || 'Account Number'}
               placeholder={selectedBiller.accountPlaceholder}
               value={accountNumber}
-              onChange={(e) => setAccountNumber(e.target.value)}
+              onChange={e => setAccountNumber(e.target.value)}
               required
             />
 
-            <Button 
+            <Button
               onClick={handleFetchBillDetails}
               disabled={!accountNumber}
               loading={loading}
@@ -148,11 +209,7 @@ export function PaymentsPage() {
     return (
       <div className="max-w-2xl mx-auto p-6 space-y-6">
         <div className="flex items-center space-x-4 mb-6">
-          <Button
-            variant="ghost"
-            onClick={() => setStep('details')}
-            className="p-2"
-          >
+          <Button variant="ghost" onClick={() => setStep('details')} className="p-2">
             ← Back
           </Button>
           <div>
@@ -182,7 +239,9 @@ export function PaymentsPage() {
               </div>
               <div>
                 <p className="text-sm text-financial-gray">Outstanding Amount</p>
-                <p className="font-medium text-financial-navy">{formatCurrency(billDetails.outstandingAmount)}</p>
+                <p className="font-medium text-financial-navy">
+                  {formatCurrency(billDetails.outstandingAmount)}
+                </p>
               </div>
               <div>
                 <p className="text-sm text-financial-gray">Status</p>
@@ -195,7 +254,7 @@ export function PaymentsPage() {
               type="number"
               step="0.01"
               value={amount}
-              onChange={(e) => setAmount(e.target.value)}
+              onChange={e => setAmount(e.target.value)}
               placeholder={`Min: KSh 1, Outstanding: ${formatCurrency(billDetails.outstandingAmount)}`}
               required
             />
@@ -238,7 +297,7 @@ export function PaymentsPage() {
         <Input
           placeholder="Search for utilities, telecom, entertainment..."
           value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
+          onChange={e => setSearchQuery(e.target.value)}
         />
       </Card>
 
@@ -277,8 +336,18 @@ export function PaymentsPage() {
                   <h4 className="font-medium text-financial-navy">{biller.name}</h4>
                   <p className="text-sm text-financial-gray">{biller.category}</p>
                 </div>
-                <svg className="w-5 h-5 text-financial-gray" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="m9 5 7 7-7 7" />
+                <svg
+                  className="w-5 h-5 text-financial-gray"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="m9 5 7 7-7 7"
+                  />
                 </svg>
               </div>
             </div>
@@ -290,17 +359,40 @@ export function PaymentsPage() {
       <Card title="Recent Payments" description="Your recent bill payments">
         <div className="space-y-3">
           {[
-            { biller: 'Kenya Power (KPLC)', account: '••••1234', amount: 1500, date: '2025-01-08', status: 'Completed' },
-            { biller: 'Safaricom Postpaid', account: '••••5678', amount: 800, date: '2025-01-05', status: 'Completed' },
-            { biller: 'Nairobi Water', account: '••••9012', amount: 650, date: '2025-01-03', status: 'Completed' },
+            {
+              biller: 'Kenya Power (KPLC)',
+              account: '••••1234',
+              amount: 1500,
+              date: '2025-01-08',
+              status: 'Completed',
+            },
+            {
+              biller: 'Safaricom Postpaid',
+              account: '••••5678',
+              amount: 800,
+              date: '2025-01-05',
+              status: 'Completed',
+            },
+            {
+              biller: 'Nairobi Water',
+              account: '••••9012',
+              amount: 650,
+              date: '2025-01-03',
+              status: 'Completed',
+            },
           ].map((payment, index) => (
-            <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-financial">
+            <div
+              key={index}
+              className="flex items-center justify-between p-3 bg-gray-50 rounded-financial"
+            >
               <div className="flex-1">
                 <h4 className="font-medium text-financial-navy">{payment.biller}</h4>
                 <p className="text-sm text-financial-gray">Account: {payment.account}</p>
               </div>
               <div className="text-right">
-                <p className="font-semibold text-financial-navy">{formatCurrency(payment.amount)}</p>
+                <p className="font-semibold text-financial-navy">
+                  {formatCurrency(payment.amount)}
+                </p>
                 <p className="text-xs text-green-600">{payment.status}</p>
               </div>
               <div className="text-right ml-4">

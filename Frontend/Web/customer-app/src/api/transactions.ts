@@ -9,7 +9,13 @@ export interface Transaction {
   toAccountId?: number
   userId: number
   amount: number
-  transactionType: 'DEPOSIT' | 'WITHDRAWAL' | 'TRANSFER' | 'PAYMENT' | 'LOAN_DISBURSEMENT' | 'LOAN_REPAYMENT'
+  transactionType:
+    | 'DEPOSIT'
+    | 'WITHDRAWAL'
+    | 'TRANSFER'
+    | 'PAYMENT'
+    | 'LOAN_DISBURSEMENT'
+    | 'LOAN_REPAYMENT'
   status: 'PENDING' | 'PROCESSING' | 'COMPLETED' | 'FAILED' | 'CANCELLED'
   description: string
   referenceNumber?: string
@@ -73,7 +79,7 @@ export const transactionsApi = {
   // Get all transactions with pagination
   getTransactions: async (page = 0, size = 20): Promise<PageResponse<Transaction>> => {
     const response = await api.get('/transactions', {
-      params: { page, size }
+      params: { page, size },
     })
     return response.data
   },
@@ -93,9 +99,9 @@ export const transactionsApi = {
     if (transactionType) params.transactionType = transactionType
     if (startDate) params.startDate = startDate
     if (endDate) params.endDate = endDate
-    
+
     const response = await api.get(`/transactions/user/${userId}`, {
-      params
+      params,
     })
     return response.data
   },
@@ -107,7 +113,7 @@ export const transactionsApi = {
     size = 20
   ): Promise<PageResponse<Transaction>> => {
     const response = await api.get('/transactions/search', {
-      params: { query, page, size }
+      params: { query, page, size },
     })
     return response.data
   },
@@ -119,7 +125,7 @@ export const transactionsApi = {
     size = 20
   ): Promise<PageResponse<Transaction>> => {
     const response = await api.get(`/transactions/account/${accountId}`, {
-      params: { page, size }
+      params: { page, size },
     })
     return response.data
   },
@@ -137,7 +143,7 @@ export const transactionsApi = {
     size = 20
   ): Promise<PageResponse<Transaction>> => {
     const response = await api.get(`/transactions/status/${status}`, {
-      params: { page, size }
+      params: { page, size },
     })
     return response.data
   },
@@ -149,7 +155,7 @@ export const transactionsApi = {
     size = 20
   ): Promise<PageResponse<Transaction>> => {
     const response = await api.get(`/transactions/type/${type}`, {
-      params: { page, size }
+      params: { page, size },
     })
     return response.data
   },
@@ -163,7 +169,7 @@ export const transactionsApi = {
     size = 20
   ): Promise<PageResponse<Transaction>> => {
     const response = await api.get(`/transactions/user/${userId}/date-range`, {
-      params: { startDate, endDate, page, size }
+      params: { startDate, endDate, page, size },
     })
     return response.data
   },
@@ -175,8 +181,8 @@ export const transactionsApi = {
   ): Promise<Transaction> => {
     const response = await api.put(`/transactions/${id}/status`, status, {
       headers: {
-        'Content-Type': 'application/json'
-      }
+        'Content-Type': 'application/json',
+      },
     })
     return response.data
   },
@@ -190,7 +196,7 @@ export const transactionsApi = {
   // Get total debits for an account
   getTotalDebits: async (accountId: number, since: string): Promise<number> => {
     const response = await api.get(`/transactions/account/${accountId}/debits`, {
-      params: { since }
+      params: { since },
     })
     return response.data
   },
@@ -198,18 +204,15 @@ export const transactionsApi = {
   // Get total credits for an account
   getTotalCredits: async (accountId: number, since: string): Promise<number> => {
     const response = await api.get(`/transactions/account/${accountId}/credits`, {
-      params: { since }
+      params: { since },
     })
     return response.data
   },
 
   // Get transaction count by user and status
-  getTransactionCount: async (
-    userId: number,
-    status: Transaction['status']
-  ): Promise<number> => {
+  getTransactionCount: async (userId: number, status: Transaction['status']): Promise<number> => {
     const response = await api.get(`/transactions/user/${userId}/count`, {
-      params: { status }
+      params: { status },
     })
     return response.data
   },
@@ -222,7 +225,7 @@ export const transactionsApi = {
   ): Promise<TransactionSummary> => {
     // This would be a custom endpoint or computed on the frontend
     const transactions = await transactionsApi.getUserTransactions(userId, 0, 1000)
-    
+
     let filtered = transactions.content
     if (startDate && endDate) {
       filtered = transactions.content.filter(t => {
@@ -243,28 +246,29 @@ export const transactionsApi = {
       totalTransfers: transfers.reduce((sum, t) => sum + t.amount, 0),
       totalFees: filtered.reduce((sum, t) => sum + (t.feeAmount || 0), 0),
       successRate: filtered.length ? (completed.length / filtered.length) * 100 : 0,
-      avgTransactionAmount: filtered.length 
-        ? filtered.reduce((sum, t) => sum + t.amount, 0) / filtered.length 
-        : 0
+      avgTransactionAmount: filtered.length
+        ? filtered.reduce((sum, t) => sum + t.amount, 0) / filtered.length
+        : 0,
     }
   },
 
   // Get monthly transaction statistics
-  getMonthlyStats: async (
-    userId: number,
-    year: number
-  ): Promise<MonthlyTransactionStats[]> => {
+  getMonthlyStats: async (userId: number, year: number): Promise<MonthlyTransactionStats[]> => {
     // This would typically be a backend endpoint, but we'll compute it here
     const startDate = `${year}-01-01T00:00:00Z`
     const endDate = `${year}-12-31T23:59:59Z`
-    
+
     const transactions = await transactionsApi.getTransactionsByDateRange(
-      userId, startDate, endDate, 0, 1000
+      userId,
+      startDate,
+      endDate,
+      0,
+      1000
     )
 
     // Group by month
     const monthlyStats: { [key: string]: MonthlyTransactionStats } = {}
-    
+
     for (let i = 1; i <= 12; i++) {
       const month = i.toString().padStart(2, '0')
       monthlyStats[month] = {
@@ -273,14 +277,14 @@ export const transactionsApi = {
         withdrawals: 0,
         transfers: 0,
         totalAmount: 0,
-        transactionCount: 0
+        transactionCount: 0,
       }
     }
 
     transactions.content.forEach(transaction => {
       const month = transaction.createdAt.substring(5, 7) // Extract MM from YYYY-MM-DD
       const stats = monthlyStats[month]
-      
+
       if (stats) {
         stats.transactionCount++
         stats.totalAmount += transaction.amount
@@ -311,5 +315,5 @@ export const transactionsApi = {
   // Pending transactions count
   getPendingTransactionsCount: async (userId: number): Promise<number> => {
     return await transactionsApi.getTransactionCount(userId, 'PENDING')
-  }
+  },
 }

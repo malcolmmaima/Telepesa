@@ -9,7 +9,7 @@ export function ProfilePage() {
   const [isEditing, setIsEditing] = useState(false)
   const [isChangingPassword, setIsChangingPassword] = useState(false)
   const [loading, setLoading] = useState(false)
-  const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null)
+  const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
 
   // Profile form state
   const [profileForm, setProfileForm] = useState({
@@ -17,14 +17,14 @@ export function ProfilePage() {
     lastName: user?.lastName || '',
     email: user?.email || '',
     phoneNumber: user?.phoneNumber || '',
-    dateOfBirth: user?.dateOfBirth || ''
+    dateOfBirth: user?.dateOfBirth || '',
   })
 
   // Password form state
   const [passwordForm, setPasswordForm] = useState({
     currentPassword: '',
     newPassword: '',
-    confirmPassword: ''
+    confirmPassword: '',
   })
 
   const handleProfileUpdate = async (e: React.FormEvent) => {
@@ -46,7 +46,7 @@ export function ProfilePage() {
 
   const handlePasswordChange = async (e: React.FormEvent) => {
     e.preventDefault()
-    
+
     if (passwordForm.newPassword !== passwordForm.confirmPassword) {
       setMessage({ type: 'error', text: 'New passwords do not match' })
       return
@@ -85,15 +85,15 @@ export function ProfilePage() {
 
       {/* Status Message */}
       {message && (
-        <div className={`p-4 rounded-financial border ${
-          message.type === 'success' 
-            ? 'bg-green-50 border-green-200 text-green-800' 
-            : 'bg-red-50 border-red-200 text-red-800'
-        }`}>
+        <div
+          className={`p-4 rounded-financial border ${
+            message.type === 'success'
+              ? 'bg-green-50 border-green-200 text-green-800'
+              : 'bg-red-50 border-red-200 text-red-800'
+          }`}
+        >
           <div className="flex items-center">
-            <span className="mr-2">
-              {message.type === 'success' ? '✅' : '⚠️'}
-            </span>
+            <span className="mr-2">{message.type === 'success' ? '✅' : '⚠️'}</span>
             {message.text}
           </div>
         </div>
@@ -151,41 +151,41 @@ export function ProfilePage() {
               <Input
                 label="First Name"
                 value={profileForm.firstName}
-                onChange={(e) => setProfileForm(prev => ({ ...prev, firstName: e.target.value }))}
+                onChange={e => setProfileForm(prev => ({ ...prev, firstName: e.target.value }))}
                 required
               />
               <Input
                 label="Last Name"
                 value={profileForm.lastName}
-                onChange={(e) => setProfileForm(prev => ({ ...prev, lastName: e.target.value }))}
+                onChange={e => setProfileForm(prev => ({ ...prev, lastName: e.target.value }))}
                 required
               />
               <Input
                 label="Email Address"
                 type="email"
                 value={profileForm.email}
-                onChange={(e) => setProfileForm(prev => ({ ...prev, email: e.target.value }))}
+                onChange={e => setProfileForm(prev => ({ ...prev, email: e.target.value }))}
                 required
               />
               <Input
                 label="Phone Number"
                 type="tel"
                 value={profileForm.phoneNumber}
-                onChange={(e) => setProfileForm(prev => ({ ...prev, phoneNumber: e.target.value }))}
+                onChange={e => setProfileForm(prev => ({ ...prev, phoneNumber: e.target.value }))}
               />
               <Input
                 label="Date of Birth"
                 type="date"
                 value={profileForm.dateOfBirth}
-                onChange={(e) => setProfileForm(prev => ({ ...prev, dateOfBirth: e.target.value }))}
+                onChange={e => setProfileForm(prev => ({ ...prev, dateOfBirth: e.target.value }))}
               />
             </div>
             <div className="flex space-x-3">
               <Button type="submit" loading={loading}>
                 Save Changes
               </Button>
-              <Button 
-                variant="outline" 
+              <Button
+                variant="outline"
                 onClick={() => {
                   setIsEditing(false)
                   setProfileForm({
@@ -193,7 +193,7 @@ export function ProfilePage() {
                     lastName: user?.lastName || '',
                     email: user?.email || '',
                     phoneNumber: user?.phoneNumber || '',
-                    dateOfBirth: user?.dateOfBirth || ''
+                    dateOfBirth: user?.dateOfBirth || '',
                   })
                 }}
               >
@@ -211,9 +211,7 @@ export function ProfilePage() {
             <p className="text-financial-gray text-sm">
               It's good practice to change your password regularly to keep your account secure.
             </p>
-            <Button onClick={() => setIsChangingPassword(true)}>
-              Change Password
-            </Button>
+            <Button onClick={() => setIsChangingPassword(true)}>Change Password</Button>
           </div>
         ) : (
           <form onSubmit={handlePasswordChange} className="space-y-4">
@@ -222,14 +220,16 @@ export function ProfilePage() {
                 label="Current Password"
                 type="password"
                 value={passwordForm.currentPassword}
-                onChange={(e) => setPasswordForm(prev => ({ ...prev, currentPassword: e.target.value }))}
+                onChange={e =>
+                  setPasswordForm(prev => ({ ...prev, currentPassword: e.target.value }))
+                }
                 required
               />
               <Input
                 label="New Password"
                 type="password"
                 value={passwordForm.newPassword}
-                onChange={(e) => setPasswordForm(prev => ({ ...prev, newPassword: e.target.value }))}
+                onChange={e => setPasswordForm(prev => ({ ...prev, newPassword: e.target.value }))}
                 required
                 minLength={8}
               />
@@ -237,7 +237,9 @@ export function ProfilePage() {
                 label="Confirm New Password"
                 type="password"
                 value={passwordForm.confirmPassword}
-                onChange={(e) => setPasswordForm(prev => ({ ...prev, confirmPassword: e.target.value }))}
+                onChange={e =>
+                  setPasswordForm(prev => ({ ...prev, confirmPassword: e.target.value }))
+                }
                 required
                 minLength={8}
               />
@@ -246,8 +248,8 @@ export function ProfilePage() {
               <Button type="submit" loading={loading}>
                 Update Password
               </Button>
-              <Button 
-                variant="outline" 
+              <Button
+                variant="outline"
                 onClick={() => {
                   setIsChangingPassword(false)
                   setPasswordForm({ currentPassword: '', newPassword: '', confirmPassword: '' })

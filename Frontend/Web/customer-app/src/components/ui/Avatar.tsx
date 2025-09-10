@@ -21,11 +21,7 @@ export const Avatar = ({ src, alt, initials, size = 'md', className }: AvatarPro
       <img
         src={src}
         alt={alt || 'Avatar'}
-        className={cn(
-          'rounded-full object-cover',
-          sizes[size],
-          className
-        )}
+        className={cn('rounded-full object-cover', sizes[size], className)}
       />
     )
   }

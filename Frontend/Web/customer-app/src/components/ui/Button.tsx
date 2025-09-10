@@ -5,7 +5,8 @@ import type { ButtonProps } from '../../types'
 const buttonVariants = {
   primary: 'btn-primary',
   secondary: 'btn-secondary',
-  outline: 'border border-financial-navy text-financial-navy bg-transparent hover:bg-financial-navy hover:text-white',
+  outline:
+    'border border-financial-navy text-financial-navy bg-transparent hover:bg-financial-navy hover:text-white',
   ghost: 'text-financial-navy bg-transparent hover:bg-financial-navy/10',
   danger: 'bg-financial-danger text-white hover:bg-red-700 focus:ring-financial-danger',
 }

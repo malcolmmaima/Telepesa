@@ -8,7 +8,7 @@ import { formatCurrency, formatDate } from '../lib/utils'
 
 export function HomePage() {
   const { user } = useAuth()
-  
+
   // State for real data from API
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -18,15 +18,45 @@ export function HomePage() {
   const [stats, setStats] = useState({
     activeAccounts: 0,
     activeLoans: 0,
-    totalTransactions: 0
+    totalTransactions: 0,
   })
-  
+
   const quickActions = [
-    { id: 'transfer', label: 'Transfer', path: '/transfers', icon: '🔄', color: 'from-blue-500 to-blue-600' },
-    { id: 'pay', label: 'Pay Bills', path: '/payments', icon: '💳', color: 'from-purple-500 to-purple-600' },
-    { id: 'loan', label: 'Apply Loan', path: '/loans', icon: '💰', color: 'from-green-500 to-green-600' },
-    { id: 'accounts', label: 'Accounts', path: '/accounts', icon: '🏦', color: 'from-financial-navy to-financial-blue' },
-    { id: 'transactions', label: 'History', path: '/transactions', icon: '📊', color: 'from-orange-500 to-orange-600' },
+    {
+      id: 'transfer',
+      label: 'Transfer',
+      path: '/transfers',
+      icon: '🔄',
+      color: 'from-blue-500 to-blue-600',
+    },
+    {
+      id: 'pay',
+      label: 'Pay Bills',
+      path: '/payments',
+      icon: '💳',
+      color: 'from-purple-500 to-purple-600',
+    },
+    {
+      id: 'loan',
+      label: 'Apply Loan',
+      path: '/loans',
+      icon: '💰',
+      color: 'from-green-500 to-green-600',
+    },
+    {
+      id: 'accounts',
+      label: 'Accounts',
+      path: '/accounts',
+      icon: '🏦',
+      color: 'from-financial-navy to-financial-blue',
+    },
+    {
+      id: 'transactions',
+      label: 'History',
+      path: '/transactions',
+      icon: '📊',
+      color: 'from-orange-500 to-orange-600',
+    },
   ]
 
   // Load dashboard data
@@ -44,27 +74,22 @@ export function HomePage() {
       // Load accounts and total balance
       const [accountsResponse, totalBalanceResponse] = await Promise.all([
         accountsApi.getUserAccounts(user!.id, 0, 10),
-        accountsApi.getUserTotalBalance(user!.id)
+        accountsApi.getUserTotalBalance(user!.id),
       ])
 
       setAccounts(accountsResponse.content)
       setTotalBalance(totalBalanceResponse)
 
       // Load recent transactions (last 5)
-      const transactionsResponse = await transactionsApi.getUserTransactions(
-        user!.id, 
-        0, 
-        5
-      )
+      const transactionsResponse = await transactionsApi.getUserTransactions(user!.id, 0, 5)
       setRecentTransactions(transactionsResponse.content)
 
       // Calculate stats
       setStats({
         activeAccounts: accountsResponse.content.filter(acc => acc.status === 'ACTIVE').length,
         activeLoans: 0, // TODO: Implement loans API
-        totalTransactions: transactionsResponse.totalElements
+        totalTransactions: transactionsResponse.totalElements,
       })
-
     } catch (err: any) {
       setError(err.message || 'Failed to load dashboard data')
       console.error('Dashboard load error:', err)
@@ -96,9 +121,7 @@ export function HomePage() {
         <h1 className="text-3xl font-bold text-financial-navy mb-2">
           Welcome back{user ? `, ${user.firstName ?? user.username}` : ''} 👋
         </h1>
-        <p className="text-financial-gray">
-          Here's what's happening with your finances today.
-        </p>
+        <p className="text-financial-gray">Here's what's happening with your finances today.</p>
       </div>
 
       {/* Error Display */}
@@ -130,7 +153,7 @@ export function HomePage() {
             <div className="text-3xl opacity-80">💰</div>
           </div>
         </Card>
-        
+
         <Card className="p-6 hover-lift">
           <div className="flex items-center justify-between">
             <div>
@@ -140,17 +163,19 @@ export function HomePage() {
             <div className="text-3xl">🏦</div>
           </div>
         </Card>
-        
+
         <Card className="p-6 hover-lift">
           <div className="flex items-center justify-between">
             <div>
               <div className="text-sm text-financial-gray">Transactions</div>
-              <div className="text-2xl font-bold text-financial-navy">{stats.totalTransactions}</div>
+              <div className="text-2xl font-bold text-financial-navy">
+                {stats.totalTransactions}
+              </div>
             </div>
             <div className="text-3xl">📊</div>
           </div>
         </Card>
-        
+
         <Card className="p-6 hover-lift">
           <div className="flex items-center justify-between">
             <div>
@@ -185,10 +210,7 @@ export function HomePage() {
             <div className="text-center py-8">
               <div className="text-4xl mb-3">🏦</div>
               <p className="text-financial-gray mb-4">No accounts found</p>
-              <Button
-                variant="outline"
-                onClick={() => (window.location.href = '/accounts')}
-              >
+              <Button variant="outline" onClick={() => (window.location.href = '/accounts')}>
                 Create Account
               </Button>
             </div>
@@ -204,17 +226,21 @@ export function HomePage() {
                     <div className="flex-1">
                       <div className="flex items-center gap-2">
                         <div className="text-financial-navy font-medium">{account.accountName}</div>
-                        <div className={`px-2 py-1 rounded text-xs font-medium ${
-                          account.status === 'ACTIVE' 
-                            ? 'text-green-600 bg-green-50 border border-green-200'
-                            : account.status === 'PENDING'
-                            ? 'text-yellow-600 bg-yellow-50 border border-yellow-200'
-                            : 'text-gray-600 bg-gray-50 border border-gray-200'
-                        }`}>
+                        <div
+                          className={`px-2 py-1 rounded text-xs font-medium ${
+                            account.status === 'ACTIVE'
+                              ? 'text-green-600 bg-green-50 border border-green-200'
+                              : account.status === 'PENDING'
+                                ? 'text-yellow-600 bg-yellow-50 border border-yellow-200'
+                                : 'text-gray-600 bg-gray-50 border border-gray-200'
+                          }`}
+                        >
                           {account.status}
                         </div>
                       </div>
-                      <div className="text-sm text-financial-gray">•••• {account.accountNumber.slice(-4)}</div>
+                      <div className="text-sm text-financial-gray">
+                        •••• {account.accountNumber.slice(-4)}
+                      </div>
                       <div className="text-xs text-financial-gray mt-1">
                         {account.accountType.replace('_', ' ')}
                       </div>
@@ -252,20 +278,19 @@ export function HomePage() {
             <div className="text-center py-8">
               <div className="text-4xl mb-3">📊</div>
               <p className="text-financial-gray mb-4">No recent transactions</p>
-              <Button
-                variant="outline"
-                onClick={() => (window.location.href = '/transactions')}
-              >
+              <Button variant="outline" onClick={() => (window.location.href = '/transactions')}>
                 View Transactions
               </Button>
             </div>
           ) : (
             <div className="space-y-3">
               {recentTransactions.map(transaction => {
-                const isIncoming = ['DEPOSIT', 'LOAN_DISBURSEMENT'].includes(transaction.transactionType)
+                const isIncoming = ['DEPOSIT', 'LOAN_DISBURSEMENT'].includes(
+                  transaction.transactionType
+                )
                 const amountColor = isIncoming ? 'text-green-600' : 'text-red-600'
                 const amountPrefix = isIncoming ? '+' : '-'
-                
+
                 return (
                   <div
                     key={transaction.id}
@@ -286,12 +311,14 @@ export function HomePage() {
                           {transaction.description}
                         </div>
                         <div className="text-xs text-financial-gray">
-                          {formatDate(transaction.createdAt, 'short')} • {transaction.transactionType}
+                          {formatDate(transaction.createdAt, 'short')} •{' '}
+                          {transaction.transactionType}
                         </div>
                       </div>
                     </div>
                     <div className={`font-semibold ${amountColor}`}>
-                      {amountPrefix}{formatCurrency(transaction.amount)}
+                      {amountPrefix}
+                      {formatCurrency(transaction.amount)}
                     </div>
                   </div>
                 )
@@ -311,5 +338,3 @@ export function HomePage() {
     </div>
   )
 }
-
-

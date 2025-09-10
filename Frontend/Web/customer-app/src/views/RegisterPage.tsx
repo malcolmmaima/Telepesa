@@ -10,18 +10,20 @@ import { Input } from '../components/ui/Input'
 import { Button } from '../components/ui/Button'
 import type { ApiError } from '../types'
 
-const registerSchema = z.object({
-  firstName: z.string().min(1, 'First name is required'),
-  lastName: z.string().min(1, 'Last name is required'),
-  email: z.string().email('Please enter a valid email address'),
-  username: z.string().min(3, 'Username must be at least 3 characters'),
-  password: z.string().min(6, 'Password must be at least 6 characters'),
-  confirmPassword: z.string().min(6, 'Please confirm your password'),
-  phoneNumber: z.string().min(10, 'Please enter a valid phone number'),
-}).refine((data) => data.password === data.confirmPassword, {
-  message: "Passwords don't match",
-  path: ["confirmPassword"],
-})
+const registerSchema = z
+  .object({
+    firstName: z.string().min(1, 'First name is required'),
+    lastName: z.string().min(1, 'Last name is required'),
+    email: z.string().email('Please enter a valid email address'),
+    username: z.string().min(3, 'Username must be at least 3 characters'),
+    password: z.string().min(6, 'Password must be at least 6 characters'),
+    confirmPassword: z.string().min(6, 'Please confirm your password'),
+    phoneNumber: z.string().min(10, 'Please enter a valid phone number'),
+  })
+  .refine(data => data.password === data.confirmPassword, {
+    message: "Passwords don't match",
+    path: ['confirmPassword'],
+  })
 
 type RegisterForm = z.infer<typeof registerSchema>
 
@@ -42,17 +44,17 @@ export function RegisterPage() {
   const onSubmit = async (data: RegisterForm) => {
     setIsLoading(true)
     setServerError(null)
-    
+
     try {
       const { confirmPassword: _confirmPassword, ...registrationData } = data
       await api.post('/users/register', registrationData)
-      
+
       // Auto-login after successful registration
       const loginResponse = await api.post('/users/login', {
         usernameOrEmail: data.email,
-        password: data.password
+        password: data.password,
       })
-      
+
       const { accessToken, refreshToken, user } = loginResponse.data
       setSession({ accessToken, refreshToken, user })
       navigate('/', { replace: true })
@@ -87,7 +89,19 @@ export function RegisterPage() {
           r: { a: 0, k: 0, ix: 10 },
           p: { a: 0, k: [200, 300, 0], ix: 2 },
           a: { a: 0, k: [0, 0, 0], ix: 1 },
-          s: { a: 1, k: [{ i: { x: [0.833], y: [0.833] }, o: { x: [0.167], y: [0.167] }, t: 0, s: [0, 0, 100] }, { t: 120, s: [100, 100, 100] }], ix: 6 }
+          s: {
+            a: 1,
+            k: [
+              {
+                i: { x: [0.833], y: [0.833] },
+                o: { x: [0.167], y: [0.167] },
+                t: 0,
+                s: [0, 0, 100],
+              },
+              { t: 120, s: [100, 100, 100] },
+            ],
+            ix: 6,
+          },
         },
         ao: 0,
         shapes: [
@@ -95,7 +109,7 @@ export function RegisterPage() {
             ty: 'rc',
             p: { a: 0, k: [0, 0], ix: 3 },
             s: { a: 0, k: [20, 80], ix: 2 },
-            r: { a: 0, k: 10, ix: 4 }
+            r: { a: 0, k: 10, ix: 4 },
           },
           {
             ty: 'fl',
@@ -105,16 +119,16 @@ export function RegisterPage() {
             bm: 0,
             nm: 'Fill 1',
             mn: 'ADBE Vector Graphic - Fill',
-            hd: false
-          }
+            hd: false,
+          },
         ],
         ip: 0,
         op: 121,
         st: 0,
-        bm: 0
-      }
+        bm: 0,
+      },
     ],
-    markers: []
+    markers: [],
   }
 
   return (
@@ -127,7 +141,7 @@ export function RegisterPage() {
           <div className="absolute bottom-20 left-16 w-56 h-56 bg-white/5 rounded-full blur-2xl"></div>
           <div className="absolute top-1/3 right-8 w-28 h-28 bg-financial-warning/20 rounded-full blur-lg"></div>
         </div>
-        
+
         <div className="relative z-10 flex flex-col justify-center items-center p-16 text-white">
           {/* Logo */}
           <div className="mb-8">
@@ -140,19 +154,15 @@ export function RegisterPage() {
 
           {/* Animation Container */}
           <div className="w-80 h-80 mb-8">
-            <Lottie
-              animationData={growthAnimationData}
-              className="w-full h-full"
-              loop={true}
-            />
+            <Lottie animationData={growthAnimationData} className="w-full h-full" loop={true} />
           </div>
 
           {/* Features */}
           <div className="text-center max-w-md">
             <h2 className="text-2xl font-semibold mb-4">🌱 Grow Your Wealth</h2>
             <p className="text-white/80 text-base leading-relaxed">
-              Join thousands of happy customers who trust us with their financial growth. 
-              Your success story starts today! ✨
+              Join thousands of happy customers who trust us with their financial growth. Your
+              success story starts today! ✨
             </p>
           </div>
         </div>
@@ -173,8 +183,12 @@ export function RegisterPage() {
           {/* Registration Card */}
           <div className="card p-8 space-y-6">
             <div className="text-center lg:text-left">
-              <h2 className="text-2xl font-bold text-financial-navy mb-2">Create Your Account 🎉</h2>
-              <p className="text-financial-gray">Let's get you set up with your new Telepesa account!</p>
+              <h2 className="text-2xl font-bold text-financial-navy mb-2">
+                Create Your Account 🎉
+              </h2>
+              <p className="text-financial-gray">
+                Let's get you set up with your new Telepesa account!
+              </p>
             </div>
 
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
@@ -186,7 +200,7 @@ export function RegisterPage() {
                   {...register('firstName')}
                   className="text-base"
                 />
-                
+
                 <Input
                   label="Last Name"
                   placeholder="Doe"
@@ -221,7 +235,7 @@ export function RegisterPage() {
                 {...register('phoneNumber')}
                 className="text-base"
               />
-              
+
               <Input
                 type="password"
                 label="Password"
@@ -268,12 +282,12 @@ export function RegisterPage() {
                   <span className="bg-white px-4 text-financial-gray">or</span>
                 </div>
               </div>
-              
+
               <div className="text-center">
                 <p className="text-financial-gray text-sm">
                   Already have an account?
-                  <Link 
-                    to="/login" 
+                  <Link
+                    to="/login"
                     className="ml-1 text-financial-blue hover:text-financial-navy transition-colors font-medium"
                   >
                     Sign in here 👈

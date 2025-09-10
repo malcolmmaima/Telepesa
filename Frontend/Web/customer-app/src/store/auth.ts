@@ -13,84 +13,84 @@ interface AuthActions {
 
 type AuthStore = AuthState & AuthActions
 
-export const useAuth = create<AuthStore>()(persist(
-  (set, get) => ({
-    // State
-    accessToken: null,
-    refreshToken: null,
-    user: null,
-    isAuthenticated: false,
-    isLoading: false,
-    error: null,
+export const useAuth = create<AuthStore>()(
+  persist(
+    (set, get) => ({
+      // State
+      accessToken: null,
+      refreshToken: null,
+      user: null,
+      isAuthenticated: false,
+      isLoading: false,
+      error: null,
 
-    // Actions
-    setSession: (session: LoginResponse) => {
-      set({
-        accessToken: session.accessToken,
-        refreshToken: session.refreshToken,
-        user: session.user,
-        isAuthenticated: true,
-        error: null,
-        isLoading: false,
-      })
-    },
-
-    updateUser: (userUpdate: Partial<User>) => {
-      const currentUser = get().user
-      if (currentUser) {
+      // Actions
+      setSession: (session: LoginResponse) => {
         set({
-          user: { ...currentUser, ...userUpdate }
+          accessToken: session.accessToken,
+          refreshToken: session.refreshToken,
+          user: session.user,
+          isAuthenticated: true,
+          error: null,
+          isLoading: false,
         })
-      }
-    },
+      },
 
-    logout: () => {
-      set({
-        accessToken: null,
-        refreshToken: null,
-        user: null,
-        isAuthenticated: false,
-        error: null,
-        isLoading: false,
-      })
-    },
+      updateUser: (userUpdate: Partial<User>) => {
+        const currentUser = get().user
+        if (currentUser) {
+          set({
+            user: { ...currentUser, ...userUpdate },
+          })
+        }
+      },
 
-    clearError: () => {
-      set({ error: null })
-    },
+      logout: () => {
+        set({
+          accessToken: null,
+          refreshToken: null,
+          user: null,
+          isAuthenticated: false,
+          error: null,
+          isLoading: false,
+        })
+      },
 
-    setLoading: (loading: boolean) => {
-      set({ isLoading: loading })
-    },
+      clearError: () => {
+        set({ error: null })
+      },
 
-    setError: (error: string) => {
-      set({ error, isLoading: false })
-    },
-  }),
-  {
-    name: 'telepesa-auth',
-    partialize: (state) => ({
-      accessToken: state.accessToken,
-      refreshToken: state.refreshToken,
-      user: state.user,
-      isAuthenticated: state.isAuthenticated,
+      setLoading: (loading: boolean) => {
+        set({ isLoading: loading })
+      },
+
+      setError: (error: string) => {
+        set({ error, isLoading: false })
+      },
     }),
-  }
-))
+    {
+      name: 'telepesa-auth',
+      partialize: state => ({
+        accessToken: state.accessToken,
+        refreshToken: state.refreshToken,
+        user: state.user,
+        isAuthenticated: state.isAuthenticated,
+      }),
+    }
+  )
+)
 
 // Computed selectors
 export const useAuthSelectors = () => {
   const auth = useAuth()
-  
+
   return {
     isLoggedIn: auth.isAuthenticated && !!auth.accessToken,
     userName: auth.user ? `${auth.user.firstName || auth.user.username}` : null,
-    userInitials: auth.user 
+    userInitials: auth.user
       ? `${auth.user.firstName?.[0] || ''}${auth.user.lastName?.[0] || auth.user.username[0]}`
       : null,
     hasVerifiedKYC: auth.user?.kycStatus === 'verified',
     isAccountActive: auth.user?.accountStatus === 'active',
   }
 }
-
-

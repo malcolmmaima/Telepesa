@@ -9,7 +9,7 @@ describe('Card', () => {
         <p>Card content</p>
       </Card>
     )
-    
+
     expect(screen.getByText('Card content')).toBeInTheDocument()
   })
 
@@ -19,23 +19,21 @@ describe('Card', () => {
         <p>Card content</p>
       </Card>
     )
-    
+
     expect(screen.getByText('Test Card')).toBeInTheDocument()
     expect(screen.getByText('This is a test card')).toBeInTheDocument()
     expect(screen.getByText('Card content')).toBeInTheDocument()
   })
 
   it('renders with actions', () => {
-    const actions = (
-      <button type="button">Action</button>
-    )
-    
+    const actions = <button type="button">Action</button>
+
     render(
       <Card title="Card with Actions" actions={actions}>
         <p>Card content</p>
       </Card>
     )
-    
+
     expect(screen.getByText('Card with Actions')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Action' })).toBeInTheDocument()
   })
@@ -46,7 +44,7 @@ describe('Card', () => {
         <p>Content</p>
       </Card>
     )
-    
+
     const cardElement = screen.getByText('Content').closest('div')
     expect(cardElement).toHaveClass('custom-card')
     expect(cardElement).toHaveClass('card') // Should also have default class
@@ -58,16 +56,16 @@ describe('Card', () => {
         <p>No padding content</p>
       </Card>
     )
-    
+
     let cardBody = screen.getByText('No padding content').closest('div')
     expect(cardBody).toHaveClass('p-0')
-    
+
     rerender(
       <Card padding={true}>
         <p>With padding content</p>
       </Card>
     )
-    
+
     cardBody = screen.getByText('With padding content').closest('div')
     expect(cardBody).toHaveClass('card-body')
   })
@@ -80,9 +78,9 @@ describe('CardHeader', () => {
         <h2>Header Content</h2>
       </CardHeader>
     )
-    
+
     expect(screen.getByText('Header Content')).toBeInTheDocument()
-    
+
     const headerElement = screen.getByText('Header Content').closest('div')
     expect(headerElement).toHaveClass('card-header')
   })
@@ -93,7 +91,7 @@ describe('CardHeader', () => {
         <h2>Header</h2>
       </CardHeader>
     )
-    
+
     const headerElement = screen.getByText('Header').closest('div')
     expect(headerElement).toHaveClass('custom-header')
     expect(headerElement).toHaveClass('card-header')
@@ -107,9 +105,9 @@ describe('CardBody', () => {
         <p>Body Content</p>
       </CardBody>
     )
-    
+
     expect(screen.getByText('Body Content')).toBeInTheDocument()
-    
+
     const bodyElement = screen.getByText('Body Content').closest('div')
     expect(bodyElement).toHaveClass('card-body')
   })
@@ -120,7 +118,7 @@ describe('CardBody', () => {
         <p>Body</p>
       </CardBody>
     )
-    
+
     const bodyElement = screen.getByText('Body').closest('div')
     expect(bodyElement).toHaveClass('custom-body')
     expect(bodyElement).toHaveClass('card-body')
@@ -134,9 +132,9 @@ describe('CardFooter', () => {
         <button type="button">Footer Button</button>
       </CardFooter>
     )
-    
+
     expect(screen.getByRole('button', { name: 'Footer Button' })).toBeInTheDocument()
-    
+
     const footerElement = screen.getByRole('button').closest('div')
     expect(footerElement).toHaveClass('px-6', 'py-4', 'border-t', 'border-gray-100')
   })
@@ -147,7 +145,7 @@ describe('CardFooter', () => {
         <p>Footer</p>
       </CardFooter>
     )
-    
+
     const footerElement = screen.getByText('Footer').closest('div')
     expect(footerElement).toHaveClass('custom-footer')
     expect(footerElement).toHaveClass('px-6', 'py-4', 'border-t', 'border-gray-100')

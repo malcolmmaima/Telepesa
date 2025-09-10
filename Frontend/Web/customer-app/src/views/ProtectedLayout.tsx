@@ -4,7 +4,7 @@ import { Navbar } from '../components/layout/Navbar'
 
 export function ProtectedLayout() {
   const { isAuthenticated, isLoading } = useAuth()
-  
+
   // Show loading state while checking authentication
   if (isLoading) {
     return (
@@ -19,12 +19,12 @@ export function ProtectedLayout() {
       </div>
     )
   }
-  
+
   // Redirect to login if not authenticated
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />
   }
-  
+
   return (
     <div className="min-h-screen bg-financial-background">
       <Navbar />
@@ -34,5 +34,3 @@ export function ProtectedLayout() {
     </div>
   )
 }
-
-

@@ -33,15 +33,18 @@ export function formatAccountNumber(accountNumber: string, showLast = 4): string
 /**
  * Format dates in a financial context
  */
-export function formatDate(date: string | Date, format: 'short' | 'medium' | 'long' = 'medium'): string {
+export function formatDate(
+  date: string | Date,
+  format: 'short' | 'medium' | 'long' = 'medium'
+): string {
   const dateObj = typeof date === 'string' ? new Date(date) : date
-  
+
   const options: Intl.DateTimeFormatOptions = {
     short: { month: 'short', day: 'numeric', year: '2-digit' },
     medium: { month: 'short', day: 'numeric', year: 'numeric' },
-    long: { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' }
+    long: { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' },
   }[format] as Intl.DateTimeFormatOptions
-  
+
   return new Intl.DateTimeFormat('en-KE', options).format(dateObj)
 }
 
@@ -51,14 +54,14 @@ export function formatDate(date: string | Date, format: 'short' | 'medium' | 'lo
 export function validateKenyanPhone(phone: string): boolean {
   // Remove all non-digit characters
   const cleanPhone = phone.replace(/\D/g, '')
-  
+
   // Check if it matches Kenyan phone number patterns
   const patterns = [
     /^254[17][0-9]{8}$/, // +254 format
-    /^0[17][0-9]{8}$/,   // 0 format
-    /^[17][0-9]{8}$/     // Without country code or 0
+    /^0[17][0-9]{8}$/, // 0 format
+    /^[17][0-9]{8}$/, // Without country code or 0
   ]
-  
+
   return patterns.some(pattern => pattern.test(cleanPhone))
 }
 
@@ -67,7 +70,7 @@ export function validateKenyanPhone(phone: string): boolean {
  */
 export function formatKenyanPhone(phone: string): string {
   const cleanPhone = phone.replace(/\D/g, '')
-  
+
   if (cleanPhone.startsWith('254')) {
     return `+${cleanPhone.slice(0, 3)} ${cleanPhone.slice(3, 6)} ${cleanPhone.slice(6)}`
   } else if (cleanPhone.startsWith('0')) {
@@ -75,7 +78,7 @@ export function formatKenyanPhone(phone: string): string {
   } else if (cleanPhone.length === 9) {
     return `0${cleanPhone.slice(0, 3)} ${cleanPhone.slice(3, 6)} ${cleanPhone.slice(6)}`
   }
-  
+
   return phone
 }
 
@@ -105,18 +108,22 @@ export function debounce<T extends (...args: any[]) => any>(
 /**
  * Check if amount is within limits
  */
-export function validateAmount(amount: number, min = 1, max = 1000000): {
+export function validateAmount(
+  amount: number,
+  min = 1,
+  max = 1000000
+): {
   isValid: boolean
   error?: string
 } {
   if (amount < min) {
     return { isValid: false, error: `Minimum amount is ${formatCurrency(min)}` }
   }
-  
+
   if (amount > max) {
     return { isValid: false, error: `Maximum amount is ${formatCurrency(max)}` }
   }
-  
+
   return { isValid: true }
 }
 
@@ -125,12 +132,12 @@ export function validateAmount(amount: number, min = 1, max = 1000000): {
  */
 export function getTransactionStatusColor(status: string): string {
   const statusColors: Record<string, string> = {
-    'completed': 'text-financial-success bg-financial-success/10',
-    'pending': 'text-financial-warning bg-financial-warning/10',
-    'failed': 'text-financial-danger bg-financial-danger/10',
-    'cancelled': 'text-financial-gray bg-financial-gray/10',
+    completed: 'text-financial-success bg-financial-success/10',
+    pending: 'text-financial-warning bg-financial-warning/10',
+    failed: 'text-financial-danger bg-financial-danger/10',
+    cancelled: 'text-financial-gray bg-financial-gray/10',
   }
-  
+
   return statusColors[status.toLowerCase()] || 'text-financial-gray bg-financial-gray/10'
 }
 
@@ -152,7 +159,7 @@ export function calculateLoanInstallment(
 ): number {
   const monthlyRate = annualRate / 100 / 12
   if (monthlyRate === 0) return principal / termMonths
-  
+
   const factor = Math.pow(1 + monthlyRate, termMonths)
   return (principal * monthlyRate * factor) / (factor - 1)
 }

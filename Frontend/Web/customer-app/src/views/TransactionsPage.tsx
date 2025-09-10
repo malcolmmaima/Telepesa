@@ -1,6 +1,10 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from '../store/auth'
-import { transactionsApi, type Transaction, type CreateTransactionRequest } from '../api/transactions'
+import {
+  transactionsApi,
+  type Transaction,
+  type CreateTransactionRequest,
+} from '../api/transactions'
 import { accountsApi, type Account } from '../api/accounts'
 import { Card } from '../components/ui/Card'
 import { Button } from '../components/ui/Button'
@@ -9,11 +13,11 @@ import { formatCurrency, formatDate, cn } from '../lib/utils'
 
 const TRANSACTION_TYPE_ICONS = {
   DEPOSIT: '📥',
-  WITHDRAWAL: '📤', 
+  WITHDRAWAL: '📤',
   TRANSFER: '🔄',
   PAYMENT: '💳',
   LOAN_DISBURSEMENT: '💰',
-  LOAN_REPAYMENT: '📈'
+  LOAN_REPAYMENT: '📈',
 }
 
 const TRANSACTION_TYPE_COLORS = {
@@ -22,7 +26,7 @@ const TRANSACTION_TYPE_COLORS = {
   TRANSFER: 'text-blue-600',
   PAYMENT: 'text-purple-600',
   LOAN_DISBURSEMENT: 'text-orange-600',
-  LOAN_REPAYMENT: 'text-emerald-600'
+  LOAN_REPAYMENT: 'text-emerald-600',
 }
 
 const STATUS_COLORS = {
@@ -30,7 +34,7 @@ const STATUS_COLORS = {
   PROCESSING: 'text-blue-600 bg-blue-50 border-blue-200',
   COMPLETED: 'text-green-600 bg-green-50 border-green-200',
   FAILED: 'text-red-600 bg-red-50 border-red-200',
-  CANCELLED: 'text-gray-600 bg-gray-50 border-gray-200'
+  CANCELLED: 'text-gray-600 bg-gray-50 border-gray-200',
 }
 
 export function TransactionsPage() {
@@ -41,12 +45,12 @@ export function TransactionsPage() {
   const [error, setError] = useState<string | null>(null)
   const [showCreateForm, setShowCreateForm] = useState(false)
   const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null)
-  
+
   // Pagination
   const [currentPage, setCurrentPage] = useState(0)
   const [totalPages, setTotalPages] = useState(0)
   const [totalElements, setTotalElements] = useState(0)
-  
+
   // Filters
   const [filters, setFilters] = useState({
     accountId: '',
@@ -54,7 +58,7 @@ export function TransactionsPage() {
     transactionType: '',
     startDate: '',
     endDate: '',
-    search: ''
+    search: '',
   })
 
   // Create transaction form state
@@ -65,7 +69,7 @@ export function TransactionsPage() {
     description: '',
     recipientAccountId: undefined,
     recipientAccountNumber: '',
-    currencyCode: 'KES'
+    currencyCode: 'KES',
   })
 
   // Load data on mount
@@ -97,11 +101,15 @@ export function TransactionsPage() {
   const loadTransactions = async () => {
     try {
       setLoading(true)
-      
+
       let response
       if (filters.accountId) {
         // Load transactions for specific account
-        response = await transactionsApi.getAccountTransactions(Number(filters.accountId), currentPage, 20)
+        response = await transactionsApi.getAccountTransactions(
+          Number(filters.accountId),
+          currentPage,
+          20
+        )
       } else if (filters.search) {
         // Search transactions
         response = await transactionsApi.searchTransactions(filters.search, currentPage, 20)
@@ -117,7 +125,7 @@ export function TransactionsPage() {
           filters.endDate || undefined
         )
       }
-      
+
       setTransactions(response.content)
       setTotalPages(response.totalPages)
       setTotalElements(response.totalElements)
@@ -133,7 +141,7 @@ export function TransactionsPage() {
     try {
       setLoading(true)
       await transactionsApi.createTransaction(createForm)
-      
+
       // Reset form
       setCreateForm({
         accountId: 0,
@@ -142,10 +150,10 @@ export function TransactionsPage() {
         description: '',
         recipientAccountId: undefined,
         recipientAccountNumber: '',
-        currencyCode: 'KES'
+        currencyCode: 'KES',
       })
       setShowCreateForm(false)
-      
+
       // Reload transactions
       await loadTransactions()
     } catch (err: any) {
@@ -167,7 +175,7 @@ export function TransactionsPage() {
       transactionType: '',
       startDate: '',
       endDate: '',
-      search: ''
+      search: '',
     })
     setCurrentPage(0)
   }
@@ -176,10 +184,11 @@ export function TransactionsPage() {
     const isIncoming = ['DEPOSIT', 'LOAN_DISBURSEMENT'].includes(transaction.transactionType)
     const prefix = isIncoming ? '+' : '-'
     const colorClass = isIncoming ? 'text-green-600' : 'text-red-600'
-    
+
     return (
       <span className={cn('font-semibold', colorClass)}>
-        {prefix}{formatCurrency(transaction.amount)}
+        {prefix}
+        {formatCurrency(transaction.amount)}
       </span>
     )
   }
@@ -209,11 +218,8 @@ export function TransactionsPage() {
             Track all your financial activities and transactions
           </p>
         </div>
-        
-        <Button
-          onClick={() => setShowCreateForm(true)}
-          className="hover-lift"
-        >
+
+        <Button onClick={() => setShowCreateForm(true)} className="hover-lift">
           ➕ New Transaction
         </Button>
       </div>
@@ -240,12 +246,10 @@ export function TransactionsPage() {
       <Card className="p-6">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <div>
-            <label className="block text-sm font-medium text-financial-navy mb-2">
-              Account
-            </label>
+            <label className="block text-sm font-medium text-financial-navy mb-2">Account</label>
             <select
               value={filters.accountId}
-              onChange={(e) => handleFilterChange({ ...filters, accountId: e.target.value })}
+              onChange={e => handleFilterChange({ ...filters, accountId: e.target.value })}
               className="w-full input"
             >
               <option value="">All Accounts</option>
@@ -258,12 +262,10 @@ export function TransactionsPage() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-financial-navy mb-2">
-              Status
-            </label>
+            <label className="block text-sm font-medium text-financial-navy mb-2">Status</label>
             <select
               value={filters.status}
-              onChange={(e) => handleFilterChange({ ...filters, status: e.target.value })}
+              onChange={e => handleFilterChange({ ...filters, status: e.target.value })}
               className="w-full input"
             >
               <option value="">All Statuses</option>
@@ -276,12 +278,10 @@ export function TransactionsPage() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-financial-navy mb-2">
-              Type
-            </label>
+            <label className="block text-sm font-medium text-financial-navy mb-2">Type</label>
             <select
               value={filters.transactionType}
-              onChange={(e) => handleFilterChange({ ...filters, transactionType: e.target.value })}
+              onChange={e => handleFilterChange({ ...filters, transactionType: e.target.value })}
               className="w-full input"
             >
               <option value="">All Types</option>
@@ -295,13 +295,11 @@ export function TransactionsPage() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-financial-navy mb-2">
-              Search
-            </label>
+            <label className="block text-sm font-medium text-financial-navy mb-2">Search</label>
             <Input
               placeholder="Search transactions..."
               value={filters.search}
-              onChange={(e) => handleFilterChange({ ...filters, search: e.target.value })}
+              onChange={e => handleFilterChange({ ...filters, search: e.target.value })}
             />
           </div>
         </div>
@@ -310,11 +308,7 @@ export function TransactionsPage() {
           <div className="text-sm text-financial-gray">
             Showing {transactions.length} of {totalElements} transactions
           </div>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={clearFilters}
-          >
+          <Button variant="ghost" size="sm" onClick={clearFilters}>
             🧹 Clear Filters
           </Button>
         </div>
@@ -327,7 +321,7 @@ export function TransactionsPage() {
             <h2 className="text-xl font-bold text-financial-navy mb-4">
               ➕ Create New Transaction
             </h2>
-            
+
             <form onSubmit={handleCreateTransaction} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-financial-navy mb-2">
@@ -335,7 +329,9 @@ export function TransactionsPage() {
                 </label>
                 <select
                   value={createForm.accountId}
-                  onChange={(e) => setCreateForm({ ...createForm, accountId: Number(e.target.value) })}
+                  onChange={e =>
+                    setCreateForm({ ...createForm, accountId: Number(e.target.value) })
+                  }
                   className="w-full input"
                   required
                 >
@@ -354,7 +350,9 @@ export function TransactionsPage() {
                 </label>
                 <select
                   value={createForm.transactionType}
-                  onChange={(e) => setCreateForm({ ...createForm, transactionType: e.target.value as any })}
+                  onChange={e =>
+                    setCreateForm({ ...createForm, transactionType: e.target.value as any })
+                  }
                   className="w-full input"
                 >
                   <option value="DEPOSIT">💰 Deposit</option>
@@ -372,7 +370,7 @@ export function TransactionsPage() {
                 min="0.01"
                 step="0.01"
                 value={createForm.amount}
-                onChange={(e) => setCreateForm({ ...createForm, amount: Number(e.target.value) })}
+                onChange={e => setCreateForm({ ...createForm, amount: Number(e.target.value) })}
                 placeholder="0.00"
                 required
               />
@@ -381,7 +379,9 @@ export function TransactionsPage() {
                 <Input
                   label="Recipient Account Number"
                   value={createForm.recipientAccountNumber}
-                  onChange={(e) => setCreateForm({ ...createForm, recipientAccountNumber: e.target.value })}
+                  onChange={e =>
+                    setCreateForm({ ...createForm, recipientAccountNumber: e.target.value })
+                  }
                   placeholder="Enter recipient account number"
                   required
                 />
@@ -390,7 +390,7 @@ export function TransactionsPage() {
               <Input
                 label="Description"
                 value={createForm.description}
-                onChange={(e) => setCreateForm({ ...createForm, description: e.target.value })}
+                onChange={e => setCreateForm({ ...createForm, description: e.target.value })}
                 placeholder="Transaction description..."
                 required
               />
@@ -404,11 +404,7 @@ export function TransactionsPage() {
                 >
                   Cancel
                 </Button>
-                <Button
-                  type="submit"
-                  disabled={loading}
-                  className="flex-1"
-                >
+                <Button type="submit" disabled={loading} className="flex-1">
                   {loading ? '⏳ Creating...' : '✅ Create Transaction'}
                 </Button>
               </div>
@@ -421,47 +417,47 @@ export function TransactionsPage() {
       {transactions.length === 0 && !loading ? (
         <div className="text-center py-12">
           <div className="text-6xl mb-4">💳</div>
-          <h3 className="text-xl font-semibold text-financial-navy mb-2">
-            No transactions found
-          </h3>
+          <h3 className="text-xl font-semibold text-financial-navy mb-2">No transactions found</h3>
           <p className="text-financial-gray mb-6">
-            {Object.values(filters).some(v => v) 
+            {Object.values(filters).some(v => v)
               ? 'Try adjusting your filters or create a new transaction.'
               : 'Start by creating your first transaction!'}
           </p>
-          <Button onClick={() => setShowCreateForm(true)}>
-            ➕ Create Your First Transaction
-          </Button>
+          <Button onClick={() => setShowCreateForm(true)}>➕ Create Your First Transaction</Button>
         </div>
       ) : (
         <div className="space-y-4">
-          {transactions.map((transaction) => (
+          {transactions.map(transaction => (
             <Card
               key={transaction.id}
               className="hover-lift cursor-pointer p-6"
-              onClick={() => setSelectedTransaction(
-                selectedTransaction?.id === transaction.id ? null : transaction
-              )}
+              onClick={() =>
+                setSelectedTransaction(
+                  selectedTransaction?.id === transaction.id ? null : transaction
+                )
+              }
             >
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-4">
                   <div className="text-2xl">
                     {TRANSACTION_TYPE_ICONS[transaction.transactionType]}
                   </div>
-                  
+
                   <div>
                     <div className="flex items-center gap-2">
                       <h3 className="font-semibold text-financial-navy">
                         {transaction.description}
                       </h3>
-                      <div className={cn(
-                        'px-2 py-1 rounded text-xs font-medium border',
-                        STATUS_COLORS[transaction.status]
-                      )}>
+                      <div
+                        className={cn(
+                          'px-2 py-1 rounded text-xs font-medium border',
+                          STATUS_COLORS[transaction.status]
+                        )}
+                      >
                         {transaction.status}
                       </div>
                     </div>
-                    
+
                     <div className="flex items-center gap-4 text-sm text-financial-gray mt-1">
                       <span className={TRANSACTION_TYPE_COLORS[transaction.transactionType]}>
                         {transaction.transactionType}
@@ -478,9 +474,7 @@ export function TransactionsPage() {
                   <div className="text-lg font-semibold">
                     {getTransactionAmountDisplay(transaction)}
                   </div>
-                  <div className="text-sm text-financial-gray">
-                    ID: {transaction.transactionId}
-                  </div>
+                  <div className="text-sm text-financial-gray">ID: {transaction.transactionId}</div>
                 </div>
               </div>
 
@@ -512,7 +506,9 @@ export function TransactionsPage() {
                         {transaction.balanceAfter !== undefined && (
                           <div className="flex justify-between">
                             <span className="text-financial-gray">Balance After:</span>
-                            <span className="font-semibold">{formatCurrency(transaction.balanceAfter)}</span>
+                            <span className="font-semibold">
+                              {formatCurrency(transaction.balanceAfter)}
+                            </span>
                           </div>
                         )}
                       </div>
@@ -538,7 +534,7 @@ export function TransactionsPage() {
                       </div>
                     </div>
                   </div>
-                  
+
                   {transaction.status === 'PENDING' && (
                     <div className="flex gap-2 pt-4 border-t border-gray-100 mt-4">
                       <Button
@@ -571,11 +567,11 @@ export function TransactionsPage() {
           >
             ← Previous
           </Button>
-          
+
           <span className="text-sm text-financial-gray">
             Page {currentPage + 1} of {totalPages}
           </span>
-          
+
           <Button
             variant="outline"
             disabled={currentPage >= totalPages - 1}

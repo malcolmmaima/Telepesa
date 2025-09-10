@@ -19,7 +19,7 @@ export function NotFoundPage() {
               <div className="absolute -top-12 left-1/2 transform -translate-x-1/2 text-6xl font-bold text-financial-blue/20 animate-float-slow">
                 4
               </div>
-              
+
               {/* Main Illustration */}
               <div className="relative z-10">
                 <div className="w-80 h-80 mx-auto lg:mx-0 relative">
@@ -30,7 +30,7 @@ export function NotFoundPage() {
                       {/* Eyes */}
                       <div className="absolute top-20 left-20 w-8 h-8 bg-black rounded-full animate-blink"></div>
                       <div className="absolute top-20 right-20 w-8 h-8 bg-black rounded-full animate-blink"></div>
-                      
+
                       {/* Snout */}
                       <div className="absolute bottom-32 left-1/2 transform -translate-x-1/2">
                         <div className="w-16 h-10 bg-pink-400 rounded-full relative">
@@ -38,20 +38,20 @@ export function NotFoundPage() {
                           <div className="absolute top-3 right-4 w-2 h-2 bg-black rounded-full"></div>
                         </div>
                       </div>
-                      
+
                       {/* Coin Slot */}
                       <div className="absolute top-8 left-1/2 transform -translate-x-1/2 w-16 h-3 bg-pink-500 rounded-full"></div>
-                      
+
                       {/* Legs */}
                       <div className="absolute -bottom-4 left-12 w-8 h-12 bg-pink-300 rounded-lg"></div>
                       <div className="absolute -bottom-4 right-12 w-8 h-12 bg-pink-300 rounded-lg"></div>
                       <div className="absolute -bottom-4 left-24 w-8 h-12 bg-pink-300 rounded-lg"></div>
                       <div className="absolute -bottom-4 right-24 w-8 h-12 bg-pink-300 rounded-lg"></div>
-                      
+
                       {/* Tail */}
                       <div className="absolute top-32 -right-4 w-3 h-16 bg-pink-300 rounded-full transform rotate-45 origin-bottom"></div>
                     </div>
-                    
+
                     {/* Floating Coins */}
                     <div className="absolute -top-8 left-4 w-6 h-6 bg-yellow-400 rounded-full animate-bounce"></div>
                     <div className="absolute -top-12 right-8 w-4 h-4 bg-yellow-300 rounded-full animate-bounce-delayed"></div>
@@ -74,7 +74,7 @@ export function NotFoundPage() {
               <p className="text-lg text-financial-gray leading-relaxed">
                 Looks like this page took a vacation to the Bahamas! 🏖️
                 <br />
-                Don't worry, your money is still safe with us. 
+                Don't worry, your money is still safe with us.
                 <br />
                 Let's get you back to managing your finances!
               </p>
@@ -99,23 +99,23 @@ export function NotFoundPage() {
             {/* Action Buttons */}
             <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
               <Button
-                onClick={() => window.location.href = '/'}
+                onClick={() => (window.location.href = '/')}
                 className="bg-gradient-to-r from-financial-navy to-financial-blue hover:from-financial-blue hover:to-financial-navy transition-all duration-300 transform hover:scale-105"
               >
                 🏠 Back to Dashboard
               </Button>
-              
+
               <Button
                 variant="outline"
-                onClick={() => window.location.href = '/accounts'}
+                onClick={() => (window.location.href = '/accounts')}
                 className="hover:bg-financial-blue hover:text-white transition-all duration-300"
               >
                 🏦 View My Accounts
               </Button>
-              
+
               <Button
                 variant="ghost"
-                onClick={() => window.location.href = '/transactions'}
+                onClick={() => (window.location.href = '/transactions')}
                 className="hover:bg-financial-gray/10"
               >
                 📊 Transaction History
@@ -128,26 +128,26 @@ export function NotFoundPage() {
                 Need help finding something specific? 🤔
               </p>
               <div className="flex flex-wrap gap-2 justify-center lg:justify-start">
-                <span 
-                  onClick={() => window.location.href = '/transfers'}
+                <span
+                  onClick={() => (window.location.href = '/transfers')}
                   className="inline-block px-3 py-1 bg-financial-blue/10 text-financial-blue rounded-full text-xs hover:bg-financial-blue/20 cursor-pointer transition-colors"
                 >
                   💸 Transfers
                 </span>
-                <span 
-                  onClick={() => window.location.href = '/payments'}
+                <span
+                  onClick={() => (window.location.href = '/payments')}
                   className="inline-block px-3 py-1 bg-financial-blue/10 text-financial-blue rounded-full text-xs hover:bg-financial-blue/20 cursor-pointer transition-colors"
                 >
                   💳 Bill Payments
                 </span>
-                <span 
-                  onClick={() => window.location.href = '/loans'}
+                <span
+                  onClick={() => (window.location.href = '/loans')}
                   className="inline-block px-3 py-1 bg-financial-blue/10 text-financial-blue rounded-full text-xs hover:bg-financial-blue/20 cursor-pointer transition-colors"
                 >
                   🏠 Loans
                 </span>
-                <span 
-                  onClick={() => window.location.href = '/profile'}
+                <span
+                  onClick={() => (window.location.href = '/profile')}
                   className="inline-block px-3 py-1 bg-financial-blue/10 text-financial-blue rounded-full text-xs hover:bg-financial-blue/20 cursor-pointer transition-colors"
                 >
                   👤 Profile
@@ -157,7 +157,7 @@ export function NotFoundPage() {
           </div>
         </div>
       </div>
-      
+
       {/* Background Decorations */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-1/4 left-10 w-2 h-2 bg-financial-blue rounded-full animate-ping"></div>

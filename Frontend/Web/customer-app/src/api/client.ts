@@ -13,7 +13,7 @@ export const api = axios.create({
 
 // Request interceptor to add auth token
 api.interceptors.request.use(
-  (config) => {
+  config => {
     const token = useAuth.getState().accessToken
     if (token) {
       config.headers = config.headers || {}
@@ -21,7 +21,7 @@ api.interceptors.request.use(
     }
     return config
   },
-  (error) => {
+  error => {
     return Promise.reject(error)
   }
 )
@@ -40,34 +40,37 @@ api.interceptors.response.use(
     // Handle 401 errors (unauthorized)
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true
-      
+
       if (refreshing) {
-        await new Promise<void>((resolve) => queue.push(resolve))
+        await new Promise<void>(resolve => queue.push(resolve))
         return api(originalRequest)
       }
-      
+
       try {
         refreshing = true
         const { refreshToken, setSession, logout } = useAuth.getState()
-        
+
         if (!refreshToken) {
           logout()
           window.location.href = '/login'
           return Promise.reject(error)
         }
-        
+
         // Try to refresh token
-        const response = await axios.post(`${api.defaults.baseURL?.replace(/\/api\/v1$/, '')}/api/v1/users/refresh`, {
-          refreshToken
-        })
-        
+        const response = await axios.post(
+          `${api.defaults.baseURL?.replace(/\/api\/v1$/, '')}/api/v1/users/refresh`,
+          {
+            refreshToken,
+          }
+        )
+
         const { accessToken, refreshToken: newRefreshToken, user } = response.data
         setSession({ accessToken, refreshToken: newRefreshToken, user })
-        
+
         // Process queued requests
-        queue.forEach((resolve) => resolve())
+        queue.forEach(resolve => resolve())
         queue = []
-        
+
         // Retry original request with new token
         if (originalRequest.headers) {
           originalRequest.headers.Authorization = `Bearer ${accessToken}`
@@ -76,7 +79,7 @@ api.interceptors.response.use(
       } catch (refreshError) {
         // Refresh failed, logout user
         useAuth.getState().logout()
-        queue.forEach((resolve) => resolve())
+        queue.forEach(resolve => resolve())
         queue = []
         window.location.href = '/login'
         return Promise.reject(refreshError)
@@ -100,121 +103,98 @@ api.interceptors.response.use(
 export const apiService = {
   // Authentication
   auth: {
-    login: (data: { usernameOrEmail: string; password: string }) => 
+    login: (data: { usernameOrEmail: string; password: string }) =>
       api.post<ApiResponse>('/users/login', data),
-    
-    register: (data: any) => 
-      api.post<ApiResponse>('/users/register', data),
-    
-    logout: () => 
-      api.post<ApiResponse>('/auth/logout'),
-    
-    refreshToken: (refreshToken: string) => 
+
+    register: (data: any) => api.post<ApiResponse>('/users/register', data),
+
+    logout: () => api.post<ApiResponse>('/auth/logout'),
+
+    refreshToken: (refreshToken: string) =>
       api.post<ApiResponse>('/users/refresh', { refreshToken }),
-    
-    forgotPassword: (email: string) => 
-      api.post<ApiResponse>('/auth/forgot-password', { email }),
-    
-    resetPassword: (data: { token: string; password: string }) => 
+
+    forgotPassword: (email: string) => api.post<ApiResponse>('/auth/forgot-password', { email }),
+
+    resetPassword: (data: { token: string; password: string }) =>
       api.post<ApiResponse>('/auth/reset-password', data),
   },
 
   // User management
   user: {
-    getProfile: () => 
-      api.get<ApiResponse>('/users/profile'),
-    
-    updateProfile: (data: any) => 
-      api.put<ApiResponse>('/users/profile', data),
-    
-    changePassword: (data: { currentPassword: string; newPassword: string }) => 
+    getProfile: () => api.get<ApiResponse>('/users/profile'),
+
+    updateProfile: (data: any) => api.put<ApiResponse>('/users/profile', data),
+
+    changePassword: (data: { currentPassword: string; newPassword: string }) =>
       api.put<ApiResponse>('/users/change-password', data),
-    
+
     uploadAvatar: (file: File) => {
       const formData = new FormData()
       formData.append('avatar', file)
       return api.post<ApiResponse>('/users/avatar', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
+        headers: { 'Content-Type': 'multipart/form-data' },
       })
     },
   },
 
   // Accounts
   accounts: {
-    getAll: () => 
-      api.get<ApiResponse>('/accounts'),
-    
-    getById: (id: number) => 
-      api.get<ApiResponse>(`/accounts/${id}`),
-    
-    create: (data: any) => 
-      api.post<ApiResponse>('/accounts', data),
-    
-    getTransactions: (accountId: number, params?: any) => 
+    getAll: () => api.get<ApiResponse>('/accounts'),
+
+    getById: (id: number) => api.get<ApiResponse>(`/accounts/${id}`),
+
+    create: (data: any) => api.post<ApiResponse>('/accounts', data),
+
+    getTransactions: (accountId: number, params?: any) =>
       api.get<ApiResponse>(`/accounts/${accountId}/transactions`, { params }),
   },
 
   // Transactions
   transactions: {
-    transfer: (data: any) => 
-      api.post<ApiResponse>('/transactions/transfer', data),
-    
-    payment: (data: any) => 
-      api.post<ApiResponse>('/transactions/payment', data),
-    
-    getReceipt: (transactionId: number) => 
+    transfer: (data: any) => api.post<ApiResponse>('/transactions/transfer', data),
+
+    payment: (data: any) => api.post<ApiResponse>('/transactions/payment', data),
+
+    getReceipt: (transactionId: number) =>
       api.get<ApiResponse>(`/transactions/${transactionId}/receipt`),
   },
 
   // Loans
   loans: {
-    getAll: () => 
-      api.get<ApiResponse>('/loans'),
-    
-    apply: (data: any) => 
-      api.post<ApiResponse>('/loans/apply', data),
-    
-    getById: (id: number) => 
-      api.get<ApiResponse>(`/loans/${id}`),
-    
-    makePayment: (loanId: number, amount: number) => 
+    getAll: () => api.get<ApiResponse>('/loans'),
+
+    apply: (data: any) => api.post<ApiResponse>('/loans/apply', data),
+
+    getById: (id: number) => api.get<ApiResponse>(`/loans/${id}`),
+
+    makePayment: (loanId: number, amount: number) =>
       api.post<ApiResponse>(`/loans/${loanId}/payment`, { amount }),
   },
 
   // Payments & Services
   payments: {
-    getServices: () => 
-      api.get<ApiResponse>('/payments/services'),
-    
-    validatePayment: (data: any) => 
-      api.post<ApiResponse>('/payments/validate', data),
-    
-    processPayment: (data: any) => 
-      api.post<ApiResponse>('/payments/process', data),
+    getServices: () => api.get<ApiResponse>('/payments/services'),
+
+    validatePayment: (data: any) => api.post<ApiResponse>('/payments/validate', data),
+
+    processPayment: (data: any) => api.post<ApiResponse>('/payments/process', data),
   },
 
   // Notifications
   notifications: {
-    getAll: (params?: any) => 
-      api.get<ApiResponse>('/notifications', { params }),
-    
-    markAsRead: (id: number) => 
-      api.put<ApiResponse>(`/notifications/${id}/read`),
-    
-    markAllAsRead: () => 
-      api.put<ApiResponse>('/notifications/read-all'),
+    getAll: (params?: any) => api.get<ApiResponse>('/notifications', { params }),
+
+    markAsRead: (id: number) => api.put<ApiResponse>(`/notifications/${id}/read`),
+
+    markAllAsRead: () => api.put<ApiResponse>('/notifications/read-all'),
   },
 
   // Dashboard
   dashboard: {
-    getStats: () => 
-      api.get<ApiResponse>('/dashboard/stats'),
-    
-    getRecentActivity: () => 
-      api.get<ApiResponse>('/dashboard/recent-activity'),
+    getStats: () => api.get<ApiResponse>('/dashboard/stats'),
+
+    getRecentActivity: () => api.get<ApiResponse>('/dashboard/recent-activity'),
   },
 }
 
 export default api
-
-

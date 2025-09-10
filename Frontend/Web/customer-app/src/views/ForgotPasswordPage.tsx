@@ -31,7 +31,7 @@ export function ForgotPasswordPage() {
   const onSubmit = async (data: ForgotPasswordForm) => {
     setIsLoading(true)
     setServerError(null)
-    
+
     try {
       await api.post('/users/forgot-password', data)
       setIsSuccess(true)
@@ -63,17 +63,36 @@ export function ForgotPasswordPage() {
         sr: 1,
         ks: {
           o: { a: 0, k: 100, ix: 11 },
-          r: { a: 1, k: [{ i: { x: [0.833], y: [0.833] }, o: { x: [0.167], y: [0.167] }, t: 0, s: [0] }, { t: 60, s: [360] }], ix: 10 },
-          p: { a: 1, k: [{ i: { x: [0.833], y: [0.833] }, o: { x: [0.167], y: [0.167] }, t: 0, s: [200, 180, 0] }, { t: 60, s: [200, 220, 0] }], ix: 2 },
+          r: {
+            a: 1,
+            k: [
+              { i: { x: [0.833], y: [0.833] }, o: { x: [0.167], y: [0.167] }, t: 0, s: [0] },
+              { t: 60, s: [360] },
+            ],
+            ix: 10,
+          },
+          p: {
+            a: 1,
+            k: [
+              {
+                i: { x: [0.833], y: [0.833] },
+                o: { x: [0.167], y: [0.167] },
+                t: 0,
+                s: [200, 180, 0],
+              },
+              { t: 60, s: [200, 220, 0] },
+            ],
+            ix: 2,
+          },
           a: { a: 0, k: [0, 0, 0], ix: 1 },
-          s: { a: 0, k: [100, 100, 100], ix: 6 }
+          s: { a: 0, k: [100, 100, 100], ix: 6 },
         },
         ao: 0,
         shapes: [
           {
             ty: 'el',
             p: { a: 0, k: [0, 0], ix: 3 },
-            s: { a: 0, k: [60, 60], ix: 2 }
+            s: { a: 0, k: [60, 60], ix: 2 },
           },
           {
             ty: 'fl',
@@ -83,16 +102,16 @@ export function ForgotPasswordPage() {
             bm: 0,
             nm: 'Fill 1',
             mn: 'ADBE Vector Graphic - Fill',
-            hd: false
-          }
+            hd: false,
+          },
         ],
         ip: 0,
         op: 61,
         st: 0,
-        bm: 0
-      }
+        bm: 0,
+      },
     ],
-    markers: []
+    markers: [],
   }
 
   if (isSuccess) {
@@ -106,7 +125,7 @@ export function ForgotPasswordPage() {
             <div className="absolute bottom-32 right-16 w-48 h-48 bg-white/5 rounded-full blur-2xl"></div>
             <div className="absolute top-1/2 left-8 w-24 h-24 bg-financial-success/20 rounded-full blur-lg"></div>
           </div>
-          
+
           <div className="relative z-10 flex flex-col justify-center items-center p-16 text-white">
             {/* Logo */}
             <div className="mb-8">
@@ -128,8 +147,8 @@ export function ForgotPasswordPage() {
             <div className="text-center max-w-md">
               <h2 className="text-2xl font-semibold mb-4">✅ Email Sent!</h2>
               <p className="text-white/80 text-base leading-relaxed">
-                We've sent a password recovery link to your email. 
-                Check your inbox and follow the instructions! 📬
+                We've sent a password recovery link to your email. Check your inbox and follow the
+                instructions! 📬
               </p>
             </div>
           </div>
@@ -151,29 +170,30 @@ export function ForgotPasswordPage() {
             <div className="card p-8 space-y-6 text-center">
               <div className="text-6xl mb-4">📧</div>
               <div>
-                <h2 className="text-2xl font-bold text-financial-navy mb-2">Email Sent Successfully! ✅</h2>
+                <h2 className="text-2xl font-bold text-financial-navy mb-2">
+                  Email Sent Successfully! ✅
+                </h2>
                 <p className="text-financial-gray mb-6">
-                  We've sent a password recovery link to your email address. 
-                  Please check your inbox and follow the instructions to reset your password.
+                  We've sent a password recovery link to your email address. Please check your inbox
+                  and follow the instructions to reset your password.
                 </p>
               </div>
 
               <div className="bg-financial-success/10 border border-financial-success/20 rounded-financial p-4">
                 <p className="text-financial-success text-sm">
-                  <strong>💡 Pro tip:</strong> Don't forget to check your spam folder if you don't see the email in your inbox!
+                  <strong>💡 Pro tip:</strong> Don't forget to check your spam folder if you don't
+                  see the email in your inbox!
                 </p>
               </div>
 
               <div className="space-y-4">
                 <Link to="/login">
-                  <Button className="w-full text-lg py-4">
-                    🔙 Back to Sign In
-                  </Button>
+                  <Button className="w-full text-lg py-4">🔙 Back to Sign In</Button>
                 </Link>
-                
+
                 <p className="text-financial-gray text-sm">
                   Didn't receive the email?
-                  <button 
+                  <button
                     onClick={() => setIsSuccess(false)}
                     className="ml-1 text-financial-blue hover:text-financial-navy transition-colors font-medium"
                   >
@@ -204,7 +224,7 @@ export function ForgotPasswordPage() {
           <div className="absolute bottom-32 right-16 w-48 h-48 bg-white/5 rounded-full blur-2xl"></div>
           <div className="absolute top-1/2 left-8 w-24 h-24 bg-financial-success/20 rounded-full blur-lg"></div>
         </div>
-        
+
         <div className="relative z-10 flex flex-col justify-center items-center p-16 text-white">
           {/* Logo */}
           <div className="mb-8">
@@ -217,19 +237,15 @@ export function ForgotPasswordPage() {
 
           {/* Animation Container */}
           <div className="w-80 h-80 mb-8">
-            <Lottie
-              animationData={recoveryAnimationData}
-              className="w-full h-full"
-              loop={true}
-            />
+            <Lottie animationData={recoveryAnimationData} className="w-full h-full" loop={true} />
           </div>
 
           {/* Features */}
           <div className="text-center max-w-md">
             <h2 className="text-2xl font-semibold mb-4">🔑 Quick Recovery</h2>
             <p className="text-white/80 text-base leading-relaxed">
-              Forgot your password? No worries! We'll help you get back into your account 
-              safely and securely. 🛡️
+              Forgot your password? No worries! We'll help you get back into your account safely and
+              securely. 🛡️
             </p>
           </div>
         </div>
@@ -250,7 +266,9 @@ export function ForgotPasswordPage() {
           {/* Recovery Card */}
           <div className="card p-8 space-y-6">
             <div className="text-center lg:text-left">
-              <h2 className="text-2xl font-bold text-financial-navy mb-2">Reset Your Password 🔑</h2>
+              <h2 className="text-2xl font-bold text-financial-navy mb-2">
+                Reset Your Password 🔑
+              </h2>
               <p className="text-financial-gray">
                 Enter your email address and we'll send you a link to reset your password.
               </p>
@@ -294,22 +312,22 @@ export function ForgotPasswordPage() {
                   <span className="bg-white px-4 text-financial-gray">or</span>
                 </div>
               </div>
-              
+
               <div className="text-center space-y-2">
                 <p className="text-financial-gray text-sm">
                   Remember your password?
-                  <Link 
-                    to="/login" 
+                  <Link
+                    to="/login"
                     className="ml-1 text-financial-blue hover:text-financial-navy transition-colors font-medium"
                   >
                     Sign in here 👈
                   </Link>
                 </p>
-                
+
                 <p className="text-financial-gray text-sm">
                   Don't have an account?
-                  <Link 
-                    to="/register" 
+                  <Link
+                    to="/register"
                     className="ml-1 text-financial-blue hover:text-financial-navy transition-colors font-medium"
                   >
                     Create one now 🎉

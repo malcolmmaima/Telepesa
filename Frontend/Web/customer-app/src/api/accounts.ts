@@ -84,7 +84,7 @@ export const accountsApi = {
     sortDir = 'desc'
   ): Promise<PageResponse<Account>> => {
     const response = await api.get(`/accounts/user/${userId}`, {
-      params: { page, size, sortBy, sortDir }
+      params: { page, size, sortBy, sortDir },
     })
     return response.data
   },
@@ -111,7 +111,7 @@ export const accountsApi = {
   createAccount: async (userId: number, request: CreateAccountRequest): Promise<Account> => {
     const response = await api.post('/accounts', {
       ...request,
-      userId
+      userId,
     })
     return response.data
   },
@@ -160,7 +160,10 @@ export const accountsApi = {
   },
 
   // Transfer between accounts
-  transferBetweenAccounts: async (fromAccountId: number, request: TransferRequest): Promise<Account> => {
+  transferBetweenAccounts: async (
+    fromAccountId: number,
+    request: TransferRequest
+  ): Promise<Account> => {
     const response = await api.post(`/accounts/${fromAccountId}/transfer`, request)
     return response.data
   },
@@ -178,7 +181,7 @@ export const accountsApi = {
     size = 20
   ): Promise<PageResponse<Account>> => {
     const response = await api.get(`/accounts/status/${status}`, {
-      params: { page, size }
+      params: { page, size },
     })
     return response.data
   },
@@ -189,18 +192,14 @@ export const accountsApi = {
     size = 20
   ): Promise<PageResponse<Account>> => {
     const response = await api.get(`/accounts/type/${accountType}`, {
-      params: { page, size }
+      params: { page, size },
     })
     return response.data
   },
 
-  searchAccounts: async (
-    query: string,
-    page = 0,
-    size = 20
-  ): Promise<PageResponse<Account>> => {
+  searchAccounts: async (query: string, page = 0, size = 20): Promise<PageResponse<Account>> => {
     const response = await api.get('/accounts/search', {
-      params: { q: query, page, size }
+      params: { q: query, page, size },
     })
     return response.data
   },
@@ -218,8 +217,8 @@ export const accountsApi = {
 
   getDormantAccounts: async (days = 90): Promise<Account[]> => {
     const response = await api.get('/accounts/dormant', {
-      params: { days }
+      params: { days },
     })
     return response.data
-  }
+  },
 }

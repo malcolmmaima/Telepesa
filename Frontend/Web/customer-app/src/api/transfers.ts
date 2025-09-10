@@ -134,7 +134,7 @@ export const transfersApi = {
     const params: any = { page, size }
     if (status) params.status = status
     if (transferType) params.transferType = transferType
-    
+
     const response = await api.get(`/transfers/user/${userId}`, { params })
     return response.data
   },
@@ -146,7 +146,7 @@ export const transfersApi = {
     size = 20
   ): Promise<PageResponse<Transfer>> => {
     const response = await api.get(`/transfers/account/${accountId}`, {
-      params: { page, size }
+      params: { page, size },
     })
     return response.data
   },
@@ -204,7 +204,7 @@ export const transfersApi = {
   // Bank Information
   getSupportedBanks: async (country = 'KE'): Promise<BankInfo[]> => {
     const response = await api.get('/transfers/banks', {
-      params: { country }
+      params: { country },
     })
     return response.data
   },
@@ -221,7 +221,7 @@ export const transfersApi = {
   ): Promise<{ valid: boolean; accountName?: string; message?: string }> => {
     const response = await api.post('/transfers/validate-account', {
       bankCode,
-      accountNumber
+      accountNumber,
     })
     return response.data
   },
@@ -244,8 +244,8 @@ export const transfersApi = {
     const params: any = {}
     if (startDate) params.startDate = startDate
     if (endDate) params.endDate = endDate
-    
+
     const response = await api.get(`/transfers/user/${userId}/stats`, { params })
     return response.data
-  }
+  },
 }

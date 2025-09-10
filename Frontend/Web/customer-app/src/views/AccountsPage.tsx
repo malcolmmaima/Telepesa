@@ -10,21 +10,21 @@ const ACCOUNT_TYPE_ICONS = {
   SAVINGS: '🏦',
   CHECKING: '💳',
   FIXED_DEPOSIT: '💰',
-  BUSINESS: '🏢'
+  BUSINESS: '🏢',
 }
 
 const ACCOUNT_TYPE_COLORS = {
   SAVINGS: 'from-blue-500 to-blue-600',
   CHECKING: 'from-green-500 to-green-600',
   FIXED_DEPOSIT: 'from-purple-500 to-purple-600',
-  BUSINESS: 'from-orange-500 to-orange-600'
+  BUSINESS: 'from-orange-500 to-orange-600',
 }
 
 const STATUS_COLORS = {
   ACTIVE: 'text-green-600 bg-green-50 border-green-200',
   PENDING: 'text-yellow-600 bg-yellow-50 border-yellow-200',
   FROZEN: 'text-blue-600 bg-blue-50 border-blue-200',
-  CLOSED: 'text-red-600 bg-red-50 border-red-200'
+  CLOSED: 'text-red-600 bg-red-50 border-red-200',
 }
 
 export function AccountsPage() {
@@ -43,7 +43,7 @@ export function AccountsPage() {
     minimumBalance: 1000,
     initialDeposit: 0,
     currencyCode: 'KES',
-    description: ''
+    description: '',
   })
 
   // Load user accounts
@@ -80,7 +80,7 @@ export function AccountsPage() {
     try {
       setLoading(true)
       await accountsApi.createAccount(user!.id, createForm)
-      
+
       // Reset form
       setCreateForm({
         accountType: 'SAVINGS',
@@ -88,10 +88,10 @@ export function AccountsPage() {
         minimumBalance: 1000,
         initialDeposit: 0,
         currencyCode: 'KES',
-        description: ''
+        description: '',
       })
       setShowCreateForm(false)
-      
+
       // Reload accounts
       await loadAccounts()
       await loadTotalBalance()
@@ -102,10 +102,13 @@ export function AccountsPage() {
     }
   }
 
-  const handleAccountAction = async (accountId: number, action: 'activate' | 'freeze' | 'unfreeze') => {
+  const handleAccountAction = async (
+    accountId: number,
+    action: 'activate' | 'freeze' | 'unfreeze'
+  ) => {
     try {
       setLoading(true)
-      
+
       switch (action) {
         case 'activate':
           await accountsApi.activateAccount(accountId)
@@ -117,7 +120,7 @@ export function AccountsPage() {
           await accountsApi.unfreezeAccount(accountId)
           break
       }
-      
+
       await loadAccounts()
     } catch (err: any) {
       setError(err.message || `Failed to ${action} account`)
@@ -155,11 +158,8 @@ export function AccountsPage() {
             <div className="text-2xl font-bold">{formatCurrency(totalBalance)}</div>
           </div>
         </div>
-        
-        <Button
-          onClick={() => setShowCreateForm(true)}
-          className="hover-lift"
-        >
+
+        <Button onClick={() => setShowCreateForm(true)} className="hover-lift">
           🆕 Create New Account
         </Button>
       </div>
@@ -186,10 +186,8 @@ export function AccountsPage() {
       {showCreateForm && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-financial-lg max-w-md w-full p-6 animate-bounce-in">
-            <h2 className="text-xl font-bold text-financial-navy mb-4">
-              🆕 Create New Account
-            </h2>
-            
+            <h2 className="text-xl font-bold text-financial-navy mb-4">🆕 Create New Account</h2>
+
             <form onSubmit={handleCreateAccount} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-financial-navy mb-2">
@@ -197,7 +195,9 @@ export function AccountsPage() {
                 </label>
                 <select
                   value={createForm.accountType}
-                  onChange={(e) => setCreateForm({ ...createForm, accountType: e.target.value as any })}
+                  onChange={e =>
+                    setCreateForm({ ...createForm, accountType: e.target.value as any })
+                  }
                   className="w-full input"
                 >
                   <option value="SAVINGS">🏦 Savings Account</option>
@@ -210,7 +210,7 @@ export function AccountsPage() {
               <Input
                 label="Account Name"
                 value={createForm.accountName}
-                onChange={(e) => setCreateForm({ ...createForm, accountName: e.target.value })}
+                onChange={e => setCreateForm({ ...createForm, accountName: e.target.value })}
                 placeholder="e.g., My Savings Account"
                 required
               />
@@ -221,7 +221,9 @@ export function AccountsPage() {
                 min="0"
                 step="0.01"
                 value={createForm.initialDeposit}
-                onChange={(e) => setCreateForm({ ...createForm, initialDeposit: Number(e.target.value) })}
+                onChange={e =>
+                  setCreateForm({ ...createForm, initialDeposit: Number(e.target.value) })
+                }
                 placeholder="0.00"
               />
 
@@ -231,7 +233,9 @@ export function AccountsPage() {
                 min="0"
                 step="0.01"
                 value={createForm.minimumBalance}
-                onChange={(e) => setCreateForm({ ...createForm, minimumBalance: Number(e.target.value) })}
+                onChange={e =>
+                  setCreateForm({ ...createForm, minimumBalance: Number(e.target.value) })
+                }
                 placeholder="1000.00"
                 required
               />
@@ -239,7 +243,7 @@ export function AccountsPage() {
               <Input
                 label="Description (Optional)"
                 value={createForm.description || ''}
-                onChange={(e) => setCreateForm({ ...createForm, description: e.target.value })}
+                onChange={e => setCreateForm({ ...createForm, description: e.target.value })}
                 placeholder="Account description..."
               />
 
@@ -252,11 +256,7 @@ export function AccountsPage() {
                 >
                   Cancel
                 </Button>
-                <Button
-                  type="submit"
-                  disabled={loading}
-                  className="flex-1"
-                >
+                <Button type="submit" disabled={loading} className="flex-1">
                   {loading ? '⏳ Creating...' : '🎉 Create Account'}
                 </Button>
               </div>
@@ -269,44 +269,44 @@ export function AccountsPage() {
       {accounts.length === 0 && !loading ? (
         <div className="text-center py-12">
           <div className="text-6xl mb-4">🏦</div>
-          <h3 className="text-xl font-semibold text-financial-navy mb-2">
-            No accounts yet
-          </h3>
+          <h3 className="text-xl font-semibold text-financial-navy mb-2">No accounts yet</h3>
           <p className="text-financial-gray mb-6">
             Create your first account to start managing your finances!
           </p>
-          <Button onClick={() => setShowCreateForm(true)}>
-            🆕 Create Your First Account
-          </Button>
+          <Button onClick={() => setShowCreateForm(true)}>🆕 Create Your First Account</Button>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {accounts.map((account) => (
+          {accounts.map(account => (
             <Card
               key={account.id}
               className="hover-lift cursor-pointer relative overflow-hidden"
-              onClick={() => setSelectedAccount(selectedAccount?.id === account.id ? null : account)}
+              onClick={() =>
+                setSelectedAccount(selectedAccount?.id === account.id ? null : account)
+              }
             >
               {/* Account Card Header */}
-              <div className={cn(
-                'h-24 bg-gradient-to-r rounded-t-financial-lg relative',
-                ACCOUNT_TYPE_COLORS[account.accountType]
-              )}>
+              <div
+                className={cn(
+                  'h-24 bg-gradient-to-r rounded-t-financial-lg relative',
+                  ACCOUNT_TYPE_COLORS[account.accountType]
+                )}
+              >
                 <div className="absolute inset-0 bg-black bg-opacity-10"></div>
                 <div className="relative p-4 text-white">
                   <div className="flex items-center justify-between">
                     <div>
-                      <div className="text-2xl mb-1">
-                        {ACCOUNT_TYPE_ICONS[account.accountType]}
-                      </div>
+                      <div className="text-2xl mb-1">{ACCOUNT_TYPE_ICONS[account.accountType]}</div>
                       <div className="text-sm opacity-90">
                         {account.accountType.replace('_', ' ')}
                       </div>
                     </div>
-                    <div className={cn(
-                      'px-2 py-1 rounded text-xs font-medium border',
-                      STATUS_COLORS[account.status]
-                    )}>
+                    <div
+                      className={cn(
+                        'px-2 py-1 rounded text-xs font-medium border',
+                        STATUS_COLORS[account.status]
+                      )}
+                    >
                       {account.status}
                     </div>
                   </div>
@@ -315,13 +315,11 @@ export function AccountsPage() {
 
               {/* Account Info */}
               <div className="p-6">
-                <h3 className="font-semibold text-financial-navy mb-2">
-                  {account.accountName}
-                </h3>
+                <h3 className="font-semibold text-financial-navy mb-2">{account.accountName}</h3>
                 <p className="text-sm text-financial-gray mb-4">
                   •••• {account.accountNumber.slice(-4)}
                 </p>
-                
+
                 <div className="space-y-2">
                   <div className="flex justify-between items-center">
                     <span className="text-sm text-financial-gray">Balance:</span>
@@ -329,7 +327,7 @@ export function AccountsPage() {
                       {formatCurrency(account.balance)}
                     </span>
                   </div>
-                  
+
                   {account.minimumBalance > 0 && (
                     <div className="flex justify-between items-center">
                       <span className="text-sm text-financial-gray">Min Balance:</span>
@@ -348,7 +346,10 @@ export function AccountsPage() {
                         <div>Account #: {account.accountNumber}</div>
                         <div>Created: {new Date(account.createdAt).toLocaleDateString()}</div>
                         {account.lastTransactionAt && (
-                          <div>Last Activity: {new Date(account.lastTransactionAt).toLocaleDateString()}</div>
+                          <div>
+                            Last Activity:{' '}
+                            {new Date(account.lastTransactionAt).toLocaleDateString()}
+                          </div>
                         )}
                       </div>
 
@@ -366,7 +367,7 @@ export function AccountsPage() {
                             ✅ Activate
                           </Button>
                         )}
-                        
+
                         {account.status === 'ACTIVE' && (
                           <Button
                             size="sm"
@@ -380,7 +381,7 @@ export function AccountsPage() {
                             🧊 Freeze
                           </Button>
                         )}
-                        
+
                         {account.status === 'FROZEN' && (
                           <Button
                             size="sm"
@@ -420,25 +421,23 @@ export function AccountsPage() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <Card className="p-4">
             <div className="text-sm text-financial-gray">Total Accounts</div>
-            <div className="text-2xl font-bold text-financial-navy">
-              {accounts.length}
-            </div>
+            <div className="text-2xl font-bold text-financial-navy">{accounts.length}</div>
           </Card>
-          
+
           <Card className="p-4">
             <div className="text-sm text-financial-gray">Active Accounts</div>
             <div className="text-2xl font-bold text-green-600">
               {accounts.filter(a => a.status === 'ACTIVE').length}
             </div>
           </Card>
-          
+
           <Card className="p-4">
             <div className="text-sm text-financial-gray">Pending Accounts</div>
             <div className="text-2xl font-bold text-yellow-600">
               {accounts.filter(a => a.status === 'PENDING').length}
             </div>
           </Card>
-          
+
           <Card className="p-4">
             <div className="text-sm text-financial-gray">Avg Balance</div>
             <div className="text-2xl font-bold text-financial-navy">

@@ -17,18 +17,18 @@ export default defineConfig({
         '**/*.d.ts',
         '**/*.config.*',
         'dist/**',
-        'build/**'
+        'build/**',
       ],
       thresholds: {
         global: {
           branches: 50,
           functions: 50,
           lines: 50,
-          statements: 50
-        }
+          statements: 50,
+        },
       },
       // Continue on threshold failures for now
-      skipFull: false
+      skipFull: false,
     },
   },
 })
