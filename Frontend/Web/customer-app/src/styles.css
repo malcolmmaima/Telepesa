@@ -207,6 +207,71 @@
   }
 }
 
+/* 404 Page Custom Animations */
+@keyframes float {
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  25% { transform: translateY(-10px) rotate(2deg); }
+  50% { transform: translateY(-20px) rotate(-2deg); }
+  75% { transform: translateY(-10px) rotate(1deg); }
+}
+
+@keyframes float-delayed {
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  25% { transform: translateY(-15px) rotate(-2deg); }
+  50% { transform: translateY(-30px) rotate(2deg); }
+  75% { transform: translateY(-15px) rotate(-1deg); }
+}
+
+@keyframes float-slow {
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  25% { transform: translateY(-8px) rotate(1deg); }
+  50% { transform: translateY(-16px) rotate(-1deg); }
+  75% { transform: translateY(-8px) rotate(2deg); }
+}
+
+@keyframes bounce-delayed {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-20px); }
+}
+
+@keyframes bounce-slow {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-15px); }
+}
+
+@keyframes blink {
+  0%, 90%, 100% { transform: scaleY(1); }
+  95% { transform: scaleY(0.1); }
+}
+
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+.animate-float-delayed {
+  animation: float-delayed 8s ease-in-out infinite;
+  animation-delay: -2s;
+}
+
+.animate-float-slow {
+  animation: float-slow 10s ease-in-out infinite;
+  animation-delay: -5s;
+}
+
+.animate-bounce-delayed {
+  animation: bounce-delayed 2s infinite;
+  animation-delay: 0.5s;
+}
+
+.animate-bounce-slow {
+  animation: bounce-slow 3s infinite;
+  animation-delay: 1s;
+}
+
+.animate-blink {
+  animation: blink 4s infinite;
+}
+
 /* Mobile responsiveness improvements */
 @media (max-width: 640px) {
   .card {
