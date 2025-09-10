@@ -39,12 +39,22 @@ jobs:
     - name: Install dependencies
       working-directory: Frontend/Web/customer-app
       run: |
-        if [ "${{ steps.npm-cache.outputs.cache-hit }}" == 'true' ]; then
-          echo "✅ Cache hit - verifying node_modules"
-          npm ls --depth=0 || npm ci --prefer-offline
+        echo "📝 Checking for package files..."
+        if [ -f "package-lock.json" ]; then
+          echo "✅ package-lock.json found - using npm ci"
+          if [ "${{ steps.npm-cache.outputs.cache-hit }}" == 'true' ]; then
+            echo "✅ Cache hit - verifying node_modules"
+            npm ls --depth=0 || npm ci --prefer-offline
+          else
+            echo "❌ Cache miss - fresh install with npm ci"
+            npm ci
+          fi
+        elif [ -f "package.json" ]; then
+          echo "⚠️ No package-lock.json - using npm install"
+          npm install
         else
-          echo "❌ Cache miss - fresh install"
-          npm ci
+          echo "❌ No package.json found!"
+          exit 1
         fi
 
     - name: Verify installation
@@ -160,7 +170,16 @@ jobs:
       working-directory: Frontend/Web/customer-app
       run: |
         if [ ! -d "node_modules" ]; then
-          npm ci
+          if [ -f "package-lock.json" ]; then
+            echo "✅ Installing with npm ci"
+            npm ci
+          elif [ -f "package.json" ]; then
+            echo "⚠️ Installing with npm install"
+            npm install
+          else
+            echo "❌ No package.json found!"
+            exit 1
+          fi
         fi
 
     - name: Security audit
