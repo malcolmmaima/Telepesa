@@ -625,7 +625,7 @@ export function TransferPage() {
                               await transfersApi.cancelTransfer(transfer.id)
                               loadTransferHistory()
                             } catch (_err) {
-                              // eslint-disable-line @typescript-eslint/no-unused-vars
+                               
                               setError('Failed to cancel transfer')
                             }
                           }}
@@ -641,7 +641,7 @@ export function TransferPage() {
                               await transfersApi.retryTransfer(transfer.id)
                               loadTransferHistory()
                             } catch (_err) {
-                              // eslint-disable-line @typescript-eslint/no-unused-vars
+                               
                               setError('Failed to retry transfer')
                             }
                           }}
@@ -725,7 +725,7 @@ export function TransferPage() {
                           await transfersApi.deleteSavedRecipient(recipient.id)
                           loadSavedRecipients()
                         } catch (_err) {
-                          // eslint-disable-line @typescript-eslint/no-unused-vars
+                           
                           setError('Failed to delete recipient')
                         }
                       }}
