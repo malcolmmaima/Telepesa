@@ -74,7 +74,7 @@ spring:
             - name: RewritePath
               args:
                 regexp: /api/v1/transactions/(?<remaining>.*)
-                replacement: /api/transactions/${remaining}
+                replacement: /api/v1/transactions/${remaining}
             - name: Retry
               args:
                 retries: 3
@@ -89,7 +89,7 @@ spring:
             - name: RewritePath
               args:
                 regexp: /api/v1/loans/(?<remaining>.*)
-                replacement: /api/loans/${remaining}
+                replacement: /api/v1/loans/${remaining}
             - name: Retry
               args:
                 retries: 3
