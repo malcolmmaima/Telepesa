@@ -136,7 +136,7 @@ export const loansApi = {
   ): Promise<PageResponse<Loan>> => {
     const params: any = { page, size }
     if (status) params.status = status
-    
+
     const response = await api.get(`/loans/user/${userId}`, { params })
     return response.data
   },
@@ -175,7 +175,9 @@ export const loansApi = {
   },
 
   // Get loan summary for user
-  getUserLoanSummary: async (userId: number): Promise<{
+  getUserLoanSummary: async (
+    userId: number
+  ): Promise<{
     totalLoans: number
     activeLoans: number
     totalBorrowed: number
@@ -225,13 +227,17 @@ export const loansApi = {
   },
 
   // Get loan documents
-  getLoanDocuments: async (loanId: number): Promise<{
-    id: number
-    documentType: string
-    fileName: string
-    url: string
-    uploadedAt: string
-  }[]> => {
+  getLoanDocuments: async (
+    loanId: number
+  ): Promise<
+    {
+      id: number
+      documentType: string
+      fileName: string
+      url: string
+      uploadedAt: string
+    }[]
+  > => {
     const response = await api.get(`/loans/${loanId}/documents`)
     return response.data
   },

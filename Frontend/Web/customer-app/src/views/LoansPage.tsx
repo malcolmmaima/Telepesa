@@ -134,9 +134,11 @@ export function LoansPage() {
       const interestRate = getDefaultInterestRate(calculatorForm.loanType)
       const monthlyRate = interestRate / 100 / 12
       const monthlyPayment =
-        (calculatorForm.amount * monthlyRate * Math.pow(1 + monthlyRate, calculatorForm.termMonths)) /
+        (calculatorForm.amount *
+          monthlyRate *
+          Math.pow(1 + monthlyRate, calculatorForm.termMonths)) /
         (Math.pow(1 + monthlyRate, calculatorForm.termMonths) - 1)
-      
+
       setCalculation({
         requestedAmount: calculatorForm.amount,
         interestRate,
@@ -275,7 +277,8 @@ export function LoansPage() {
         <div className="p-4 bg-green-50 border border-green-200 rounded-financial">
           <p className="text-green-600 flex items-center">
             <span className="mr-2">✅</span>
-            Your loan application has been submitted successfully! Application ID: #{applicationSuccess.id}
+            Your loan application has been submitted successfully! Application ID: #
+            {applicationSuccess.id}
           </p>
           <Button
             variant="ghost"
@@ -441,9 +444,7 @@ export function LoansPage() {
                 <Input
                   label="Employer Name (Optional)"
                   value={application.employerName || ''}
-                  onChange={e =>
-                    setApplication({ ...application, employerName: e.target.value })
-                  }
+                  onChange={e => setApplication({ ...application, employerName: e.target.value })}
                   placeholder="Your employer's name"
                 />
               </div>
@@ -475,10 +476,7 @@ export function LoansPage() {
       )}
 
       {activeTab === 'my-loans' && (
-        <Card
-          title="My Loans"
-          description="Track your loan applications and active loans"
-        >
+        <Card title="My Loans" description="Track your loan applications and active loans">
           {userLoans.length === 0 ? (
             <div className="text-center py-8">
               <div className="text-6xl mb-4">📊</div>

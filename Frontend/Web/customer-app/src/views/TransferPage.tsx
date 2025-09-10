@@ -254,33 +254,35 @@ export function TransferPage() {
         <Card className="p-6">
           <h3 className="text-lg font-semibold text-financial-navy mb-4">💰 From Account</h3>
           <div className="grid gap-3">
-            {Array.isArray(accounts) && accounts.length > 0 ? accounts.map(account => (
-              <div
-                key={account.id}
-                onClick={() => setTransferForm(prev => ({ ...prev, fromAccountId: account.id }))}
-                className={cn(
-                  'p-4 border rounded-financial cursor-pointer transition-all',
-                  transferForm.fromAccountId === account.id
-                    ? 'border-financial-blue bg-blue-50'
-                    : 'border-gray-200 hover:border-gray-300'
-                )}
-              >
-                <div className="flex justify-between items-center">
-                  <div>
-                    <div className="font-medium text-financial-navy">{account.accountName}</div>
-                    <div className="text-sm text-financial-gray">
-                      •••• {account.accountNumber.slice(-4)} • {account.accountType}
+            {Array.isArray(accounts) && accounts.length > 0 ? (
+              accounts.map(account => (
+                <div
+                  key={account.id}
+                  onClick={() => setTransferForm(prev => ({ ...prev, fromAccountId: account.id }))}
+                  className={cn(
+                    'p-4 border rounded-financial cursor-pointer transition-all',
+                    transferForm.fromAccountId === account.id
+                      ? 'border-financial-blue bg-blue-50'
+                      : 'border-gray-200 hover:border-gray-300'
+                  )}
+                >
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <div className="font-medium text-financial-navy">{account.accountName}</div>
+                      <div className="text-sm text-financial-gray">
+                        •••• {account.accountNumber.slice(-4)} • {account.accountType}
+                      </div>
                     </div>
-                  </div>
-                  <div className="text-right">
-                    <div className="font-semibold text-financial-navy">
-                      {formatCurrency(account.balance)}
+                    <div className="text-right">
+                      <div className="font-semibold text-financial-navy">
+                        {formatCurrency(account.balance)}
+                      </div>
+                      <div className="text-xs text-financial-gray">Available</div>
                     </div>
-                    <div className="text-xs text-financial-gray">Available</div>
                   </div>
                 </div>
-              </div>
-            )) : (
+              ))
+            ) : (
               <div className="p-8 text-center">
                 <div className="text-4xl mb-3">💳</div>
                 <h3 className="font-semibold text-financial-navy mb-2">No accounts available</h3>
@@ -382,11 +384,13 @@ export function TransferPage() {
                     required
                   >
                     <option value="">Select Bank</option>
-                    {Array.isArray(banks) ? banks.map(bank => (
-                      <option key={bank.bankCode} value={bank.bankCode}>
-                        {bank.bankName}
-                      </option>
-                    )) : null}
+                    {Array.isArray(banks)
+                      ? banks.map(bank => (
+                          <option key={bank.bankCode} value={bank.bankCode}>
+                            {bank.bankName}
+                          </option>
+                        ))
+                      : null}
                   </select>
                 </div>
                 <Input
@@ -573,80 +577,83 @@ export function TransferPage() {
         </div>
       ) : (
         <div className="space-y-4">
-          {Array.isArray(transfers) ? transfers.map(transfer => (
-            <Card key={transfer.id} className="p-6">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-4">
-                  <div className="text-3xl">{TRANSFER_TYPE_ICONS[transfer.transferType]}</div>
-                  <div>
-                    <div className="font-semibold text-financial-navy">
-                      To: {transfer.recipientName}
+          {Array.isArray(transfers)
+            ? transfers.map(transfer => (
+                <Card key={transfer.id} className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-4">
+                      <div className="text-3xl">{TRANSFER_TYPE_ICONS[transfer.transferType]}</div>
+                      <div>
+                        <div className="font-semibold text-financial-navy">
+                          To: {transfer.recipientName}
+                        </div>
+                        <div className="text-sm text-financial-gray">
+                          {transfer.description} •{' '}
+                          {new Date(transfer.createdAt).toLocaleDateString()}
+                        </div>
+                        <div className="text-xs text-financial-gray">ID: {transfer.transferId}</div>
+                      </div>
                     </div>
-                    <div className="text-sm text-financial-gray">
-                      {transfer.description} • {new Date(transfer.createdAt).toLocaleDateString()}
+                    <div className="text-right">
+                      <div className="font-semibold text-financial-navy">
+                        {formatCurrency(transfer.amount)}
+                      </div>
+                      <div
+                        className={cn(
+                          'inline-block px-2 py-1 rounded text-xs font-medium border',
+                          TRANSFER_STATUS_COLORS[transfer.status]
+                        )}
+                      >
+                        {transfer.status}
+                      </div>
+                      {transfer.fee > 0 && (
+                        <div className="text-xs text-financial-gray mt-1">
+                          Fee: {formatCurrency(transfer.fee)}
+                        </div>
+                      )}
                     </div>
-                    <div className="text-xs text-financial-gray">ID: {transfer.transferId}</div>
                   </div>
-                </div>
-                <div className="text-right">
-                  <div className="font-semibold text-financial-navy">
-                    {formatCurrency(transfer.amount)}
-                  </div>
-                  <div
-                    className={cn(
-                      'inline-block px-2 py-1 rounded text-xs font-medium border',
-                      TRANSFER_STATUS_COLORS[transfer.status]
-                    )}
-                  >
-                    {transfer.status}
-                  </div>
-                  {transfer.fee > 0 && (
-                    <div className="text-xs text-financial-gray mt-1">
-                      Fee: {formatCurrency(transfer.fee)}
-                    </div>
-                  )}
-                </div>
-              </div>
 
-              {(transfer.status === 'PENDING' || transfer.status === 'FAILED') && (
-                <div className="flex gap-2 mt-4 pt-4 border-t border-gray-100">
-                  {transfer.status === 'PENDING' && (
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={async () => {
-                        try {
-                          await transfersApi.cancelTransfer(transfer.id)
-                          loadTransferHistory()
-                        } catch (_err) {
-                          // eslint-disable-line @typescript-eslint/no-unused-vars
-                          setError('Failed to cancel transfer')
-                        }
-                      }}
-                    >
-                      ✕ Cancel
-                    </Button>
+                  {(transfer.status === 'PENDING' || transfer.status === 'FAILED') && (
+                    <div className="flex gap-2 mt-4 pt-4 border-t border-gray-100">
+                      {transfer.status === 'PENDING' && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={async () => {
+                            try {
+                              await transfersApi.cancelTransfer(transfer.id)
+                              loadTransferHistory()
+                            } catch (_err) {
+                              // eslint-disable-line @typescript-eslint/no-unused-vars
+                              setError('Failed to cancel transfer')
+                            }
+                          }}
+                        >
+                          ✕ Cancel
+                        </Button>
+                      )}
+                      {transfer.status === 'FAILED' && (
+                        <Button
+                          size="sm"
+                          onClick={async () => {
+                            try {
+                              await transfersApi.retryTransfer(transfer.id)
+                              loadTransferHistory()
+                            } catch (_err) {
+                              // eslint-disable-line @typescript-eslint/no-unused-vars
+                              setError('Failed to retry transfer')
+                            }
+                          }}
+                        >
+                          🔄 Retry
+                        </Button>
+                      )}
+                    </div>
                   )}
-                  {transfer.status === 'FAILED' && (
-                    <Button
-                      size="sm"
-                      onClick={async () => {
-                        try {
-                          await transfersApi.retryTransfer(transfer.id)
-                          loadTransferHistory()
-                        } catch (_err) {
-                          // eslint-disable-line @typescript-eslint/no-unused-vars
-                          setError('Failed to retry transfer')
-                        }
-                      }}
-                    >
-                      🔄 Retry
-                    </Button>
-                  )}
-                </div>
-              )}
-            </Card>
-          )) : null}
+                </Card>
+              ))
+            : null}
         </div>
       )}
     </div>
@@ -672,59 +679,63 @@ export function TransferPage() {
         </div>
       ) : (
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {Array.isArray(savedRecipients) ? savedRecipients.map(recipient => (
-            <Card key={recipient.id} className="p-4">
-              <div className="flex justify-between items-start mb-3">
-                <div className="flex-1">
-                  <div className="font-semibold text-financial-navy">{recipient.recipientName}</div>
-                  {recipient.nickname && (
-                    <div className="text-sm text-financial-gray">"{recipient.nickname}"</div>
-                  )}
-                </div>
-                <div className="text-2xl">
-                  {recipient.recipientType === 'BANK_ACCOUNT'
-                    ? '🏛️'
-                    : recipient.recipientType === 'MOBILE_MONEY'
-                      ? '📱'
-                      : '🏦'}
-                </div>
-              </div>
+          {Array.isArray(savedRecipients)
+            ? savedRecipients.map(recipient => (
+                <Card key={recipient.id} className="p-4">
+                  <div className="flex justify-between items-start mb-3">
+                    <div className="flex-1">
+                      <div className="font-semibold text-financial-navy">
+                        {recipient.recipientName}
+                      </div>
+                      {recipient.nickname && (
+                        <div className="text-sm text-financial-gray">"{recipient.nickname}"</div>
+                      )}
+                    </div>
+                    <div className="text-2xl">
+                      {recipient.recipientType === 'BANK_ACCOUNT'
+                        ? '🏛️'
+                        : recipient.recipientType === 'MOBILE_MONEY'
+                          ? '📱'
+                          : '🏦'}
+                    </div>
+                  </div>
 
-              <div className="space-y-1 text-sm text-financial-gray mb-4">
-                {recipient.accountNumber && <div>•••• {recipient.accountNumber.slice(-4)}</div>}
-                {recipient.bankName && <div>{recipient.bankName}</div>}
-                {recipient.phoneNumber && <div>{recipient.phoneNumber}</div>}
-              </div>
+                  <div className="space-y-1 text-sm text-financial-gray mb-4">
+                    {recipient.accountNumber && <div>•••• {recipient.accountNumber.slice(-4)}</div>}
+                    {recipient.bankName && <div>{recipient.bankName}</div>}
+                    {recipient.phoneNumber && <div>{recipient.phoneNumber}</div>}
+                  </div>
 
-              <div className="flex gap-2">
-                <Button
-                  size="sm"
-                  onClick={() => {
-                    handleRecipientSelect(recipient)
-                    setActiveTab('new-transfer')
-                  }}
-                  className="flex-1"
-                >
-                  💸 Transfer
-                </Button>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={async () => {
-                    try {
-                      await transfersApi.deleteSavedRecipient(recipient.id)
-                      loadSavedRecipients()
-                    } catch (_err) {
-                      // eslint-disable-line @typescript-eslint/no-unused-vars
-                      setError('Failed to delete recipient')
-                    }
-                  }}
-                >
-                  🗑️
-                </Button>
-              </div>
-            </Card>
-          )) : null}
+                  <div className="flex gap-2">
+                    <Button
+                      size="sm"
+                      onClick={() => {
+                        handleRecipientSelect(recipient)
+                        setActiveTab('new-transfer')
+                      }}
+                      className="flex-1"
+                    >
+                      💸 Transfer
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={async () => {
+                        try {
+                          await transfersApi.deleteSavedRecipient(recipient.id)
+                          loadSavedRecipients()
+                        } catch (_err) {
+                          // eslint-disable-line @typescript-eslint/no-unused-vars
+                          setError('Failed to delete recipient')
+                        }
+                      }}
+                    >
+                      🗑️
+                    </Button>
+                  </div>
+                </Card>
+              ))
+            : null}
         </div>
       )}
     </div>

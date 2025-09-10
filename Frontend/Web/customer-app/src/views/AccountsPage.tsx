@@ -165,142 +165,145 @@ export function AccountsPage() {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {accounts && accounts.map(account => (
-            <Card
-              key={account.id}
-              className="hover-lift cursor-pointer relative overflow-hidden"
-              onClick={() =>
-                setSelectedAccount(selectedAccount?.id === account.id ? null : account)
-              }
-            >
-              {/* Account Card Header */}
-              <div
-                className={cn(
-                  'h-24 bg-gradient-to-r rounded-t-financial-lg relative',
-                  ACCOUNT_TYPE_COLORS[account.accountType]
-                )}
+          {accounts &&
+            accounts.map(account => (
+              <Card
+                key={account.id}
+                className="hover-lift cursor-pointer relative overflow-hidden"
+                onClick={() =>
+                  setSelectedAccount(selectedAccount?.id === account.id ? null : account)
+                }
               >
-                <div className="absolute inset-0 bg-black bg-opacity-10"></div>
-                <div className="relative p-4 text-white">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <div className="text-2xl mb-1">{ACCOUNT_TYPE_ICONS[account.accountType]}</div>
-                      <div className="text-sm opacity-90">
-                        {account.accountType.replace('_', ' ')}
+                {/* Account Card Header */}
+                <div
+                  className={cn(
+                    'h-24 bg-gradient-to-r rounded-t-financial-lg relative',
+                    ACCOUNT_TYPE_COLORS[account.accountType]
+                  )}
+                >
+                  <div className="absolute inset-0 bg-black bg-opacity-10"></div>
+                  <div className="relative p-4 text-white">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <div className="text-2xl mb-1">
+                          {ACCOUNT_TYPE_ICONS[account.accountType]}
+                        </div>
+                        <div className="text-sm opacity-90">
+                          {account.accountType.replace('_', ' ')}
+                        </div>
                       </div>
-                    </div>
-                    <div
-                      className={cn(
-                        'px-2 py-1 rounded text-xs font-medium border',
-                        STATUS_COLORS[account.status]
-                      )}
-                    >
-                      {account.status}
+                      <div
+                        className={cn(
+                          'px-2 py-1 rounded text-xs font-medium border',
+                          STATUS_COLORS[account.status]
+                        )}
+                      >
+                        {account.status}
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
 
-              {/* Account Info */}
-              <div className="p-6">
-                <h3 className="font-semibold text-financial-navy mb-2">{account.accountName}</h3>
-                <p className="text-sm text-financial-gray mb-4">
-                  •••• {account.accountNumber.slice(-4)}
-                </p>
+                {/* Account Info */}
+                <div className="p-6">
+                  <h3 className="font-semibold text-financial-navy mb-2">{account.accountName}</h3>
+                  <p className="text-sm text-financial-gray mb-4">
+                    •••• {account.accountNumber.slice(-4)}
+                  </p>
 
-                <div className="space-y-2">
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm text-financial-gray">Balance:</span>
-                    <span className="font-semibold text-financial-navy">
-                      {formatCurrency(account.balance)}
-                    </span>
+                  <div className="space-y-2">
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-financial-gray">Balance:</span>
+                      <span className="font-semibold text-financial-navy">
+                        {formatCurrency(account.balance)}
+                      </span>
+                    </div>
+
+                    {account.minimumBalance > 0 && (
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm text-financial-gray">Min Balance:</span>
+                        <span className="text-sm text-financial-gray">
+                          {formatCurrency(account.minimumBalance)}
+                        </span>
+                      </div>
+                    )}
                   </div>
 
-                  {account.minimumBalance > 0 && (
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm text-financial-gray">Min Balance:</span>
-                      <span className="text-sm text-financial-gray">
-                        {formatCurrency(account.minimumBalance)}
-                      </span>
+                  {/* Expanded Details */}
+                  {selectedAccount?.id === account.id && (
+                    <div className="mt-6 pt-4 border-t border-gray-100 animate-slide-up">
+                      <div className="space-y-3">
+                        <div className="text-xs text-financial-gray space-y-1">
+                          <div>Account #: {account.accountNumber}</div>
+                          <div>Created: {new Date(account.createdAt).toLocaleDateString()}</div>
+                          {account.lastTransactionAt && (
+                            <div>
+                              Last Activity:{' '}
+                              {new Date(account.lastTransactionAt).toLocaleDateString()}
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Account Actions */}
+                        <div className="flex gap-2 pt-2">
+                          {account.status === 'PENDING' && (
+                            <Button
+                              size="sm"
+                              onClick={(e?: React.MouseEvent<HTMLButtonElement>) => {
+                                e?.stopPropagation()
+                                handleAccountAction(account.id, 'activate')
+                              }}
+                              disabled={loading}
+                            >
+                              ✅ Activate
+                            </Button>
+                          )}
+
+                          {account.status === 'ACTIVE' && (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={(e?: React.MouseEvent<HTMLButtonElement>) => {
+                                e?.stopPropagation()
+                                handleAccountAction(account.id, 'freeze')
+                              }}
+                              disabled={loading}
+                            >
+                              🧊 Freeze
+                            </Button>
+                          )}
+
+                          {account.status === 'FROZEN' && (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={(e?: React.MouseEvent<HTMLButtonElement>) => {
+                                e?.stopPropagation()
+                                handleAccountAction(account.id, 'unfreeze')
+                              }}
+                              disabled={loading}
+                            >
+                              🔥 Unfreeze
+                            </Button>
+                          )}
+
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={(e?: React.MouseEvent<HTMLButtonElement>) => {
+                              e?.stopPropagation()
+                              window.location.href = `/transactions?account=${account.id}`
+                            }}
+                          >
+                            📊 Transactions
+                          </Button>
+                        </div>
+                      </div>
                     </div>
                   )}
                 </div>
-
-                {/* Expanded Details */}
-                {selectedAccount?.id === account.id && (
-                  <div className="mt-6 pt-4 border-t border-gray-100 animate-slide-up">
-                    <div className="space-y-3">
-                      <div className="text-xs text-financial-gray space-y-1">
-                        <div>Account #: {account.accountNumber}</div>
-                        <div>Created: {new Date(account.createdAt).toLocaleDateString()}</div>
-                        {account.lastTransactionAt && (
-                          <div>
-                            Last Activity:{' '}
-                            {new Date(account.lastTransactionAt).toLocaleDateString()}
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Account Actions */}
-                      <div className="flex gap-2 pt-2">
-                        {account.status === 'PENDING' && (
-                          <Button
-                            size="sm"
-                            onClick={(e?: React.MouseEvent<HTMLButtonElement>) => {
-                              e?.stopPropagation()
-                              handleAccountAction(account.id, 'activate')
-                            }}
-                            disabled={loading}
-                          >
-                            ✅ Activate
-                          </Button>
-                        )}
-
-                        {account.status === 'ACTIVE' && (
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={(e?: React.MouseEvent<HTMLButtonElement>) => {
-                              e?.stopPropagation()
-                              handleAccountAction(account.id, 'freeze')
-                            }}
-                            disabled={loading}
-                          >
-                            🧊 Freeze
-                          </Button>
-                        )}
-
-                        {account.status === 'FROZEN' && (
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={(e?: React.MouseEvent<HTMLButtonElement>) => {
-                              e?.stopPropagation()
-                              handleAccountAction(account.id, 'unfreeze')
-                            }}
-                            disabled={loading}
-                          >
-                            🔥 Unfreeze
-                          </Button>
-                        )}
-
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={(e?: React.MouseEvent<HTMLButtonElement>) => {
-                            e?.stopPropagation()
-                            window.location.href = `/transactions?account=${account.id}`
-                          }}
-                        >
-                          📊 Transactions
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </Card>
-          ))}
+              </Card>
+            ))}
         </div>
       )}
 

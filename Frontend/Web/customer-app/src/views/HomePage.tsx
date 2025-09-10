@@ -97,8 +97,10 @@ export function HomePage() {
 
       // Ensure arrays are always defined
       const safeAccounts = Array.isArray(accountsData.content) ? accountsData.content : []
-      const safeTransactions = Array.isArray(transactionsData.content) ? transactionsData.content : []
-      
+      const safeTransactions = Array.isArray(transactionsData.content)
+        ? transactionsData.content
+        : []
+
       setAccounts(safeAccounts)
       setTotalBalance(balanceData)
       setRecentTransactions(safeTransactions)
@@ -225,7 +227,7 @@ export function HomePage() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Your Accounts */}
         <Card title="Your Accounts" description="Balances and account status">
-          {(!accounts || accounts.length === 0) ? (
+          {!accounts || accounts.length === 0 ? (
             <div className="text-center py-8">
               <div className="text-4xl mb-3">🏦</div>
               <p className="text-financial-gray mb-4">No accounts found</p>
@@ -235,48 +237,51 @@ export function HomePage() {
             </div>
           ) : (
             <div className="space-y-4">
-              {accounts && accounts.slice(0, 3).map(account => (
-                <div
-                  key={account.id}
-                  className="border rounded-financial p-4 bg-white hover:bg-gray-50 cursor-pointer transition-colors"
-                  onClick={() => (window.location.href = '/accounts')}
-                >
-                  <div className="flex items-center justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2">
-                        <div className="text-financial-navy font-medium">{account.accountName}</div>
-                        <div
-                          className={`px-2 py-1 rounded text-xs font-medium ${
-                            account.status === 'ACTIVE'
-                              ? 'text-green-600 bg-green-50 border border-green-200'
-                              : account.status === 'PENDING'
-                                ? 'text-yellow-600 bg-yellow-50 border border-yellow-200'
-                                : 'text-gray-600 bg-gray-50 border border-gray-200'
-                          }`}
-                        >
-                          {account.status}
+              {accounts &&
+                accounts.slice(0, 3).map(account => (
+                  <div
+                    key={account.id}
+                    className="border rounded-financial p-4 bg-white hover:bg-gray-50 cursor-pointer transition-colors"
+                    onClick={() => (window.location.href = '/accounts')}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2">
+                          <div className="text-financial-navy font-medium">
+                            {account.accountName}
+                          </div>
+                          <div
+                            className={`px-2 py-1 rounded text-xs font-medium ${
+                              account.status === 'ACTIVE'
+                                ? 'text-green-600 bg-green-50 border border-green-200'
+                                : account.status === 'PENDING'
+                                  ? 'text-yellow-600 bg-yellow-50 border border-yellow-200'
+                                  : 'text-gray-600 bg-gray-50 border border-gray-200'
+                            }`}
+                          >
+                            {account.status}
+                          </div>
+                        </div>
+                        <div className="text-sm text-financial-gray">
+                          •••• {account.accountNumber.slice(-4)}
+                        </div>
+                        <div className="text-xs text-financial-gray mt-1">
+                          {account.accountType.replace('_', ' ')}
                         </div>
                       </div>
-                      <div className="text-sm text-financial-gray">
-                        •••• {account.accountNumber.slice(-4)}
-                      </div>
-                      <div className="text-xs text-financial-gray mt-1">
-                        {account.accountType.replace('_', ' ')}
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <div className="text-lg font-semibold text-financial-navy">
-                        {formatCurrency(account.balance)}
-                      </div>
-                      {account.lastTransactionAt && (
-                        <div className="text-xs text-financial-gray">
-                          Last: {formatDate(account.lastTransactionAt, 'short')}
+                      <div className="text-right">
+                        <div className="text-lg font-semibold text-financial-navy">
+                          {formatCurrency(account.balance)}
                         </div>
-                      )}
+                        {account.lastTransactionAt && (
+                          <div className="text-xs text-financial-gray">
+                            Last: {formatDate(account.lastTransactionAt, 'short')}
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                ))}
               {accounts && accounts.length > 3 && (
                 <Button
                   variant="ghost"
@@ -293,7 +298,7 @@ export function HomePage() {
 
         {/* Recent Transactions */}
         <Card title="Recent Transactions" description="Your latest activity">
-          {(!recentTransactions || recentTransactions.length === 0) ? (
+          {!recentTransactions || recentTransactions.length === 0 ? (
             <div className="text-center py-8">
               <div className="text-4xl mb-3">📊</div>
               <p className="text-financial-gray mb-4">No recent transactions</p>
@@ -303,45 +308,46 @@ export function HomePage() {
             </div>
           ) : (
             <div className="space-y-3">
-              {recentTransactions && recentTransactions.map(transaction => {
-                const isIncoming = ['DEPOSIT', 'LOAN_DISBURSEMENT'].includes(
-                  transaction.transactionType
-                )
-                const amountColor = isIncoming ? 'text-green-600' : 'text-red-600'
-                const amountPrefix = isIncoming ? '+' : '-'
+              {recentTransactions &&
+                recentTransactions.map(transaction => {
+                  const isIncoming = ['DEPOSIT', 'LOAN_DISBURSEMENT'].includes(
+                    transaction.transactionType
+                  )
+                  const amountColor = isIncoming ? 'text-green-600' : 'text-red-600'
+                  const amountPrefix = isIncoming ? '+' : '-'
 
-                return (
-                  <div
-                    key={transaction.id}
-                    className="flex items-center justify-between p-3 rounded-financial bg-gray-50 hover:bg-gray-100 cursor-pointer transition-colors"
-                    onClick={() => (window.location.href = '/transactions')}
-                  >
-                    <div className="flex items-center space-x-3">
-                      <div className="text-xl">
-                        {transaction.transactionType === 'DEPOSIT' && '📥'}
-                        {transaction.transactionType === 'WITHDRAWAL' && '📤'}
-                        {transaction.transactionType === 'TRANSFER' && '🔄'}
-                        {transaction.transactionType === 'PAYMENT' && '💳'}
-                        {transaction.transactionType === 'LOAN_DISBURSEMENT' && '💰'}
-                        {transaction.transactionType === 'LOAN_REPAYMENT' && '📈'}
+                  return (
+                    <div
+                      key={transaction.id}
+                      className="flex items-center justify-between p-3 rounded-financial bg-gray-50 hover:bg-gray-100 cursor-pointer transition-colors"
+                      onClick={() => (window.location.href = '/transactions')}
+                    >
+                      <div className="flex items-center space-x-3">
+                        <div className="text-xl">
+                          {transaction.transactionType === 'DEPOSIT' && '📥'}
+                          {transaction.transactionType === 'WITHDRAWAL' && '📤'}
+                          {transaction.transactionType === 'TRANSFER' && '🔄'}
+                          {transaction.transactionType === 'PAYMENT' && '💳'}
+                          {transaction.transactionType === 'LOAN_DISBURSEMENT' && '💰'}
+                          {transaction.transactionType === 'LOAN_REPAYMENT' && '📈'}
+                        </div>
+                        <div>
+                          <div className="font-medium text-financial-navy">
+                            {transaction.description}
+                          </div>
+                          <div className="text-xs text-financial-gray">
+                            {formatDate(transaction.createdAt, 'short')} •{' '}
+                            {transaction.transactionType}
+                          </div>
+                        </div>
                       </div>
-                      <div>
-                        <div className="font-medium text-financial-navy">
-                          {transaction.description}
-                        </div>
-                        <div className="text-xs text-financial-gray">
-                          {formatDate(transaction.createdAt, 'short')} •{' '}
-                          {transaction.transactionType}
-                        </div>
+                      <div className={`font-semibold ${amountColor}`}>
+                        {amountPrefix}
+                        {formatCurrency(transaction.amount)}
                       </div>
                     </div>
-                    <div className={`font-semibold ${amountColor}`}>
-                      {amountPrefix}
-                      {formatCurrency(transaction.amount)}
-                    </div>
-                  </div>
-                )
-              })}
+                  )
+                })}
               <Button
                 variant="ghost"
                 size="sm"

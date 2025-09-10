@@ -38,7 +38,7 @@ npm run preview
 The app connects to backend microservices:
 
 - **Account Service** (port 8082): Account management, balances
-- **User Service** (port 8081): Authentication, user profiles  
+- **User Service** (port 8081): Authentication, user profiles
 - **Transaction Service** (port 8083): Transaction history, transfers
 
 ### Environment Variables
@@ -49,6 +49,7 @@ The app connects to backend microservices:
 ### Development Without Backend
 
 If backend services aren't running, the app gracefully degrades:
+
 - Shows empty states instead of errors
 - Logs helpful messages to console
 - Core UI functionality remains intact
