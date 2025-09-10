@@ -547,7 +547,7 @@ export function TransactionsPage() {
                         onClick={(e?: React.MouseEvent<HTMLButtonElement>) => {
                           e?.stopPropagation()
                           // Add cancel transaction functionality
-                          console.log('Cancel transaction:', transaction.id)
+                          // TODO: Implement cancel transaction API call
                         }}
                       >
                         ❌ Cancel

@@ -44,8 +44,8 @@ export function RegisterPage() {
     setServerError(null)
     
     try {
-      const { confirmPassword, ...registrationData } = data
-      const response = await api.post('/users/register', registrationData)
+      const { confirmPassword: _confirmPassword, ...registrationData } = data
+      await api.post('/users/register', registrationData)
       
       // Auto-login after successful registration
       const loginResponse = await api.post('/users/login', {
