@@ -83,6 +83,9 @@ Notes
 ```bash
 cd Backend
 mvn -q clean test
+
+# Or run realistic E2E infra/gateway tests
+bash Backend/scripts/realistic-e2e-test.sh
 ```
 
 Postman collection: `Backend/Telepesa_API_Collection_Complete.postman_collection.json`

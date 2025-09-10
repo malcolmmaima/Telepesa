@@ -107,6 +107,17 @@ jobs:
           cd ..
         fi
         
+        # Test transfer-service (if exists)
+        if [ -d "transfer-service" ]; then
+          echo "Testing transfer-service..."
+          cd transfer-service
+          mvn clean test -Dspring.profiles.active=test \
+            -Dspring.datasource.url=jdbc:postgresql://localhost:5432/telepesa_test \
+            -Dspring.datasource.username=testuser \
+            -Dspring.datasource.password=testpassword
+          cd ..
+        fi
+        
         # Test loan-service (if exists)
         if [ -d "loan-service" ]; then
           echo "Testing loan-service..."
@@ -216,7 +227,7 @@ jobs:
         cd ..
         
         # Build other services (if they exist)
-        for service in account-service transaction-service loan-service notification-service; do
+        for service in account-service transaction-service loan-service notification-service transfer-service; do
           if [ -d "$service" ]; then
             echo "Building $service..."
             cd $service
@@ -315,7 +326,7 @@ jobs:
         cd ..
         
         # Run security scan for other services (if they exist)
-        for service in account-service transaction-service loan-service notification-service; do
+        for service in account-service transaction-service loan-service notification-service transfer-service; do
           if [ -d "$service" ]; then
             echo "Running OWASP Dependency Check for $service..."
             cd $service
@@ -348,7 +359,7 @@ jobs:
       run: |
         echo "Running basic security checks for all services..."
         
-        for service in user-service account-service transaction-service loan-service notification-service; do
+        for service in user-service account-service transaction-service loan-service notification-service transfer-service; do
           if [ -d "$service" ]; then
             echo "Checking $service..."
             cd $service

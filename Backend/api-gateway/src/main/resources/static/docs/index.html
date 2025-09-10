@@ -284,7 +284,7 @@
         </div>
         
         <div class="footer">
-            <p>&copy; 2024 Telepesa - Modern Banking Platform for Africa</p>
+            <p>&copy; <span id="current-year"></span> Telepesa - Modern Banking Platform for Africa</p>
             <p>Built with ❤️ for African Financial Inclusion</p>
         </div>
     </div>
@@ -302,6 +302,12 @@
                     }, 200);
                 });
             });
+            
+            // Dynamic current year in footer
+            const yearEl = document.getElementById('current-year');
+            if (yearEl) {
+                yearEl.textContent = new Date().getFullYear().toString();
+            }
             
             // Add timestamp
             const timestamp = new Date().toLocaleString();
