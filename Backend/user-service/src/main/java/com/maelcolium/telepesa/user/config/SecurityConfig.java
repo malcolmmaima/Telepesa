@@ -74,7 +74,8 @@ public class SecurityConfig {
             .authorizeHttpRequests(authz -> authz
                 // Public endpoints
                 .requestMatchers("/api/users/register", "/api/users/login",
-                                "/api/v1/users/register", "/api/v1/users/login").permitAll()
+                                "/api/v1/users/register", "/api/v1/users/login",
+                                "/api/users/refresh", "/api/v1/users/refresh").permitAll()
                 .requestMatchers("/api/users/verify-email", "/api/users/resend-verification").permitAll()
                 .requestMatchers("/api/users/forgot-password", "/api/users/reset-password").permitAll()
                 .requestMatchers("/api/v1/users/verify-email", "/api/v1/users/resend-verification").permitAll()

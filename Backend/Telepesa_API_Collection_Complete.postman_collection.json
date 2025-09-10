@@ -381,7 +381,7 @@
 									"",
 									"pm.test(\"Login successful with tokens\", function () {",
 									"    const jsonData = pm.response.json();",
-									"    pm.expect(jsonData).to.have.property(\"token\");",
+									"    pm.expect(jsonData).to.have.property(\"accessToken\");",
 									"    pm.expect(jsonData).to.have.property(\"refreshToken\");",
 									"    pm.expect(jsonData).to.have.property(\"user\");",
 									"});",
@@ -389,7 +389,7 @@
 									"// Store tokens for later tests",
 									"if (pm.response.code === 200) {",
 									"    const jsonData = pm.response.json();",
-									"    pm.globals.set(\"jwt_token\", jsonData.token);",
+									"    pm.globals.set(\"jwt_token\", jsonData.accessToken);",
 									"    pm.globals.set(\"refresh_token\", jsonData.refreshToken);",
 									"}"
 								],

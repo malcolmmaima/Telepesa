@@ -10,10 +10,14 @@ import com.maelcolium.telepesa.user.exception.DuplicateUserException;
 import com.maelcolium.telepesa.user.exception.UserNotFoundException;
 import com.maelcolium.telepesa.user.mapper.UserMapper;
 import com.maelcolium.telepesa.user.model.User;
+import com.maelcolium.telepesa.user.model.RefreshToken;
 import com.maelcolium.telepesa.user.repository.UserRepository;
+import com.maelcolium.telepesa.user.repository.RefreshTokenRepository;
 import com.maelcolium.telepesa.user.service.AuditLogService;
 import com.maelcolium.telepesa.user.service.DeviceFingerprintService;
 import com.maelcolium.telepesa.user.service.UserService;
+import com.maelcolium.telepesa.user.dto.TokenRefreshRequest;
+import com.maelcolium.telepesa.user.dto.TokenRefreshResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.annotation.CacheEvict;
@@ -46,6 +50,7 @@ public class UserServiceImpl implements UserService {
     private final UserDetailsService userDetailsService;
     private final AuditLogService auditLogService;
     private final DeviceFingerprintService deviceFingerprintService;
+    private final RefreshTokenRepository refreshTokenRepository;
 
     @Value("${app.user.max-failed-attempts:5}")
     private int maxFailedAttempts;
@@ -59,7 +64,8 @@ public class UserServiceImpl implements UserService {
                           JwtTokenUtil jwtTokenUtil,
                           UserDetailsService userDetailsService,
                           AuditLogService auditLogService,
-                          DeviceFingerprintService deviceFingerprintService) {
+                          DeviceFingerprintService deviceFingerprintService,
+                          RefreshTokenRepository refreshTokenRepository) {
         this.userRepository = userRepository;
         this.userMapper = userMapper;
         this.passwordEncoder = passwordEncoder;
@@ -67,6 +73,7 @@ public class UserServiceImpl implements UserService {
         this.userDetailsService = userDetailsService;
         this.auditLogService = auditLogService;
         this.deviceFingerprintService = deviceFingerprintService;
+        this.refreshTokenRepository = refreshTokenRepository;
     }
 
     @Override
@@ -134,14 +141,25 @@ public class UserServiceImpl implements UserService {
             userRepository.updateFailedLoginAttempts(user.getId(), 0);
         }
 
-        // Generate JWT token
+        // Generate tokens
         UserDetails userDetails = userDetailsService.loadUserByUsername(user.getUsername());
-        String token = jwtTokenUtil.generateToken(userDetails);
+        String accessToken = jwtTokenUtil.generateToken(userDetails);
+
+        // Revoke previous refresh tokens and issue a new one
+        refreshTokenRepository.revokeAllByUser(user);
+        RefreshToken newRefresh = RefreshToken.builder()
+            .user(user)
+            .token(generateToken())
+            .expiresAt(LocalDateTime.now().plusDays(30))
+            .revoked(false)
+            .build();
+        refreshTokenRepository.save(newRefresh);
 
         log.info("User authenticated successfully: {}", user.getUsername());
 
         return LoginResponse.builder()
-            .accessToken(token)
+            .accessToken(accessToken)
+            .refreshToken(newRefresh.getToken())
             .tokenType("Bearer")
             .user(userMapper.toDto(user))
             .build();
@@ -236,6 +254,41 @@ public class UserServiceImpl implements UserService {
             );
             throw e;
         }
+    }
+
+    @Override
+    public TokenRefreshResponse refreshToken(TokenRefreshRequest request) {
+        String presentedToken = request.getRefreshToken();
+        RefreshToken existing = refreshTokenRepository.findByToken(presentedToken)
+            .orElseThrow(() -> new BadCredentialsException("Invalid refresh token"));
+
+        if (Boolean.TRUE.equals(existing.getRevoked()) || existing.getExpiresAt().isBefore(LocalDateTime.now())) {
+            throw new BadCredentialsException("Refresh token expired or revoked");
+        }
+
+        User user = existing.getUser();
+
+        // Rotate: revoke current and issue new refresh token
+        existing.setRevoked(true);
+        RefreshToken rotated = RefreshToken.builder()
+            .user(user)
+            .token(generateToken())
+            .expiresAt(LocalDateTime.now().plusDays(30))
+            .revoked(false)
+            .build();
+        existing.setReplacedByToken(rotated.getToken());
+        refreshTokenRepository.save(existing);
+        refreshTokenRepository.save(rotated);
+
+        // Issue new access token
+        UserDetails userDetails = userDetailsService.loadUserByUsername(user.getUsername());
+        String accessToken = jwtTokenUtil.generateToken(userDetails);
+
+        return TokenRefreshResponse.builder()
+            .accessToken(accessToken)
+            .refreshToken(rotated.getToken())
+            .tokenType("Bearer")
+            .build();
     }
 
     @Override

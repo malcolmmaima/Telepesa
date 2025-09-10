@@ -4,6 +4,8 @@ import com.maelcolium.telepesa.models.dto.UserDto;
 import com.maelcolium.telepesa.user.dto.CreateUserRequest;
 import com.maelcolium.telepesa.user.dto.LoginRequest;
 import com.maelcolium.telepesa.user.dto.LoginResponse;
+import com.maelcolium.telepesa.user.dto.TokenRefreshRequest;
+import com.maelcolium.telepesa.user.dto.TokenRefreshResponse;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -33,6 +35,11 @@ public interface UserService {
      * Authenticate user with enhanced security features (device fingerprinting, audit logging)
      */
     LoginResponse authenticateUserWithSecurity(LoginRequest request, HttpServletRequest httpRequest);
+
+    /**
+     * Refresh access token using refresh token (with rotation)
+     */
+    TokenRefreshResponse refreshToken(TokenRefreshRequest request);
 
     /**
      * Get user by ID

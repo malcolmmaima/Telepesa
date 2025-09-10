@@ -4,6 +4,8 @@ import com.maelcolium.telepesa.models.dto.UserDto;
 import com.maelcolium.telepesa.user.dto.CreateUserRequest;
 import com.maelcolium.telepesa.user.dto.LoginRequest;
 import com.maelcolium.telepesa.user.dto.LoginResponse;
+import com.maelcolium.telepesa.user.dto.TokenRefreshRequest;
+import com.maelcolium.telepesa.user.dto.TokenRefreshResponse;
 import com.maelcolium.telepesa.user.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -61,6 +63,18 @@ public class UserController {
                                              HttpServletRequest httpRequest) {
         log.info("Login request received for: {}", request.getUsernameOrEmail());
         LoginResponse response = userService.authenticateUserWithSecurity(request, httpRequest);
+        return ResponseEntity.ok(response);
+    }
+
+    @Operation(summary = "Refresh access token using refresh token")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Token refreshed successfully"),
+        @ApiResponse(responseCode = "401", description = "Invalid or expired refresh token")
+    })
+    @PostMapping("/refresh")
+    public ResponseEntity<TokenRefreshResponse> refresh(@Valid @RequestBody TokenRefreshRequest request) {
+        log.info("Token refresh request received");
+        TokenRefreshResponse response = userService.refreshToken(request);
         return ResponseEntity.ok(response);
     }
 
