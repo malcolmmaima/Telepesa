@@ -47,6 +47,8 @@ public class GatewayConfig {
         return http
             .csrf(csrf -> csrf.disable())
             .authorizeExchange(exchanges -> exchanges
+                // Allow OPTIONS requests for CORS preflight
+                .pathMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                 // Public endpoints - allow all actuator endpoints
                 .pathMatchers("/actuator/**").permitAll()
                 .pathMatchers("/api/v1/health/**").permitAll()
