@@ -1,9 +1,8 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from '../store/auth'
-import { accountsApi, type Account, type CreateAccountRequest } from '../api/accounts'
+import { accountsApi, type Account } from '../api/accounts'
 import { Card } from '../components/ui/Card'
 import { Button } from '../components/ui/Button'
-import { Input } from '../components/ui/Input'
 import { formatCurrency, cn } from '../lib/utils'
 
 const ACCOUNT_TYPE_ICONS = {
@@ -33,18 +32,7 @@ export function AccountsPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [selectedAccount, setSelectedAccount] = useState<Account | null>(null)
-  const [showCreateForm, setShowCreateForm] = useState(false)
   const [totalBalance, setTotalBalance] = useState(0)
-
-  // Create account form state
-  const [createForm, setCreateForm] = useState<CreateAccountRequest>({
-    accountType: 'SAVINGS',
-    accountName: '',
-    minimumBalance: 1000,
-    initialDeposit: 0,
-    currencyCode: 'KES',
-    description: '',
-  })
 
   // Load user accounts
   useEffect(() => {
@@ -75,32 +63,6 @@ export function AccountsPage() {
     }
   }
 
-  const handleCreateAccount = async (e: React.FormEvent) => {
-    e.preventDefault()
-    try {
-      setLoading(true)
-      await accountsApi.createAccount(user!.id, createForm)
-
-      // Reset form
-      setCreateForm({
-        accountType: 'SAVINGS',
-        accountName: '',
-        minimumBalance: 1000,
-        initialDeposit: 0,
-        currencyCode: 'KES',
-        description: '',
-      })
-      setShowCreateForm(false)
-
-      // Reload accounts
-      await loadAccounts()
-      await loadTotalBalance()
-    } catch (err: any) {
-      setError(err.message || 'Failed to create account')
-    } finally {
-      setLoading(false)
-    }
-  }
 
   const handleAccountAction = async (
     accountId: number,
@@ -151,17 +113,18 @@ export function AccountsPage() {
         <div>
           <h1 className="text-3xl font-bold text-financial-navy mb-2">Your Accounts 🏦</h1>
           <p className="text-financial-gray">
-            Manage your accounts and monitor your finances in one place
+            View and manage your existing accounts in one place
           </p>
           <div className="mt-4 p-4 bg-gradient-to-r from-financial-navy to-financial-blue rounded-financial text-white">
             <div className="text-sm opacity-90">Total Balance</div>
             <div className="text-2xl font-bold">{formatCurrency(totalBalance)}</div>
           </div>
+          <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-financial">
+            <p className="text-sm text-blue-700">
+              💡 <strong>Need a new account?</strong> Contact our support team or visit any branch to open additional accounts.
+            </p>
+          </div>
         </div>
-
-        <Button onClick={() => setShowCreateForm(true)} className="hover-lift">
-          🆕 Create New Account
-        </Button>
       </div>
 
       {/* Error Display */}
@@ -182,98 +145,27 @@ export function AccountsPage() {
         </div>
       )}
 
-      {/* Create Account Form Modal */}
-      {showCreateForm && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-financial-lg max-w-md w-full p-6 animate-bounce-in">
-            <h2 className="text-xl font-bold text-financial-navy mb-4">🆕 Create New Account</h2>
-
-            <form onSubmit={handleCreateAccount} className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-financial-navy mb-2">
-                  Account Type
-                </label>
-                <select
-                  value={createForm.accountType}
-                  onChange={e =>
-                    setCreateForm({ ...createForm, accountType: e.target.value as any })
-                  }
-                  className="w-full input"
-                >
-                  <option value="SAVINGS">🏦 Savings Account</option>
-                  <option value="CHECKING">💳 Checking Account</option>
-                  <option value="FIXED_DEPOSIT">💰 Fixed Deposit</option>
-                  <option value="BUSINESS">🏢 Business Account</option>
-                </select>
-              </div>
-
-              <Input
-                label="Account Name"
-                value={createForm.accountName}
-                onChange={e => setCreateForm({ ...createForm, accountName: e.target.value })}
-                placeholder="e.g., My Savings Account"
-                required
-              />
-
-              <Input
-                label="Initial Deposit (Optional)"
-                type="number"
-                min="0"
-                step="0.01"
-                value={createForm.initialDeposit}
-                onChange={e =>
-                  setCreateForm({ ...createForm, initialDeposit: Number(e.target.value) })
-                }
-                placeholder="0.00"
-              />
-
-              <Input
-                label="Minimum Balance"
-                type="number"
-                min="0"
-                step="0.01"
-                value={createForm.minimumBalance}
-                onChange={e =>
-                  setCreateForm({ ...createForm, minimumBalance: Number(e.target.value) })
-                }
-                placeholder="1000.00"
-                required
-              />
-
-              <Input
-                label="Description (Optional)"
-                value={createForm.description || ''}
-                onChange={e => setCreateForm({ ...createForm, description: e.target.value })}
-                placeholder="Account description..."
-              />
-
-              <div className="flex gap-3 pt-4">
-                <Button
-                  type="button"
-                  variant="secondary"
-                  onClick={() => setShowCreateForm(false)}
-                  className="flex-1"
-                >
-                  Cancel
-                </Button>
-                <Button type="submit" disabled={loading} className="flex-1">
-                  {loading ? '⏳ Creating...' : '🎉 Create Account'}
-                </Button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
 
       {/* Accounts Grid */}
       {accounts.length === 0 && !loading ? (
         <div className="text-center py-12">
           <div className="text-6xl mb-4">🏦</div>
-          <h3 className="text-xl font-semibold text-financial-navy mb-2">No accounts yet</h3>
+          <h3 className="text-xl font-semibold text-financial-navy mb-2">No accounts available</h3>
           <p className="text-financial-gray mb-6">
-            Create your first account to start managing your finances!
+            Contact our support team or visit any branch to open your first account!
           </p>
-          <Button onClick={() => setShowCreateForm(true)}>🆕 Create Your First Account</Button>
+          <div className="max-w-md mx-auto p-6 bg-blue-50 border border-blue-200 rounded-financial">
+            <h4 className="font-semibold text-blue-800 mb-2">📞 Get Started</h4>
+            <p className="text-blue-700 text-sm mb-3">
+              Our team will help you choose the right account type for your needs.
+            </p>
+            <Button 
+              variant="outline" 
+              onClick={() => window.location.href = '/support'}
+            >
+              💬 Contact Support
+            </Button>
+          </div>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

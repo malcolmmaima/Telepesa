@@ -28,14 +28,6 @@ export interface AccountBalance {
   lastUpdated: string
 }
 
-export interface CreateAccountRequest {
-  accountType: Account['accountType']
-  accountName: string
-  minimumBalance?: number
-  initialDeposit?: number
-  currencyCode: string
-  description?: string
-}
 
 export interface UpdateAccountRequest {
   accountName?: string
@@ -107,14 +99,6 @@ export const accountsApi = {
     return response.data
   },
 
-  // Create new account
-  createAccount: async (userId: number, request: CreateAccountRequest): Promise<Account> => {
-    const response = await api.post('/accounts', {
-      ...request,
-      userId,
-    })
-    return response.data
-  },
 
   // Update account
   updateAccount: async (accountId: number, request: UpdateAccountRequest): Promise<Account> => {

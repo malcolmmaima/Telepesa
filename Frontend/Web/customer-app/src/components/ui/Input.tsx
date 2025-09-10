@@ -1,18 +1,22 @@
-import { forwardRef } from 'react'
+import { forwardRef, useId } from 'react'
 import { cn } from '../../lib/utils'
 import type { InputProps } from '../../types'
 
 export const Input = forwardRef<HTMLInputElement, InputProps>(
-  ({ className, label, placeholder, type = 'text', error, required, disabled, ...props }, ref) => {
+  ({ className, label, placeholder, type = 'text', error, required, disabled, id, ...props }, ref) => {
+    const inputId = useId()
+    const finalId = id || inputId
+
     return (
       <div className="space-y-2">
         {label && (
-          <label className="block text-sm font-medium text-financial-navy">
+          <label htmlFor={finalId} className="block text-sm font-medium text-financial-navy">
             {label}
             {required && <span className="ml-1 text-financial-danger">*</span>}
           </label>
         )}
         <input
+          id={finalId}
           type={type}
           className={cn(
             'input',
@@ -56,16 +60,20 @@ export const TextArea = forwardRef<
     onChange?: (event: React.ChangeEvent<HTMLTextAreaElement>) => void
     onBlur?: (event: React.FocusEvent<HTMLTextAreaElement>) => void
   }
->(({ className, label, placeholder, error, required, disabled, ...props }, ref) => {
+>(({ className, label, placeholder, error, required, disabled, id, ...props }, ref) => {
+  const inputId = useId()
+  const finalId = id || inputId
+
   return (
     <div className="space-y-2">
       {label && (
-        <label className="block text-sm font-medium text-financial-navy">
+        <label htmlFor={finalId} className="block text-sm font-medium text-financial-navy">
           {label}
           {required && <span className="ml-1 text-financial-danger">*</span>}
         </label>
       )}
       <textarea
+        id={finalId}
         className={cn(
           'input min-h-[80px] resize-y',
           error &&

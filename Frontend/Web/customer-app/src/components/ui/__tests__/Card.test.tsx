@@ -45,7 +45,8 @@ describe('Card', () => {
       </Card>
     )
 
-    const cardElement = screen.getByText('Content').closest('div')
+    // The card wrapper is the parent of the content div
+    const cardElement = screen.getByText('Content').closest('div')?.parentElement
     expect(cardElement).toHaveClass('custom-card')
     expect(cardElement).toHaveClass('card') // Should also have default class
   })

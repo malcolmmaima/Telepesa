@@ -38,8 +38,10 @@ describe('LoginPage', () => {
   it('renders the login form correctly', () => {
     renderLoginPage()
 
-    // Check for main elements
-    expect(screen.getByText('Telepesa')).toBeInTheDocument()
+    // Check for main elements - there are multiple instances (desktop and mobile)
+    const telesapElements = screen.getAllByText('Telepesa')
+    expect(telesapElements).toHaveLength(2) // Desktop and mobile versions
+    expect(telesapElements[0]).toBeInTheDocument()
     expect(screen.getByText('Welcome back! 👋')).toBeInTheDocument()
     expect(
       screen.getByText("Ready to manage your finances? Let's get you signed in!")
@@ -74,9 +76,10 @@ describe('LoginPage', () => {
     const animationContainer = screen.getByTestId('lottie-animation')
     expect(animationContainer).toBeInTheDocument()
 
-    // Check for mobile logo (visible on mobile, hidden on desktop)
-    const mobileLogo = screen.getByText('Your Money, Your Way')
-    expect(mobileLogo).toBeInTheDocument()
+    // Check for mobile logo (visible on mobile, hidden on desktop) - there are multiple instances
+    const slogans = screen.getAllByText('Your Money, Your Way')
+    expect(slogans).toHaveLength(2) // Desktop and mobile versions
+    expect(slogans[0]).toBeInTheDocument()
   })
 
   it('displays correct links', () => {

@@ -246,9 +246,12 @@ export interface InputProps extends BaseComponentProps {
   onChange?: (event: React.ChangeEvent<HTMLInputElement>) => void
   onBlur?: (event: React.FocusEvent<HTMLInputElement>) => void
   name?: string
+  id?: string
   min?: string | number
   max?: string | number
   step?: string | number
+  minLength?: number
+  maxLength?: number
 }
 
 export interface CardProps extends BaseComponentProps {
