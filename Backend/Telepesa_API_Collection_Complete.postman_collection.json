@@ -1084,6 +1084,8 @@
 		{ "key": "transaction_service_url", "value": "http://localhost:8083", "type": "string" },
 		{ "key": "loan_service_url", "value": "http://localhost:8084", "type": "string" },
 		{ "key": "notification_service_url", "value": "http://localhost:8085", "type": "string" },
+		{ "key": "transfer_service_url", "value": "http://localhost:8086", "type": "string" },
+		{ "key": "bill_payment_service_url", "value": "http://localhost:8087", "type": "string" },
 		{ "key": "test_user_id", "value": "2", "type": "string" },
 		{ "key": "test_account_id", "value": "1", "type": "string" },
 		{ "key": "jwt_token", "value": "", "type": "string" }
