@@ -7,11 +7,15 @@ psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-E
     CREATE DATABASE account_db;
     CREATE DATABASE transaction_db;
     CREATE DATABASE loan_db;
+    CREATE DATABASE transfer_db;
+    CREATE DATABASE bill_payment_db;
     
     GRANT ALL PRIVILEGES ON DATABASE user_db TO $POSTGRES_USER;
     GRANT ALL PRIVILEGES ON DATABASE account_db TO $POSTGRES_USER;
     GRANT ALL PRIVILEGES ON DATABASE transaction_db TO $POSTGRES_USER;
     GRANT ALL PRIVILEGES ON DATABASE loan_db TO $POSTGRES_USER;
+    GRANT ALL PRIVILEGES ON DATABASE transfer_db TO $POSTGRES_USER;
+    GRANT ALL PRIVILEGES ON DATABASE bill_payment_db TO $POSTGRES_USER;
 EOSQL
 
 # Add UUID extension to each database
@@ -28,5 +32,13 @@ psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "transaction_db" <<
 EOSQL
 
 psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "loan_db" <<-EOSQL
+    CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+EOSQL
+
+psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "transfer_db" <<-EOSQL
+    CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+EOSQL
+
+psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "bill_payment_db" <<-EOSQL
     CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 EOSQL

@@ -46,6 +46,11 @@ logging:
     root: INFO
     org.springframework.web: INFO
 
+app:
+  jwt:
+    secret: ${JWT_SECRET:myVerySecretJWTKeyForTelepesaUserService123!@#ExtraLongSecureKeyPart456ForHMACCompatibility789}
+    expiration: 3600
+
 # Eureka Client
 eureka:
   client:
