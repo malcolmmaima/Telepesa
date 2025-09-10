@@ -9,7 +9,7 @@ services:
       POSTGRES_DB: telepesa_db
       POSTGRES_USER: telepesa_user
       POSTGRES_PASSWORD: telepesa_password
-      POSTGRES_MULTIPLE_DATABASES: user_db,account_db,transaction_db,loan_db,transfer_db
+      POSTGRES_MULTIPLE_DATABASES: user_db,account_db,transaction_db,loan_db,transfer_db,bill_payment_db
     ports:
       - "5432:5432"
     volumes:
@@ -405,6 +405,47 @@ services:
       - telepesa-network
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8086/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 90s
+
+  bill-payment-service:
+    build:
+      context: ../bill-payment-service
+      dockerfile: Dockerfile
+    container_name: telepesa-bill-payment-service
+    ports:
+      - "8087:8087"
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/bill_payment_db
+      SPRING_DATASOURCE_USERNAME: telepesa_user
+      SPRING_DATASOURCE_PASSWORD: telepesa_password
+      SPRING_DATASOURCE_DRIVER_CLASS_NAME: org.postgresql.Driver
+      EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE: http://eureka-server:8761/eureka/
+      ZIPKIN_BASE_URL: http://zipkin:9411
+      REDIS_HOST: redis
+      REDIS_PASSWORD: telepesa_redis_password
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PASSWORD: telepesa_redis_password
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      JWT_SECRET: myVerySecretJWTKeyForTelepesaUserService123!@#
+    depends_on:
+      postgres:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      zipkin:
+        condition: service_healthy
+    networks:
+      - telepesa-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8087/actuator/health"]
       interval: 30s
       timeout: 10s
       retries: 3

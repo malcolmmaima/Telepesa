@@ -125,6 +125,21 @@ spring:
                 retries: 3
                 statuses: BAD_GATEWAY,SERVICE_UNAVAILABLE
                 methods: GET,POST,PUT,DELETE
+        # Bill Payment Service Routes
+        - id: bill-payment-service
+          uri: lb://bill-payment-service
+          predicates:
+            - Path=/api/v1/bills/**
+          filters:
+            - name: RewritePath
+              args:
+                regexp: /api/v1/bills/(?<remaining>.*)
+                replacement: /api/bills/${remaining}
+            - name: Retry
+              args:
+                retries: 3
+                statuses: BAD_GATEWAY,SERVICE_UNAVAILABLE
+                methods: GET,POST,PUT,DELETE
         # User Service Debug Route
         # - id: user-service-debug
         #   uri: http://httpbin.org/status/418
