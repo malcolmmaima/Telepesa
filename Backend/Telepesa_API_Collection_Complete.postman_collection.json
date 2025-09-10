@@ -38,9 +38,9 @@
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "{{user_service_url}}/actuator/health",
+							"raw": "{{gateway_url}}/actuator/health",
 							"host": [
-								"{{user_service_url}}"
+								"{{gateway_url}}"
 							],
 							"path": [
 								"actuator",
@@ -74,9 +74,9 @@
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "{{account_service_url}}/actuator/health",
+							"raw": "{{gateway_url}}/actuator/health",
 							"host": [
-								"{{account_service_url}}"
+								"{{gateway_url}}"
 							],
 							"path": [
 								"actuator",
@@ -110,9 +110,9 @@
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "{{transaction_service_url}}/actuator/health",
+							"raw": "{{gateway_url}}/actuator/health",
 							"host": [
-								"{{transaction_service_url}}"
+								"{{gateway_url}}"
 							],
 							"path": [
 								"actuator",
@@ -146,9 +146,9 @@
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "{{loan_service_url}}/actuator/health",
+							"raw": "{{gateway_url}}/actuator/health",
 							"host": [
-								"{{loan_service_url}}"
+								"{{gateway_url}}"
 							],
 							"path": [
 								"actuator",
@@ -182,9 +182,9 @@
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "{{notification_service_url}}/actuator/health",
+							"raw": "{{gateway_url}}/actuator/health",
 							"host": [
-								"{{notification_service_url}}"
+								"{{gateway_url}}"
 							],
 							"path": [
 								"actuator",
@@ -354,9 +354,9 @@
 							"raw": "{\n    \"userId\": {{test_user_id}},\n    \"status\": \"ACTIVE\"\n}"
 						},
 						"url": {
-							"raw": "{{user_service_url}}/api/users/{{test_user_id}}/status",
+							"raw": "{{gateway_url}}/api/v1/users/{{test_user_id}}/status",
 							"host": [
-								"{{user_service_url}}"
+								"{{gateway_url}}"
 							],
 							"path": [
 								"api",
@@ -550,9 +550,9 @@
 							"raw": "{\n    \"fromAccountId\": {{test_account_id}},\n    \"toAccountId\": {{test_account_id}},\n    \"amount\": 1000.00,\n    \"currency\": \"KES\",\n    \"transactionType\": \"TRANSFER\",\n    \"description\": \"Test transaction\"\n}"
 						},
 						"url": {
-							"raw": "{{transaction_service_url}}/api/transactions",
+							"raw": "{{gateway_url}}/api/v1/transactions",
 							"host": [
-								"{{transaction_service_url}}"
+								"{{gateway_url}}"
 							],
 							"path": [
 								"api",
@@ -593,9 +593,9 @@
 							}
 						],
 						"url": {
-							"raw": "{{transaction_service_url}}/api/transactions/{{test_transaction_id}}",
+							"raw": "{{gateway_url}}/api/v1/transactions/{{test_transaction_id}}",
 							"host": [
-								"{{transaction_service_url}}"
+								"{{gateway_url}}"
 							],
 							"path": [
 								"api",
@@ -636,9 +636,9 @@
 							}
 						],
 						"url": {
-							"raw": "{{transaction_service_url}}/api/transactions/account/{{test_account_id}}",
+							"raw": "{{gateway_url}}/api/v1/transactions/account/{{test_account_id}}",
 							"host": [
-								"{{transaction_service_url}}"
+								"{{gateway_url}}"
 							],
 							"path": [
 								"api",
@@ -701,9 +701,9 @@
 							"raw": "{\n    \"userId\": {{test_user_id}},\n    \"amount\": 50000.00,\n    \"currency\": \"KES\",\n    \"term\": 12,\n    \"purpose\": \"Business expansion\",\n    \"interestRate\": 15.5\n}"
 						},
 						"url": {
-							"raw": "{{loan_service_url}}/api/loans",
+							"raw": "{{gateway_url}}/api/v1/loans",
 							"host": [
-								"{{loan_service_url}}"
+								"{{gateway_url}}"
 							],
 							"path": [
 								"api",
@@ -744,9 +744,9 @@
 							}
 						],
 						"url": {
-							"raw": "{{loan_service_url}}/api/loans/{{test_loan_id}}",
+							"raw": "{{gateway_url}}/api/v1/loans/{{test_loan_id}}",
 							"host": [
-								"{{loan_service_url}}"
+								"{{gateway_url}}"
 							],
 							"path": [
 								"api",
@@ -803,9 +803,9 @@
 							"raw": "{\n    \"loanId\": {{test_loan_id}},\n    \"ownerId\": {{test_user_id}},\n    \"type\": \"VEHICLE\",\n    \"description\": \"Toyota Hilux 2020\",\n    \"value\": 800000.00,\n    \"currency\": \"KES\"\n}"
 						},
 						"url": {
-							"raw": "{{loan_service_url}}/api/collaterals",
+							"raw": "{{gateway_url}}/api/v1/collaterals",
 							"host": [
-								"{{loan_service_url}}"
+								"{{gateway_url}}"
 							],
 							"path": [
 								"api",
@@ -845,9 +845,9 @@
 							}
 						],
 						"url": {
-							"raw": "{{loan_service_url}}/api/collaterals/loan/{{test_loan_id}}",
+							"raw": "{{gateway_url}}/api/v1/collaterals/loan/{{test_loan_id}}",
 							"host": [
-								"{{loan_service_url}}"
+								"{{gateway_url}}"
 							],
 							"path": [
 								"api",
@@ -910,9 +910,9 @@
 							"raw": "{\n    \"userId\": {{test_user_id}},\n    \"type\": \"TRANSACTION\",\n    \"title\": \"Transaction Successful\",\n    \"message\": \"Your transaction of KES 1,000 has been processed successfully.\",\n    \"priority\": \"HIGH\"\n}"
 						},
 						"url": {
-							"raw": "{{notification_service_url}}/api/notifications",
+							"raw": "{{gateway_url}}/api/v1/notifications",
 							"host": [
-								"{{notification_service_url}}"
+								"{{gateway_url}}"
 							],
 							"path": [
 								"api",
@@ -952,9 +952,9 @@
 							}
 						],
 						"url": {
-							"raw": "{{notification_service_url}}/api/notifications/user/{{test_user_id}}",
+							"raw": "{{gateway_url}}/api/v1/notifications/user/{{test_user_id}}",
 							"host": [
-								"{{notification_service_url}}"
+								"{{gateway_url}}"
 							],
 							"path": [
 								"api",
@@ -995,9 +995,9 @@
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "{{account_service_url}}/api/accounts",
+							"raw": "{{gateway_url}}/api/v1/accounts",
 							"host": [
-								"{{account_service_url}}"
+								"{{gateway_url}}"
 							],
 							"path": [
 								"api",
@@ -1036,9 +1036,9 @@
 							}
 						],
 						"url": {
-							"raw": "{{account_service_url}}/api/accounts",
+							"raw": "{{gateway_url}}/api/v1/accounts",
 							"host": [
-								"{{account_service_url}}"
+								"{{gateway_url}}"
 							],
 							"path": [
 								"api",
