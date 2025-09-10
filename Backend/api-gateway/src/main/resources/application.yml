@@ -110,6 +110,21 @@ spring:
                 retries: 3
                 statuses: BAD_GATEWAY,SERVICE_UNAVAILABLE
                 methods: GET,POST,PUT,DELETE
+        # Transfer Service Routes
+        - id: transfer-service
+          uri: lb://transfer-service
+          predicates:
+            - Path=/api/v1/transfers/**
+          filters:
+            - name: RewritePath
+              args:
+                regexp: /api/v1/transfers/(?<remaining>.*)
+                replacement: /api/transfers/${remaining}
+            - name: Retry
+              args:
+                retries: 3
+                statuses: BAD_GATEWAY,SERVICE_UNAVAILABLE
+                methods: GET,POST,PUT,DELETE
         # User Service Debug Route
         # - id: user-service-debug
         #   uri: http://httpbin.org/status/418
