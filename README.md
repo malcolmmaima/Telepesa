@@ -176,10 +176,27 @@ bash Backend/scripts/realistic-e2e-test.sh
 
 Postman collection: `Backend/Telepesa_API_Collection_Complete.postman_collection.json`
 
+## CI/CD
+- **Backend CI**: `.github/workflows/ci.yml`
+- **Web Frontend CI**: `.github/workflows/web-frontend.yml` builds React app and runs quality checks
+- To enable container image push:
+  - Docker Hub: set repository secrets `DOCKERHUB_USERNAME` and `DOCKERHUB_TOKEN`
+  - Or GHCR: set repository secret `GHCR_PAT` (Personal Access Token with write:packages scope)
+
+## End-to-End Testing Status
+
+✅ **Infrastructure**: All core services healthy and accessible  
+✅ **Service Discovery**: All services registered with Eureka  
+✅ **Authentication**: User login/JWT working (tested with valid credentials)  
+✅ **Account Management**: Account creation and retrieval working  
+✅ **API Gateway**: CORS fixed, routing functional, security working  
+✅ **Frontend**: Complete web UI with all features implemented  
+
 ## Documentation
 
 - Backend/docs contains detailed guides for architecture, security, and testing.
 - Each service exposes Swagger UI at `http://localhost:<port>/swagger-ui.html`.
+- Frontend web app: http://localhost:5174/ (React + TypeScript)
 
 ## License
 
