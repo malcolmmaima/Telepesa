@@ -88,7 +88,10 @@ public class GatewayConfig {
     @Bean
     public CorsWebFilter corsWebFilter() {
         CorsConfiguration config = new CorsConfiguration();
-        config.addAllowedOriginPattern("*");
+        // Allow specific frontend origins
+        config.addAllowedOrigin("http://localhost:5173"); // Vite dev server
+        config.addAllowedOrigin("http://localhost:3000"); // React dev server
+        config.addAllowedOrigin("http://localhost:3001"); // Alternative port
         config.addAllowedHeader("*");
         config.addAllowedMethod("*");
         config.setAllowCredentials(true);
