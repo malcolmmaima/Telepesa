@@ -231,7 +231,7 @@ export interface ButtonProps extends BaseComponentProps {
   size?: 'sm' | 'md' | 'lg'
   disabled?: boolean
   loading?: boolean
-  onClick?: () => void
+  onClick?: (event?: React.MouseEvent<HTMLButtonElement>) => void
   type?: 'button' | 'submit' | 'reset'
 }
 
@@ -246,6 +246,9 @@ export interface InputProps extends BaseComponentProps {
   onChange?: (event: React.ChangeEvent<HTMLInputElement>) => void
   onBlur?: (event: React.FocusEvent<HTMLInputElement>) => void
   name?: string
+  min?: string | number
+  max?: string | number
+  step?: string | number
 }
 
 export interface CardProps extends BaseComponentProps {
@@ -253,6 +256,7 @@ export interface CardProps extends BaseComponentProps {
   description?: string
   actions?: React.ReactNode
   padding?: boolean
+  onClick?: (event?: React.MouseEvent<HTMLDivElement>) => void
 }
 
 // State Types
