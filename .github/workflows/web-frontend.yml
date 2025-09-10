@@ -24,12 +24,39 @@ jobs:
       uses: actions/setup-node@v4
       with:
         node-version: '20'
-        cache: 'npm'
-        cache-dependency-path: Frontend/Web/customer-app/package-lock.json
+
+    - name: Cache node modules
+      uses: actions/cache@v4
+      id: npm-cache
+      with:
+        path: |
+          Frontend/Web/customer-app/node_modules
+          ~/.npm
+        key: ${{ runner.os }}-npm-${{ hashFiles('**/package-lock.json') }}
+        restore-keys: |
+          ${{ runner.os }}-npm-
 
     - name: Install dependencies
       working-directory: Frontend/Web/customer-app
-      run: npm ci
+      run: |
+        if [ "${{ steps.npm-cache.outputs.cache-hit }}" == 'true' ]; then
+          echo "✅ Cache hit - verifying node_modules"
+          npm ls --depth=0 || npm ci --prefer-offline
+        else
+          echo "❌ Cache miss - fresh install"
+          npm ci
+        fi
+
+    - name: Verify installation
+      working-directory: Frontend/Web/customer-app
+      run: |
+        echo "🔍 Verifying installation..."
+        echo "Node version: $(node --version)"
+        echo "NPM version: $(npm --version)"
+        echo "Package.json exists: $(test -f package.json && echo 'YES' || echo 'NO')"
+        echo "Node modules exists: $(test -d node_modules && echo 'YES' || echo 'NO')"
+        echo "Dependencies count: $(ls node_modules | wc -l | xargs)"
+        echo "✅ Installation verified"
 
     - name: Run linting
       working-directory: Frontend/Web/customer-app
@@ -122,6 +149,18 @@ jobs:
           echo "⚠️ JavaScript bundle is quite large (${JS_SIZE_MB}MB). Consider code splitting."
         else
           echo "✅ JavaScript bundle size is acceptable"
+        fi
+
+    - name: Set up Node.js for security audit
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+
+    - name: Install dependencies for security audit
+      working-directory: Frontend/Web/customer-app
+      run: |
+        if [ ! -d "node_modules" ]; then
+          npm ci
         fi
 
     - name: Security audit
