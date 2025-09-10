@@ -63,7 +63,6 @@ export function AccountsPage() {
     }
   }
 
-
   const handleAccountAction = async (
     accountId: number,
     action: 'activate' | 'freeze' | 'unfreeze'
@@ -112,16 +111,15 @@ export function AccountsPage() {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h1 className="text-3xl font-bold text-financial-navy mb-2">Your Accounts 🏦</h1>
-          <p className="text-financial-gray">
-            View and manage your existing accounts in one place
-          </p>
+          <p className="text-financial-gray">View and manage your existing accounts in one place</p>
           <div className="mt-4 p-4 bg-gradient-to-r from-financial-navy to-financial-blue rounded-financial text-white">
             <div className="text-sm opacity-90">Total Balance</div>
             <div className="text-2xl font-bold">{formatCurrency(totalBalance)}</div>
           </div>
           <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-financial">
             <p className="text-sm text-blue-700">
-              💡 <strong>Need a new account?</strong> Contact our support team or visit any branch to open additional accounts.
+              💡 <strong>Need a new account?</strong> Contact our support team or visit any branch
+              to open additional accounts.
             </p>
           </div>
         </div>
@@ -145,7 +143,6 @@ export function AccountsPage() {
         </div>
       )}
 
-
       {/* Accounts Grid */}
       {accounts.length === 0 && !loading ? (
         <div className="text-center py-12">
@@ -159,10 +156,7 @@ export function AccountsPage() {
             <p className="text-blue-700 text-sm mb-3">
               Our team will help you choose the right account type for your needs.
             </p>
-            <Button 
-              variant="outline" 
-              onClick={() => window.location.href = '/support'}
-            >
+            <Button variant="outline" onClick={() => (window.location.href = '/support')}>
               💬 Contact Support
             </Button>
           </div>

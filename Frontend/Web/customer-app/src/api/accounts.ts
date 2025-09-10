@@ -28,7 +28,6 @@ export interface AccountBalance {
   lastUpdated: string
 }
 
-
 export interface UpdateAccountRequest {
   accountName?: string
   description?: string
@@ -98,7 +97,6 @@ export const accountsApi = {
     const response = await api.get(`/accounts/number/${accountNumber}`)
     return response.data
   },
-
 
   // Update account
   updateAccount: async (accountId: number, request: UpdateAccountRequest): Promise<Account> => {

@@ -3,7 +3,10 @@ import { cn } from '../../lib/utils'
 import type { InputProps } from '../../types'
 
 export const Input = forwardRef<HTMLInputElement, InputProps>(
-  ({ className, label, placeholder, type = 'text', error, required, disabled, id, ...props }, ref) => {
+  (
+    { className, label, placeholder, type = 'text', error, required, disabled, id, ...props },
+    ref
+  ) => {
     const inputId = useId()
     const finalId = id || inputId
 
