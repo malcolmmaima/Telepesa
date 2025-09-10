@@ -1,45 +1,62 @@
-:root { color-scheme: light; }
-* { box-sizing: border-box; }
-html, body, #root { height: 100%; margin: 0; }
-body { font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Apple Color Emoji", "Segoe UI Emoji"; }
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
-.input { width: 100%; padding: 10px 12px; border-radius: 10px; border: 1px solid #e6ecf0; outline: none; }
-.input:focus { border-color: #0b3b5e; box-shadow: 0 0 0 3px #0b3b5e1a; }
-.btn-primary { background: #0b3b5e; color: white; border: none; padding: 10px 14px; border-radius: 10px; cursor: pointer; }
-.btn-primary:hover { background: #0a3453; }
+@layer base {
+  :root {
+    color-scheme: light;
+  }
+  
+  * {
+    box-sizing: border-box;
+  }
+  
+  html, body, #root {
+    height: 100%;
+    margin: 0;
+  }
+  
+  body {
+    font-family: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Arial, 'Apple Color Emoji', 'Segoe UI Emoji';
+    background-color: theme('colors.financial.background');
+    color: theme('colors.financial.navy');
+  }
+}
 
-.bg-gradient-to-b { background: linear-gradient(180deg, var(--tw-from, #ffffff) 0%, var(--tw-to, #f6f9fb) 100%); }
-.from-white { --tw-from: #ffffff; }
-.to-\[\#f6f9fb\] { --tw-to: #f6f9fb; }
-.min-h-screen { min-height: 100vh; }
-.grid { display: grid; }
-.place-items-center { place-items: center; }
-.w-full { width: 100%; }
-.max-w-sm { max-width: 28rem; }
-.p-6 { padding: 1.5rem; }
-.rounded-2xl { border-radius: 1rem; }
-.shadow-sm { box-shadow: 0 1px 2px rgba(0,0,0,.05); }
-.border { border: 1px solid #e6ecf0; }
-.bg-white { background: #fff; }
-.text-2xl { font-size: 1.5rem; }
-.font-semibold { font-weight: 600; }
-.text-\[\#0b3b5e\] { color: #0b3b5e; }
-.mb-1 { margin-bottom: .25rem; }
-.text-sm { font-size: .875rem; }
-.text-\[\#5b7083\] { color: #5b7083; }
-.mb-6 { margin-bottom: 1.5rem; }
-.mt-4 { margin-top: 1rem; }
-.mt-6 { margin-top: 1.5rem; }
-.min-h-screen { min-height: 100vh; }
-.px-6 { padding-left: 1.5rem; padding-right: 1.5rem; }
-.py-4 { padding-top: 1rem; padding-bottom: 1rem; }
-.max-w-5xl { max-width: 64rem; }
-.mx-auto { margin-left: auto; margin-right: auto; }
-.flex { display: flex; }
-.items-center { align-items: center; }
-.justify-between { justify-content: space-between; }
-.p-6 { padding: 1.5rem; }
-.rounded-2xl { border-radius: 1rem; }
-.mt-2 { margin-top: .5rem; }
+@layer components {
+  .input {
+    @apply w-full px-3 py-3 bg-white border border-gray-200 rounded-financial text-financial-navy placeholder-financial-gray-lighter focus:outline-none focus:ring-2 focus:ring-financial-navy focus:border-transparent transition-all duration-200;
+  }
+  
+  .btn-primary {
+    @apply bg-financial-navy text-white border-none px-4 py-3 rounded-financial cursor-pointer font-medium transition-all duration-200 hover:bg-financial-navy-light focus:outline-none focus:ring-2 focus:ring-financial-navy focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+  
+  .btn-secondary {
+    @apply bg-white text-financial-navy border border-financial-navy px-4 py-3 rounded-financial cursor-pointer font-medium transition-all duration-200 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-financial-navy focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+  
+  .card {
+    @apply bg-white rounded-financial-lg shadow-financial border border-gray-100;
+  }
+  
+  .card-header {
+    @apply px-6 py-4 border-b border-gray-100;
+  }
+  
+  .card-body {
+    @apply p-6;
+  }
+  
+  .financial-gradient {
+    @apply bg-gradient-to-br from-financial-navy via-financial-blue to-primary-600;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}
 
 
