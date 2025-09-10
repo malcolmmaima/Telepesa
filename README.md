@@ -2,16 +2,102 @@
 
 Telepesa is a modular, microservices-based digital banking platform. It provides secure, scalable services for user management, accounts, transactions, loans, notifications, transfers, and bill payments, routed through a centralized API Gateway and discovered via Eureka.
 
-## Overview
+## Architecture Overview
 
-- Language/Framework: Java 17, Spring Boot 3.2
-- Service Discovery: Netflix Eureka
-- API Gateway: Spring Cloud Gateway
-- Datastores: PostgreSQL (primary), Redis (cache), MongoDB (notifications)
-- Messaging/Tracing: Kafka, Zipkin
-- Auth: Spring Security + JWT
-- Docs: OpenAPI/Swagger
-- Containers: Docker
+```
+┌─────────────────────────────────────────────────────────────────────────────────────┐
+│                                TELEPESA ARCHITECTURE                                   │
+└─────────────────────────────────────────────────────────────────────────────────────┘
+
+                              ┌─────────────────────┐
+                              │   Web Frontend      │
+                              │   (React/TypeScript)│
+                              │   localhost:5174    │
+                              └──────────┬──────────┘
+                                         │ HTTPS/CORS
+                                         │
+                              ┌──────────▼──────────┐
+                              │    API Gateway      │
+                              │  (Spring Gateway)   │
+                              │   localhost:8080    │
+                              └──────────┬──────────┘
+                                         │
+                    ┌────────────────────┼────────────────────┐
+                    │                    │                    │
+         ┌──────────▼─────────┐ ┌────────▼────────┐ ┌────────▼────────┐
+         │   Eureka Server    │ │   Infrastructure │ │   Monitoring    │
+         │ (Service Discovery)│ │                  │ │                 │
+         │  localhost:8761    │ │ PostgreSQL:5432  │ │  Zipkin:9411   │
+         └────────────────────┘ │   Redis:6379     │ │  Kafka:9092    │
+                                │  MongoDB:27017   │ └─────────────────┘
+                                │ ZooKeeper:2181   │
+                                └──────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────────────────┐
+│                               MICROSERVICES LAYER                                      │
+├─────────────────────────────────────────────────────────────────────────────────────┤
+│                                                                                     │
+│  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────┐ │
+│  │  User Service   │  │ Account Service │  │Transaction Svc  │  │  Loan Service   │ │
+│  │   Port: 8081    │  │   Port: 8082    │  │   Port: 8083    │  │   Port: 8084    │ │
+│  │                 │  │                 │  │                 │  │                 │ │
+│  │ • Authentication│  │ • Account CRUD  │  │ • Txn Processing│  │ • Loan Apps     │ │
+│  │ • JWT Tokens    │  │ • Balance Mgmt  │  │ • History       │  │ • Credit Checks │ │
+│  │ • User Profiles │  │ • Account Types │  │ • Audit Logs    │  │ • Repayment     │ │
+│  │ • Security      │  │ • Statements    │  │ • Reconciliation│  │ • Collateral    │ │
+│  └─────────────────┘  └─────────────────┘  └─────────────────┘  └─────────────────┘ │
+│                                                                                     │
+│  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────┐                     │
+│  │Notification Svc │  │ Transfer Service│  │Bill Payment Svc │                     │
+│  │   Port: 8085    │  │   Port: 8086    │  │   Port: 8087    │                     │
+│  │                 │  │                 │  │                 │                     │
+│  │ • Email/SMS     │  │ • Fund Transfers│  │ • Utility Bills │                     │
+│  │ • Push Notify   │  │ • Inter-bank    │  │ • Telecom       │                     │
+│  │ • Templates     │  │ • Fee Calc      │  │ • Entertainment │                     │
+│  │ • Audit Trail   │  │ • Limits        │  │ • Biller Mgmt   │                     │
+│  └─────────────────┘  └─────────────────┘  └─────────────────┘                     │
+│                                                                                     │
+└─────────────────────────────────────────────────────────────────────────────────────┘
+
+                           ┌─────────────────────────────┐
+                           │        DATA LAYER           │
+                           ├─────────────────────────────┤
+                           │                             │
+                           │ • PostgreSQL (Primary)      │
+                           │   - User data               │
+                           │   - Account data            │
+                           │   - Transaction records     │
+                           │   - Loan information        │
+                           │                             │
+                           │ • Redis (Cache & Sessions) │
+                           │   - JWT tokens              │
+                           │   - Rate limiting           │
+                           │   - Temporary data          │
+                           │                             │
+                           │ • MongoDB (Notifications)   │
+                           │   - Email templates         │
+                           │   - Notification history    │
+                           │   - Message queues          │
+                           │                             │
+                           │ • Kafka (Event Streaming)   │
+                           │   - Transaction events      │
+                           │   - Audit trails            │
+                           │   - Inter-service comms     │
+                           │                             │
+                           └─────────────────────────────┘
+```
+
+## Tech Stack
+
+- **Language/Framework**: Java 17, Spring Boot 3.4
+- **Service Discovery**: Netflix Eureka
+- **API Gateway**: Spring Cloud Gateway
+- **Datastores**: PostgreSQL (primary), Redis (cache), MongoDB (notifications)
+- **Messaging/Tracing**: Kafka, Zipkin
+- **Auth**: Spring Security + JWT
+- **Docs**: OpenAPI/Swagger
+- **Containers**: Docker
+- **Frontend**: React + TypeScript + Vite
 
 ## Services and Ports
 
