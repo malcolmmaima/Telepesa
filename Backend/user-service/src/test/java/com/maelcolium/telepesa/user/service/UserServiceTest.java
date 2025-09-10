@@ -10,6 +10,7 @@ import com.maelcolium.telepesa.user.exception.DuplicateUserException;
 import com.maelcolium.telepesa.user.exception.UserNotFoundException;
 import com.maelcolium.telepesa.user.mapper.UserMapper;
 import com.maelcolium.telepesa.user.model.User;
+import com.maelcolium.telepesa.user.repository.RefreshTokenRepository;
 import com.maelcolium.telepesa.user.repository.UserRepository;
 import com.maelcolium.telepesa.user.service.impl.UserServiceImpl;
 import jakarta.servlet.http.HttpServletRequest;
@@ -64,6 +65,9 @@ class UserServiceTest {
 
     @Mock
     private DeviceFingerprintService deviceFingerprintService;
+
+    @Mock
+    private RefreshTokenRepository refreshTokenRepository;
 
     @Mock
     private HttpServletRequest httpServletRequest;
