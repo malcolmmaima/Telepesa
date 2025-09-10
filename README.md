@@ -1,8 +1,7 @@
 # Telepesa - Modern Banking Platform for Africa
 
-[![Backend CI](https://github.com/malcolmmiyare/Telepesa/actions/workflows/ci.yml/badge.svg)](https://github.com/malcolmmiyare/Telepesa/actions/workflows/ci.yml)
-[![Web Frontend CI](https://github.com/malcolmmiyare/Telepesa/actions/workflows/web-frontend.yml/badge.svg)](https://github.com/malcolmmiyare/Telepesa/actions/workflows/web-frontend.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![codecov](https://codecov.io/gh/malcolmmaima/Telepesa/branch/main/graph/badge.svg)](https://codecov.io/gh/malcolmmaima/Telepesa)
 [![Java](https://img.shields.io/badge/Java-17+-blue.svg)](https://openjdk.org/projects/jdk/17/)
 [![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.4-green.svg)](https://spring.io/projects/spring-boot)
 [![React](https://img.shields.io/badge/React-18+-blue.svg)](https://reactjs.org/)
@@ -226,6 +225,22 @@ DOCKER_PASSWORD=<your-dockerhub-token>
 GHCR_PAT=<github-personal-access-token>
 # Token needs: write:packages, read:packages
 ```
+
+### 📊 Codecov Integration Setup
+
+**Coverage Reports** (Optional but Recommended):
+```bash
+# Repository Secret Required:
+CODECOV_TOKEN=<your-codecov-upload-token>
+# Get token from: https://codecov.io/gh/YOUR_USERNAME/YOUR_REPO
+```
+
+**Setup Steps:**
+1. Visit [codecov.io](https://codecov.io) and sign up with GitHub
+2. Add your repository to Codecov
+3. Copy the upload token from repository settings
+4. Add `CODECOV_TOKEN` to your GitHub repository secrets
+5. Coverage reports will be automatically uploaded on each CI run
 
 ### 📈 Quality Metrics
 
