@@ -1,5 +1,5 @@
 # Runtime stage for CI/CD (JAR already built)
-FROM eclipse-temurin:17-jre-alpine
+FROM eclipse-temurin:17-jre
 
 # Install security updates and required packages
 RUN apk update && apk upgrade && \

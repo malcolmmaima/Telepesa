@@ -1,5 +1,6 @@
 package com.maelcolium.telepesa.loan.exception;
 
+import com.maelcolium.telepesa.exceptions.ErrorResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -19,86 +20,82 @@ import java.util.Map;
 public class GlobalExceptionHandler {
 
     @ExceptionHandler(LoanNotFoundException.class)
-    public ResponseEntity<Map<String, Object>> handleLoanNotFound(LoanNotFoundException ex) {
+    public ResponseEntity<ErrorResponse> handleLoanNotFound(LoanNotFoundException ex) {
         log.error("Loan not found: {}", ex.getMessage());
-        
-        Map<String, Object> error = new HashMap<>();
-        error.put("status", HttpStatus.NOT_FOUND.value());
-        error.put("error", "Loan Not Found");
-        error.put("message", ex.getMessage());
-        error.put("timestamp", LocalDateTime.now());
-        
+        ErrorResponse error = ErrorResponse.builder()
+                .status(HttpStatus.NOT_FOUND.value())
+                .error("Loan Not Found")
+                .message(ex.getMessage())
+                .timestamp(LocalDateTime.now())
+                .build();
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
     }
 
     @ExceptionHandler(LoanOperationException.class)
-    public ResponseEntity<Map<String, Object>> handleLoanOperation(LoanOperationException ex) {
+    public ResponseEntity<ErrorResponse> handleLoanOperation(LoanOperationException ex) {
         log.error("Loan operation error: {}", ex.getMessage());
-        
-        Map<String, Object> error = new HashMap<>();
-        error.put("status", HttpStatus.BAD_REQUEST.value());
-        error.put("error", "Loan Operation Error");
-        error.put("message", ex.getMessage());
-        error.put("timestamp", LocalDateTime.now());
-        
+        ErrorResponse error = ErrorResponse.builder()
+                .status(HttpStatus.BAD_REQUEST.value())
+                .error("Loan Operation Error")
+                .message(ex.getMessage())
+                .timestamp(LocalDateTime.now())
+                .build();
         return ResponseEntity.badRequest().body(error);
     }
 
     @ExceptionHandler(CollateralNotFoundException.class)
-    public ResponseEntity<Map<String, Object>> handleCollateralNotFound(CollateralNotFoundException ex) {
+    public ResponseEntity<ErrorResponse> handleCollateralNotFound(CollateralNotFoundException ex) {
         log.error("Collateral not found: {}", ex.getMessage());
-        
-        Map<String, Object> error = new HashMap<>();
-        error.put("status", HttpStatus.NOT_FOUND.value());
-        error.put("error", "Collateral Not Found");
-        error.put("message", ex.getMessage());
-        error.put("timestamp", LocalDateTime.now());
-        
+        ErrorResponse error = ErrorResponse.builder()
+                .status(HttpStatus.NOT_FOUND.value())
+                .error("Collateral Not Found")
+                .message(ex.getMessage())
+                .timestamp(LocalDateTime.now())
+                .build();
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
     }
 
     @ExceptionHandler(CollateralOperationException.class)
-    public ResponseEntity<Map<String, Object>> handleCollateralOperation(CollateralOperationException ex) {
+    public ResponseEntity<ErrorResponse> handleCollateralOperation(CollateralOperationException ex) {
         log.error("Collateral operation error: {}", ex.getMessage());
-        
-        Map<String, Object> error = new HashMap<>();
-        error.put("status", HttpStatus.BAD_REQUEST.value());
-        error.put("error", "Collateral Operation Error");
-        error.put("message", ex.getMessage());
-        error.put("timestamp", LocalDateTime.now());
-        
+        ErrorResponse error = ErrorResponse.builder()
+                .status(HttpStatus.BAD_REQUEST.value())
+                .error("Collateral Operation Error")
+                .message(ex.getMessage())
+                .timestamp(LocalDateTime.now())
+                .build();
         return ResponseEntity.badRequest().body(error);
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<Map<String, Object>> handleValidationExceptions(MethodArgumentNotValidException ex) {
+    public ResponseEntity<ErrorResponse> handleValidationExceptions(MethodArgumentNotValidException ex) {
         log.error("Validation error: {}", ex.getMessage());
         
         Map<String, String> validationErrors = new HashMap<>();
         ex.getBindingResult().getFieldErrors().forEach(error -> 
             validationErrors.put(error.getField(), error.getDefaultMessage())
         );
-        
-        Map<String, Object> error = new HashMap<>();
-        error.put("status", HttpStatus.BAD_REQUEST.value());
-        error.put("error", "Validation Failed");
-        error.put("message", "Invalid input data");
-        error.put("validationErrors", validationErrors);
-        error.put("timestamp", LocalDateTime.now());
-        
+
+        ErrorResponse error = ErrorResponse.builder()
+                .status(HttpStatus.BAD_REQUEST.value())
+                .error("Validation Failed")
+                .message("Invalid input data")
+                .validationErrors(validationErrors)
+                .timestamp(LocalDateTime.now())
+                .build();
         return ResponseEntity.badRequest().body(error);
     }
 
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<Map<String, Object>> handleGeneral(Exception ex) {
+    public ResponseEntity<ErrorResponse> handleGeneral(Exception ex) {
         log.error("Unexpected error: {}", ex.getMessage(), ex);
-        
-        Map<String, Object> error = new HashMap<>();
-        error.put("status", HttpStatus.INTERNAL_SERVER_ERROR.value());
-        error.put("error", "Internal Server Error");
-        error.put("message", "An unexpected error occurred");
-        error.put("timestamp", LocalDateTime.now());
-        
+
+        ErrorResponse error = ErrorResponse.builder()
+                .status(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                .error("Internal Server Error")
+                .message("An unexpected error occurred")
+                .timestamp(LocalDateTime.now())
+                .build();
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
     }
 }
