@@ -97,8 +97,8 @@ export interface PageResponse<T> {
 export const loansApi = {
   // Get loan products
   getLoanProducts: async (): Promise<LoanProduct[]> => {
-    const response = await api.get('/loans/products')
-    return response.data
+    const response = await api.get('http://localhost:8080/loan-service/api/v1/loans/products')
+    return Array.isArray(response.data?.data) ? response.data.data : (Array.isArray(response.data) ? response.data : [])
   },
 
   // Get loan product by type
