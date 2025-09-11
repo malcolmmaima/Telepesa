@@ -3,7 +3,9 @@ import { useAuth } from '../store/auth'
 import { accountsApi, type Account } from '../api/accounts'
 import { Card } from '../components/ui/Card'
 import { Button } from '../components/ui/Button'
+import { Input } from '../components/ui/Input'
 import { formatCurrency, cn } from '../lib/utils'
+
 
 const ACCOUNT_TYPE_ICONS = {
   SAVINGS: '🏦',
@@ -29,10 +31,15 @@ const STATUS_COLORS = {
 export function AccountsPage() {
   const { user } = useAuth()
   const [accounts, setAccounts] = useState<Account[]>([])
+  const [filteredAccounts, setFilteredAccounts] = useState<Account[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [selectedAccount, setSelectedAccount] = useState<Account | null>(null)
   const [totalBalance, setTotalBalance] = useState(0)
+  const [searchQuery, setSearchQuery] = useState('')
+  const [statusFilter, setStatusFilter] = useState<Account['status'] | 'ALL'>('ALL')
+  const [typeFilter, setTypeFilter] = useState<Account['accountType'] | 'ALL'>('ALL')
+  const [sortBy, setSortBy] = useState<'balance' | 'name' | 'date'>('balance')
 
   // Load user accounts
   useEffect(() => {
@@ -49,8 +56,8 @@ export function AccountsPage() {
       const accountsArray = Array.isArray(response.content) ? response.content : []
       setAccounts(accountsArray)
     } catch (err: any) {
-      setAccounts([]) // Ensure accounts is always an array
-      setError(err.message || 'Failed to load accounts')
+      console.error('Failed to load accounts from API:', err.message)
+      setError('Failed to load accounts: ' + (err.message || 'Unknown error'))
     } finally {
       setLoading(false)
     }
@@ -62,8 +69,61 @@ export function AccountsPage() {
       setTotalBalance(balance)
     } catch (err) {
       console.error('Failed to load total balance:', err)
+      // Calculate from current accounts as fallback
+      const total = accounts.reduce((sum, account) => sum + account.balance, 0)
+      setTotalBalance(total)
     }
   }
+
+  // Filter and search accounts
+  useEffect(() => {
+    let filtered = [...accounts]
+
+    // Apply search filter
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase()
+      filtered = filtered.filter(
+        account =>
+          account.accountName.toLowerCase().includes(query) ||
+          account.accountNumber.includes(query) ||
+          account.accountType.toLowerCase().includes(query) ||
+          (account.description?.toLowerCase().includes(query) ?? false)
+      )
+    }
+
+    // Apply status filter
+    if (statusFilter !== 'ALL') {
+      filtered = filtered.filter(account => account.status === statusFilter)
+    }
+
+    // Apply type filter
+    if (typeFilter !== 'ALL') {
+      filtered = filtered.filter(account => account.accountType === typeFilter)
+    }
+
+    // Apply sorting
+    filtered.sort((a, b) => {
+      switch (sortBy) {
+        case 'balance':
+          return b.balance - a.balance
+        case 'name':
+          return a.accountName.localeCompare(b.accountName)
+        case 'date':
+          return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        default:
+          return 0
+      }
+    })
+
+    setFilteredAccounts(filtered)
+  }, [accounts, searchQuery, statusFilter, typeFilter, sortBy])
+
+  // Update total balance when accounts change
+  useEffect(() => {
+    if (accounts.length > 0) {
+      loadTotalBalance()
+    }
+  }, [accounts])
 
   const handleAccountAction = async (
     accountId: number,
@@ -110,20 +170,168 @@ export function AccountsPage() {
   return (
     <div className="max-w-7xl mx-auto p-6 space-y-8">
       {/* Header Section */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
-          <h1 className="text-3xl font-bold text-financial-navy mb-2">Your Accounts 🏦</h1>
-          <p className="text-financial-gray">View and manage your existing accounts in one place</p>
-          <div className="mt-4 p-4 bg-gradient-to-r from-financial-navy to-financial-blue rounded-financial text-white">
-            <div className="text-sm opacity-90">Total Balance</div>
-            <div className="text-2xl font-bold">{formatCurrency(totalBalance)}</div>
+      <div className="space-y-6">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div>
+            <h1 className="text-3xl font-bold text-financial-navy mb-2">
+              Your Accounts 🏦
+            </h1>
+            <p className="text-financial-gray">View and manage your existing accounts in one place</p>
           </div>
-          <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-financial">
+          <div className="flex flex-col sm:flex-row gap-3">
+            <Button
+              variant="outline"
+              onClick={loadAccounts}
+              disabled={loading}
+              className="flex items-center gap-2"
+            >
+              🔄 {loading ? 'Refreshing...' : 'Refresh'}
+            </Button>
+            <Button
+              variant="primary"
+              onClick={() => (window.location.href = '/support')}
+              className="flex items-center gap-2"
+            >
+              ➕ New Account
+            </Button>
+          </div>
+        </div>
+
+        {/* Balance Summary - Full Width */}
+        <div className="w-full">
+          <div className="p-8 bg-gradient-to-r from-financial-navy to-financial-blue rounded-financial-lg text-white">
+            <div className="flex justify-between items-center">
+              <div className="flex-1">
+                <div className="text-lg opacity-90">Total Balance</div>
+                <div className="text-4xl font-bold my-2">{formatCurrency(totalBalance)}</div>
+                <div className="text-base opacity-75">
+                  Across {accounts.length} account{accounts.length !== 1 ? 's' : ''}
+                </div>
+              </div>
+              <div className="flex items-center space-x-8">
+                <div className="text-center">
+                  <div className="text-2xl font-bold">{accounts.filter(a => a.status === 'ACTIVE').length}</div>
+                  <div className="text-sm opacity-75">Active</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-2xl font-bold">{accounts.filter(a => a.status === 'PENDING').length}</div>
+                  <div className="text-sm opacity-75">Pending</div>
+                </div>
+                <div className="text-6xl opacity-60">💰</div>
+              </div>
+            </div>
+          </div>
+          {/* Help Section */}
+          <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-financial">
             <p className="text-sm text-blue-700">
-              💡 <strong>Need a new account?</strong> Contact our support team or visit any branch
-              to open additional accounts.
+              💡 <strong>Need help?</strong> Contact support for account assistance or visit any branch to open a new account.
             </p>
           </div>
+        </div>
+
+        {/* Search and Filters */}
+        <div className="bg-white border border-gray-200 rounded-financial-lg p-6">
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
+            {/* Search */}
+            <div className="lg:col-span-2">
+              <label className="block text-sm font-medium text-financial-gray mb-2">
+                🔍 Search Accounts
+              </label>
+              <Input
+                type="text"
+                placeholder="Search by name, number, or type..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full"
+              />
+            </div>
+
+            {/* Status Filter */}
+            <div>
+              <label className="block text-sm font-medium text-financial-gray mb-2">
+                📊 Status
+              </label>
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value as Account['status'] | 'ALL')}
+                className="w-full px-3 py-2 border border-gray-300 rounded-financial focus:ring-2 focus:ring-financial-blue focus:border-financial-blue"
+              >
+                <option value="ALL">All Status</option>
+                <option value="ACTIVE">✅ Active</option>
+                <option value="PENDING">⏳ Pending</option>
+                <option value="FROZEN">🧊 Frozen</option>
+                <option value="CLOSED">❌ Closed</option>
+              </select>
+            </div>
+
+            {/* Type Filter & Sort */}
+            <div>
+              <label className="block text-sm font-medium text-financial-gray mb-2">
+                🏷️ Type & Sort
+              </label>
+              <div className="space-y-2">
+                <select
+                  value={typeFilter}
+                  onChange={(e) => setTypeFilter(e.target.value as Account['accountType'] | 'ALL')}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-financial text-sm focus:ring-2 focus:ring-financial-blue focus:border-financial-blue"
+                >
+                  <option value="ALL">All Types</option>
+                  <option value="SAVINGS">🏦 Savings</option>
+                  <option value="CHECKING">💳 Checking</option>
+                  <option value="FIXED_DEPOSIT">💰 Fixed Deposit</option>
+                  <option value="BUSINESS">🏢 Business</option>
+                </select>
+                <select
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value as 'balance' | 'name' | 'date')}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-financial text-sm focus:ring-2 focus:ring-financial-blue focus:border-financial-blue"
+                >
+                  <option value="balance">💰 By Balance</option>
+                  <option value="name">📝 By Name</option>
+                  <option value="date">📅 By Date</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          {/* Filter Summary */}
+          {(searchQuery || statusFilter !== 'ALL' || typeFilter !== 'ALL') && (
+            <div className="mt-4 pt-4 border-t border-gray-100">
+              <div className="flex flex-wrap gap-2 items-center">
+                <span className="text-sm text-financial-gray">Active filters:</span>
+                {searchQuery && (
+                  <span className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full">
+                    Search: "{searchQuery}"
+                  </span>
+                )}
+                {statusFilter !== 'ALL' && (
+                  <span className="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full">
+                    Status: {statusFilter}
+                  </span>
+                )}
+                {typeFilter !== 'ALL' && (
+                  <span className="px-2 py-1 bg-purple-100 text-purple-800 text-xs rounded-full">
+                    Type: {typeFilter.replace('_', ' ')}
+                  </span>
+                )}
+                <button
+                  onClick={() => {
+                    setSearchQuery('')
+                    setStatusFilter('ALL')
+                    setTypeFilter('ALL')
+                  }}
+                  className="px-2 py-1 bg-red-100 text-red-800 text-xs rounded-full hover:bg-red-200 transition-colors"
+                >
+                  ✕ Clear all
+                </button>
+              </div>
+              <div className="mt-2">
+                <span className="text-sm text-financial-gray">
+                  Showing {filteredAccounts.length} of {accounts.length} accounts
+                </span>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
@@ -146,10 +354,10 @@ export function AccountsPage() {
       )}
 
       {/* Accounts Grid */}
-      {(!accounts || accounts.length === 0) && !loading ? (
+      {accounts.length === 0 && !loading ? (
         <div className="text-center py-12">
           <div className="text-6xl mb-4">🏦</div>
-          <h3 className="text-xl font-semibold text-financial-navy mb-2">No accounts available</h3>
+          <h3 className="text-xl font-semibold text-financial-navy mb-2">No accounts found</h3>
           <p className="text-financial-gray mb-6">
             Contact our support team or visit any branch to open your first account!
           </p>
@@ -158,15 +366,38 @@ export function AccountsPage() {
             <p className="text-blue-700 text-sm mb-3">
               Our team will help you choose the right account type for your needs.
             </p>
-            <Button variant="outline" onClick={() => (window.location.href = '/support')}>
-              💬 Contact Support
-            </Button>
+            <div className="flex gap-2 justify-center">
+              <Button variant="outline" onClick={loadAccounts}>
+                🔄 Retry
+              </Button>
+              <Button variant="outline" onClick={() => (window.location.href = '/support')}>
+                💬 Contact Support
+              </Button>
+            </div>
           </div>
+        </div>
+      ) : filteredAccounts.length === 0 && accounts.length > 0 ? (
+        <div className="text-center py-12">
+          <div className="text-6xl mb-4">🔍</div>
+          <h3 className="text-xl font-semibold text-financial-navy mb-2">No accounts match your filters</h3>
+          <p className="text-financial-gray mb-6">
+            Try adjusting your search terms or filters to find what you're looking for.
+          </p>
+          <Button 
+            variant="outline"
+            onClick={() => {
+              setSearchQuery('')
+              setStatusFilter('ALL')
+              setTypeFilter('ALL')
+            }}
+          >
+            ✕ Clear all filters
+          </Button>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {accounts &&
-            accounts.map(account => (
+          {filteredAccounts &&
+            filteredAccounts.map(account => (
               <Card
                 key={account.id}
                 className="hover-lift cursor-pointer relative overflow-hidden"

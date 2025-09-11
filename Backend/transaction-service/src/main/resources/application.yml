@@ -17,10 +17,10 @@ spring:
         format_sql: true
         show_sql: false
     show-sql: false
-  security:
-    jwt:
-      secret: ${JWT_SECRET:your-secret-key-here}
-      expiration: 86400000
+app:
+  jwt:
+    secret: ${JWT_SECRET:your-secret-key-here}
+    expiration: 86400
   data:
     redis:
       host: ${REDIS_HOST:localhost}

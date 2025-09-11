@@ -75,6 +75,7 @@ public class GatewayConfig {
                 .pathMatchers("/api/v1/accounts/**").authenticated()
                 .pathMatchers("/api/v1/transactions/**").authenticated()
                 .pathMatchers("/api/v1/loans/**").authenticated()
+                .pathMatchers("/api/v1/transfers/**").authenticated()
                 .pathMatchers("/api/v1/notifications/**").authenticated()
                 .pathMatchers("/api/v1/admin/**").hasRole("ADMIN")
                 .anyExchange().authenticated()

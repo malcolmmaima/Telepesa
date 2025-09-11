@@ -11,11 +11,19 @@ export function cn(...inputs: ClassValue[]) {
 /**
  * Format currency amounts
  */
-export function formatCurrency(amount: number, currency = 'KES'): string {
+export function formatCurrency(amount: number | null | undefined, currency = 'KES'): string {
+  // Handle invalid or null/undefined amounts
+  if (amount == null || isNaN(Number(amount)) || !isFinite(Number(amount))) {
+    return new Intl.NumberFormat('en-KE', {
+      style: 'currency',
+      currency,
+    }).format(0)
+  }
+  
   return new Intl.NumberFormat('en-KE', {
     style: 'currency',
     currency,
-  }).format(amount)
+  }).format(Number(amount))
 }
 
 /**

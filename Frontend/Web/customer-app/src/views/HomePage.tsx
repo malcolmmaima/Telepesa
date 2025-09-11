@@ -83,7 +83,9 @@ export function HomePage() {
           accountsApi.getUserTotalBalance(user!.id),
         ])
         accountsData = accountsResponse
-        balanceData = totalBalanceResponse
+        balanceData = typeof totalBalanceResponse === 'number' && isFinite(totalBalanceResponse) 
+          ? totalBalanceResponse 
+          : 0
       } catch (err) {
         console.log('Accounts/balance API not available yet')
       }
@@ -226,7 +228,7 @@ export function HomePage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Your Accounts */}
-        <Card title="Your Accounts" description="Balances and account status">
+        <Card title="Your Accounts" description="Balances and account status" className="h-fit">
           {!accounts || accounts.length === 0 ? (
             <div className="text-center py-8">
               <div className="text-4xl mb-3">🏦</div>
@@ -236,22 +238,22 @@ export function HomePage() {
               </Button>
             </div>
           ) : (
-            <div className="space-y-4">
+            <div className="space-y-4 max-h-80 overflow-y-auto custom-scrollbar">
               {accounts &&
                 accounts.slice(0, 3).map(account => (
                   <div
                     key={account.id}
-                    className="border rounded-financial p-4 bg-white hover:bg-gray-50 cursor-pointer transition-colors"
+                    className="border rounded-financial p-4 bg-white hover:bg-gray-50 cursor-pointer transition-colors min-h-0 flex-shrink-0"
                     onClick={() => (window.location.href = '/accounts')}
                   >
                     <div className="flex items-center justify-between">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2">
-                          <div className="text-financial-navy font-medium">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <div className="text-financial-navy font-medium truncate">
                             {account.accountName}
                           </div>
                           <div
-                            className={`px-2 py-1 rounded text-xs font-medium ${
+                            className={`px-2 py-1 rounded text-xs font-medium flex-shrink-0 ${
                               account.status === 'ACTIVE'
                                 ? 'text-green-600 bg-green-50 border border-green-200'
                                 : account.status === 'PENDING'
@@ -262,14 +264,14 @@ export function HomePage() {
                             {account.status}
                           </div>
                         </div>
-                        <div className="text-sm text-financial-gray">
+                        <div className="text-sm text-financial-gray truncate">
                           •••• {account.accountNumber.slice(-4)}
                         </div>
-                        <div className="text-xs text-financial-gray mt-1">
+                        <div className="text-xs text-financial-gray mt-1 truncate">
                           {account.accountType.replace('_', ' ')}
                         </div>
                       </div>
-                      <div className="text-right">
+                      <div className="text-right flex-shrink-0 ml-4">
                         <div className="text-lg font-semibold text-financial-navy">
                           {formatCurrency(account.balance)}
                         </div>
@@ -287,7 +289,7 @@ export function HomePage() {
                   variant="ghost"
                   size="sm"
                   onClick={() => (window.location.href = '/accounts')}
-                  className="w-full"
+                  className="w-full flex-shrink-0"
                 >
                   View All Accounts ({accounts.length})
                 </Button>
