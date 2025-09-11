@@ -52,8 +52,7 @@ export function AccountsPage() {
   const loadAccounts = async () => {
     try {
       setLoading(true)
-      const response = await accountsApi.getUserAccounts(user!.id, 0, 50)
-      const accountsArray = Array.isArray(response.content) ? response.content : []
+      const accountsArray = await accountsApi.getUserAccounts(user!.id, 0, 50)
       setAccounts(accountsArray)
     } catch (err: any) {
       console.error('Failed to load accounts from API:', err.message)

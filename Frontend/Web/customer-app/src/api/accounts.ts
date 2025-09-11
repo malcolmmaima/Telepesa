@@ -73,72 +73,84 @@ export const accountsApi = {
     size = 20,
     sortBy = 'createdAt',
     sortDir = 'desc'
-  ): Promise<PageResponse<Account>> => {
+  ): Promise<Account[]> => {
     const response = await api.get(`/accounts/user/${userId}`, {
       params: { page, size, sortBy, sortDir },
     })
-    return response.data
+    // Backend returns data in {data: Account[]} format, extract the accounts array
+    return Array.isArray(response.data?.data) ? response.data.data : []
   },
 
   // Get user active accounts only
   getUserActiveAccounts: async (userId: number): Promise<Account[]> => {
     const response = await api.get(`/accounts/user/${userId}/active`)
-    return response.data
+    // Backend returns data in {data: Account[]} format, extract the accounts array
+    return Array.isArray(response.data?.data) ? response.data.data : []
   },
 
   // Get account by ID
   getAccount: async (accountId: number): Promise<Account> => {
     const response = await api.get(`/accounts/${accountId}`)
-    return response.data
+    // Backend may return data in {data: Account} format, extract the account object
+    return response.data?.data || response.data
   },
 
   // Get account by account number
   getAccountByNumber: async (accountNumber: string): Promise<Account> => {
     const response = await api.get(`/accounts/number/${accountNumber}`)
-    return response.data
+    // Backend may return data in {data: Account} format, extract the account object
+    return response.data?.data || response.data
   },
 
   // Update account
   updateAccount: async (accountId: number, request: UpdateAccountRequest): Promise<Account> => {
     const response = await api.put(`/accounts/${accountId}`, request)
-    return response.data
+    // Backend may return data in {data: Account} format, extract the account object
+    return response.data?.data || response.data
   },
 
   // Account operations
   activateAccount: async (accountId: number): Promise<Account> => {
     const response = await api.post(`/accounts/${accountId}/activate`)
-    return response.data
+    // Backend may return data in {data: Account} format, extract the account object
+    return response.data?.data || response.data
   },
 
   freezeAccount: async (accountId: number): Promise<Account> => {
     const response = await api.post(`/accounts/${accountId}/freeze`)
-    return response.data
+    // Backend may return data in {data: Account} format, extract the account object
+    return response.data?.data || response.data
   },
 
   unfreezeAccount: async (accountId: number): Promise<Account> => {
     const response = await api.post(`/accounts/${accountId}/unfreeze`)
-    return response.data
+    // Backend may return data in {data: Account} format, extract the account object
+    return response.data?.data || response.data
   },
 
   closeAccount: async (accountId: number): Promise<Account> => {
     const response = await api.post(`/accounts/${accountId}/close`)
-    return response.data
+    // Backend may return data in {data: Account} format, extract the account object
+    return response.data?.data || response.data
   },
 
   // Balance operations
   getAccountBalance: async (accountId: number): Promise<AccountBalance> => {
     const response = await api.get(`/accounts/${accountId}/balance`)
-    return response.data
+    // Backend may return data in {data: AccountBalance} format, extract the balance object
+    return response.data?.data || response.data
   },
 
   creditAccount: async (accountId: number, request: CreditDebitRequest): Promise<Account> => {
     const response = await api.post(`/accounts/${accountId}/credit`, request)
-    return response.data
+    // Backend may return data in {data: Account} format, extract the account object
+    return response.data?.data || response.data
   },
 
   debitAccount: async (accountId: number, request: CreditDebitRequest): Promise<Account> => {
     const response = await api.post(`/accounts/${accountId}/debit`, request)
-    return response.data
+    // Backend may return data in {data: Account} format, extract the account object
+    return response.data?.data || response.data
   },
 
   // Transfer between accounts
@@ -147,13 +159,15 @@ export const accountsApi = {
     request: TransferRequest
   ): Promise<Account> => {
     const response = await api.post(`/accounts/${fromAccountId}/transfer`, request)
-    return response.data
+    // Backend may return data in {data: Account} format, extract the account object
+    return response.data?.data || response.data
   },
 
   // Get user total balance
   getUserTotalBalance: async (userId: number): Promise<number> => {
     const response = await api.get(`/accounts/user/${userId}/total-balance`)
-    return response.data
+    // Backend may return data in {data: number} format, extract the balance value
+    return typeof response.data?.data === 'number' ? response.data.data : (typeof response.data === 'number' ? response.data : 0)
   },
 
   // Search and filter accounts
@@ -165,7 +179,8 @@ export const accountsApi = {
     const response = await api.get(`/accounts/status/${status}`, {
       params: { page, size },
     })
-    return response.data
+    // Backend may return data in {data: PageResponse} format, extract the page response
+    return response.data?.data || response.data
   },
 
   getAccountsByType: async (
@@ -176,31 +191,36 @@ export const accountsApi = {
     const response = await api.get(`/accounts/type/${accountType}`, {
       params: { page, size },
     })
-    return response.data
+    // Backend may return data in {data: PageResponse} format, extract the page response
+    return response.data?.data || response.data
   },
 
   searchAccounts: async (query: string, page = 0, size = 20): Promise<PageResponse<Account>> => {
     const response = await api.get('/accounts/search', {
       params: { q: query, page, size },
     })
-    return response.data
+    // Backend may return data in {data: PageResponse} format, extract the page response
+    return response.data?.data || response.data
   },
 
   // Analytics and reports
   getAccountStatistics: async (): Promise<AccountStatistics> => {
     const response = await api.get('/accounts/statistics')
-    return response.data
+    // Backend may return data in {data: AccountStatistics} format, extract the statistics object
+    return response.data?.data || response.data
   },
 
   getAccountsBelowMinimumBalance: async (): Promise<Account[]> => {
     const response = await api.get('/accounts/below-minimum-balance')
-    return response.data
+    // Backend returns data in {data: Account[]} format, extract the accounts array
+    return Array.isArray(response.data?.data) ? response.data.data : []
   },
 
   getDormantAccounts: async (days = 90): Promise<Account[]> => {
     const response = await api.get('/accounts/dormant', {
       params: { days },
     })
-    return response.data
+    // Backend returns data in {data: Account[]} format, extract the accounts array
+    return Array.isArray(response.data?.data) ? response.data.data : []
   },
 }
