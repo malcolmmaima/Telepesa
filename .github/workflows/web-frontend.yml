@@ -3,13 +3,8 @@ name: Telepesa Web Frontend CI/CD Pipeline
 on:
   push:
     branches: [ main, develop ]
-    paths:
-      - 'Frontend/Web/**'
-      - '.github/workflows/web-frontend.yml'
   pull_request:
     branches: [ main, develop ]
-    paths:
-      - 'Frontend/Web/**'
 
 jobs:
   test-and-build:

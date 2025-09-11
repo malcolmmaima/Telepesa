@@ -3,13 +3,8 @@ name: Telepesa Spring Boot Backend CI/CD Pipeline
 on:
   push:
     branches: [ main, develop ]
-    paths:
-      - 'Backend/**'
-      - '.github/workflows/ci.yml'
   pull_request:
     branches: [ main, develop ]
-    paths:
-      - 'Backend/**'
 
 jobs:
   test-and-coverage:
@@ -139,6 +134,17 @@ jobs:
             -Dspring.datasource.password=testpassword
           cd ..
         fi
+        
+        # Test bill-payment-service (if exists)
+        if [ -d "bill-payment-service" ]; then
+          echo "Testing bill-payment-service..."
+          cd bill-payment-service
+          mvn clean test -Dspring.profiles.active=test \
+            -Dspring.datasource.url=jdbc:postgresql://localhost:5432/telepesa_test \
+            -Dspring.datasource.username=testuser \
+            -Dspring.datasource.password=testpassword
+          cd ..
+        fi
 
     - name: Generate coverage reports
       working-directory: Backend
@@ -149,7 +155,7 @@ jobs:
         cd ..
         
         # Generate coverage for other services (if they exist)
-        for service in account-service transaction-service loan-service notification-service; do
+        for service in account-service transaction-service loan-service notification-service transfer-service bill-payment-service; do
           if [ -d "$service" ]; then
             echo "Generating coverage for $service..."
             cd $service
@@ -162,10 +168,11 @@ jobs:
       uses: codecov/codecov-action@v5
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
-        file: Backend/*/target/site/jacoco/jacoco.xml
-        flags: unittests
-        name: codecov-umbrella
+        files: Backend/*/target/site/jacoco/jacoco.xml
+        flags: backend
+        name: codecov-backend
         fail_ci_if_error: false
+        verbose: true
 
     - name: Upload test results
       uses: actions/upload-artifact@v4
@@ -227,7 +234,7 @@ jobs:
         cd ..
         
         # Build other services (if they exist)
-        for service in account-service transaction-service loan-service notification-service transfer-service; do
+        for service in account-service transaction-service loan-service notification-service transfer-service bill-payment-service; do
           if [ -d "$service" ]; then
             echo "Building $service..."
             cd $service
@@ -326,7 +333,7 @@ jobs:
         cd ..
         
         # Run security scan for other services (if they exist)
-        for service in account-service transaction-service loan-service notification-service transfer-service; do
+        for service in account-service transaction-service loan-service notification-service transfer-service bill-payment-service; do
           if [ -d "$service" ]; then
             echo "Running OWASP Dependency Check for $service..."
             cd $service
@@ -359,7 +366,7 @@ jobs:
       run: |
         echo "Running basic security checks for all services..."
         
-        for service in user-service account-service transaction-service loan-service notification-service transfer-service; do
+        for service in user-service account-service transaction-service loan-service notification-service transfer-service bill-payment-service; do
           if [ -d "$service" ]; then
             echo "Checking $service..."
             cd $service

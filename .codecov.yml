@@ -1,0 +1,61 @@
+codecov:
+  require_ci_to_pass: false
+  notify:
+    wait_for_ci: false
+
+# Define coverage flags for different parts of the monorepo
+flags:
+  backend:
+    paths:
+      - Backend/
+    carryforward: true
+  frontend:
+    paths:
+      - Frontend/Web/
+    carryforward: true
+
+# Coverage status configuration
+coverage:
+  status:
+    # Project-level coverage combining both backend and frontend
+    project:
+      default:
+        target: auto
+        threshold: 1%
+        flags:
+          - backend
+          - frontend
+        
+      # Separate status checks for each component
+      backend:
+        target: 70%
+        threshold: 2%
+        flags:
+          - backend
+        
+      frontend:
+        target: 65%
+        threshold: 2%
+        flags:
+          - frontend
+    
+    # Patch coverage (for PRs)
+    patch:
+      default:
+        target: 70%
+        threshold: 5%
+
+# File and path handling
+parsers:
+  gcov:
+    branch_detection:
+      conditional: yes
+      loop: yes
+      method: no
+      macro: no
+
+# Comment configuration
+comment:
+  layout: "reach,diff,flags,tree"
+  behavior: default
+  require_changes: false
