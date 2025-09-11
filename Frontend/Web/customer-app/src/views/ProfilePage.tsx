@@ -1,15 +1,22 @@
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useAuth } from '../store/auth'
 import { Card } from '../components/ui/Card'
 import { Button } from '../components/ui/Button'
 import { Input } from '../components/ui/Input'
+import { userApi, type UpdateProfileRequest, type ChangePasswordRequest } from '../api/user'
 
 export function ProfilePage() {
-  const { user } = useAuth()
+  const { user, setUser } = useAuth()
+  const fileInputRef = useRef<HTMLInputElement>(null)
   const [isEditing, setIsEditing] = useState(false)
   const [isChangingPassword, setIsChangingPassword] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [uploadingAvatar, setUploadingAvatar] = useState(false)
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
+  const [userSettings, setUserSettings] = useState({
+    emailNotifications: true,
+    smsNotifications: false,
+  })
 
   // Profile form state
   const [profileForm, setProfileForm] = useState({
@@ -27,15 +34,36 @@ export function ProfilePage() {
     confirmPassword: '',
   })
 
+  // Load user settings on component mount
+  useEffect(() => {
+    const loadUserSettings = async () => {
+      try {
+        const settings = await userApi.getUserSettings()
+        setUserSettings(settings)
+      } catch (error) {
+        console.error('Failed to load user settings:', error)
+      }
+    }
+    loadUserSettings()
+  }, [])
+
   const handleProfileUpdate = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
     setMessage(null)
 
     try {
-      // TODO: Implement profile update API call
-      // await updateProfile(profileForm)
-      setMessage({ type: 'success', text: 'Profile updated successfully!' })
+      const profileData: UpdateProfileRequest = {
+        firstName: profileForm.firstName,
+        lastName: profileForm.lastName,
+        email: profileForm.email,
+        phoneNumber: profileForm.phoneNumber || undefined,
+        dateOfBirth: profileForm.dateOfBirth || undefined,
+      }
+      
+      const response = await userApi.updateProfile(profileData)
+      setUser(response.user)
+      setMessage({ type: 'success', text: response.message || 'Profile updated successfully!' })
       setIsEditing(false)
     } catch (error: any) {
       setMessage({ type: 'error', text: error.message || 'Failed to update profile' })
@@ -61,15 +89,69 @@ export function ProfilePage() {
     setMessage(null)
 
     try {
-      // TODO: Implement password change API call
-      // await changePassword(passwordForm.currentPassword, passwordForm.newPassword)
-      setMessage({ type: 'success', text: 'Password changed successfully!' })
+      const passwordData: ChangePasswordRequest = {
+        currentPassword: passwordForm.currentPassword,
+        newPassword: passwordForm.newPassword,
+      }
+      
+      const response = await userApi.changePassword(passwordData)
+      setMessage({ type: 'success', text: response.message || 'Password changed successfully!' })
       setIsChangingPassword(false)
       setPasswordForm({ currentPassword: '', newPassword: '', confirmPassword: '' })
     } catch (error: any) {
       setMessage({ type: 'error', text: error.message || 'Failed to change password' })
     } finally {
       setLoading(false)
+    }
+  }
+
+  const handleAvatarUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (!file) return
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      setMessage({ type: 'error', text: 'Please select a valid image file' })
+      return
+    }
+
+    // Validate file size (5MB max)
+    if (file.size > 5 * 1024 * 1024) {
+      setMessage({ type: 'error', text: 'Image must be smaller than 5MB' })
+      return
+    }
+
+    setUploadingAvatar(true)
+    setMessage(null)
+
+    try {
+      const response = await userApi.uploadAvatar(file)
+      // Update user in auth store with new avatar URL
+      if (user) {
+        setUser({ ...user, avatarUrl: response.avatarUrl })
+      }
+      setMessage({ type: 'success', text: response.message || 'Profile picture updated!' })
+    } catch (error: any) {
+      setMessage({ type: 'error', text: error.message || 'Failed to upload profile picture' })
+    } finally {
+      setUploadingAvatar(false)
+      // Reset file input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = ''
+      }
+    }
+  }
+
+  const handleSettingsChange = async (setting: string, value: boolean) => {
+    try {
+      const newSettings = { ...userSettings, [setting]: value }
+      setUserSettings(newSettings)
+      await userApi.updateUserSettings(newSettings)
+      setMessage({ type: 'success', text: 'Settings updated successfully!' })
+    } catch (error: any) {
+      // Revert on error
+      setUserSettings(prev => ({ ...prev, [setting]: !value }))
+      setMessage({ type: 'error', text: 'Failed to update settings' })
     }
   }
 
@@ -98,6 +180,65 @@ export function ProfilePage() {
           </div>
         </div>
       )}
+
+      {/* Profile Picture */}
+      <Card title="Profile Picture" description="Upload and manage your profile picture">
+        <div className="flex items-center space-x-6">
+          <div className="flex-shrink-0">
+            <div className="w-24 h-24 rounded-full bg-gradient-to-br from-financial-blue to-financial-navy flex items-center justify-center overflow-hidden">
+              {user?.avatarUrl ? (
+                <img
+                  src={user.avatarUrl}
+                  alt="Profile"
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <span className="text-2xl font-bold text-white">
+                  {user?.firstName?.[0]}{user?.lastName?.[0]}
+                </span>
+              )}
+            </div>
+          </div>
+          <div className="flex-1">
+            <h4 className="font-medium text-financial-navy mb-2">
+              {user?.avatarUrl ? 'Update' : 'Upload'} Profile Picture
+            </h4>
+            <p className="text-sm text-financial-gray mb-4">
+              Choose a clear photo of yourself. Accepted formats: JPG, PNG, GIF (max 5MB)
+            </p>
+            <div className="flex items-center space-x-3">
+              <Button
+                variant="outline"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={uploadingAvatar}
+                className="flex items-center gap-2"
+              >
+                {uploadingAvatar ? '📤 Uploading...' : '📷 Choose Photo'}
+              </Button>
+              {user?.avatarUrl && (
+                <Button
+                  variant="ghost"
+                  onClick={() => {
+                    // TODO: Implement remove avatar functionality
+                    setMessage({ type: 'error', text: 'Remove avatar feature coming soon' })
+                  }}
+                  disabled={uploadingAvatar}
+                  className="text-red-600 hover:text-red-700"
+                >
+                  🗑️ Remove
+                </Button>
+              )}
+            </div>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              onChange={handleAvatarUpload}
+              className="hidden"
+            />
+          </div>
+        </div>
+      </Card>
 
       {/* Profile Information */}
       <Card title="Personal Information" description="Your basic account details">
@@ -271,7 +412,12 @@ export function ProfilePage() {
               <p className="text-sm text-financial-gray">Receive transaction and account updates</p>
             </div>
             <label className="relative inline-flex items-center cursor-pointer">
-              <input type="checkbox" className="sr-only peer" defaultChecked />
+              <input 
+                type="checkbox" 
+                className="sr-only peer" 
+                checked={userSettings.emailNotifications}
+                onChange={(e) => handleSettingsChange('emailNotifications', e.target.checked)}
+              />
               <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-financial-blue/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-financial-blue"></div>
             </label>
           </div>
@@ -281,7 +427,12 @@ export function ProfilePage() {
               <p className="text-sm text-financial-gray">Receive transaction alerts via SMS</p>
             </div>
             <label className="relative inline-flex items-center cursor-pointer">
-              <input type="checkbox" className="sr-only peer" />
+              <input 
+                type="checkbox" 
+                className="sr-only peer" 
+                checked={userSettings.smsNotifications}
+                onChange={(e) => handleSettingsChange('smsNotifications', e.target.checked)}
+              />
               <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-financial-blue/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-financial-blue"></div>
             </label>
           </div>

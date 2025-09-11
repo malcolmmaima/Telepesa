@@ -165,7 +165,12 @@ export function LoansPage() {
     e.preventDefault()
     try {
       setLoading(true)
-      const loan = await loansApi.applyForLoan(application)
+      // Update application with correct user ID
+      const applicationWithUserId = {
+        ...application,
+        accountId: user!.id // Use user ID instead of account ID for now
+      }
+      const loan = await loansApi.applyForLoan(applicationWithUserId)
       setApplicationSuccess(loan)
       setShowApplicationForm(false)
       await loadUserLoans()

@@ -4,6 +4,7 @@ import { accountsApi, type Account } from '../api/accounts'
 import { Card } from '../components/ui/Card'
 import { Button } from '../components/ui/Button'
 import { Input } from '../components/ui/Input'
+import { AccountDetailsModal } from '../components/AccountDetailsModal'
 import { formatCurrency, cn } from '../lib/utils'
 
 
@@ -35,6 +36,7 @@ export function AccountsPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [selectedAccount, setSelectedAccount] = useState<Account | null>(null)
+  const [modalAccount, setModalAccount] = useState<Account | null>(null)
   const [totalBalance, setTotalBalance] = useState(0)
   const [searchQuery, setSearchQuery] = useState('')
   const [statusFilter, setStatusFilter] = useState<Account['status'] | 'ALL'>('ALL')
@@ -400,9 +402,7 @@ export function AccountsPage() {
               <Card
                 key={account.id}
                 className="hover-lift cursor-pointer relative overflow-hidden"
-                onClick={() =>
-                  setSelectedAccount(selectedAccount?.id === account.id ? null : account)
-                }
+                onClick={() => setModalAccount(account)}
               >
                 {/* Account Card Header */}
                 <div
@@ -567,6 +567,15 @@ export function AccountsPage() {
           </Card>
         </div>
       )}
+
+      {/* Account Details Modal */}
+      <AccountDetailsModal
+        isOpen={modalAccount !== null}
+        onClose={() => setModalAccount(null)}
+        account={modalAccount}
+        onAccountAction={handleAccountAction}
+        loading={loading}
+      />
     </div>
   )
 }

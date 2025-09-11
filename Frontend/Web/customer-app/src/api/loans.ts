@@ -97,7 +97,7 @@ export interface PageResponse<T> {
 export const loansApi = {
   // Get loan products
   getLoanProducts: async (): Promise<LoanProduct[]> => {
-    const response = await api.get('http://localhost:8080/loan-service/api/v1/loans/products')
+    const response = await api.get('/api/v1/loans/products')
     return Array.isArray(response.data?.data) ? response.data.data : (Array.isArray(response.data) ? response.data : [])
   },
 
@@ -123,7 +123,24 @@ export const loansApi = {
 
   // Apply for loan
   applyForLoan: async (application: LoanApplication): Promise<Loan> => {
-    const response = await api.post('/loans/apply', application)
+    // Convert frontend LoanApplication to backend CreateLoanRequest format
+    const createLoanRequest = {
+      userId: application.accountId, // Will be updated to correct user ID
+      accountNumber: `ACC${String(application.accountId).padStart(12, '0')}`,
+      loanType: application.loanType,
+      principalAmount: application.requestedAmount,
+      interestRate: 12.5, // Default rate, should be calculated based on product
+      termMonths: application.termMonths,
+      purpose: application.purpose,
+      monthlyIncome: application.monthlyIncome,
+      employmentStatus: application.employmentStatus,
+      employerName: application.employerName,
+      collateral: application.collateral,
+      collateralValue: application.collateralValue,
+      notes: `Employment: ${application.employmentStatus}${application.employerName ? `, Employer: ${application.employerName}` : ''}`
+    }
+    
+    const response = await api.post('/api/v1/loans', createLoanRequest)
     return response.data
   },
 
@@ -137,7 +154,7 @@ export const loansApi = {
     const params: any = { page, size }
     if (status) params.status = status
 
-    const response = await api.get(`/loans/user/${userId}`, { params })
+    const response = await api.get(`/api/v1/loans/user/${userId}`, { params })
     return response.data
   },
 
