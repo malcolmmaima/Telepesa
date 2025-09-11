@@ -4,9 +4,11 @@ import { Card } from '../components/ui/Card'
 import { Button } from '../components/ui/Button'
 import { Input } from '../components/ui/Input'
 import { userApi, type UpdateProfileRequest, type ChangePasswordRequest } from '../api/user'
+import { useAvatarImage } from '../hooks/useAvatarImage'
 
 export function ProfilePage() {
-  const { user, setUser } = useAuth()
+  const { user, updateUser } = useAuth()
+  const { imageSrc: avatarImageSrc, isLoading: isLoadingAvatar, error: avatarError } = useAvatarImage(user?.avatarUrl)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [isEditing, setIsEditing] = useState(false)
   const [isChangingPassword, setIsChangingPassword] = useState(false)
@@ -62,7 +64,7 @@ export function ProfilePage() {
       }
       
       const response = await userApi.updateProfile(profileData)
-      setUser(response.user)
+      updateUser(response.user)
       setMessage({ type: 'success', text: response.message || 'Profile updated successfully!' })
       setIsEditing(false)
     } catch (error: any) {
@@ -128,7 +130,7 @@ export function ProfilePage() {
       const response = await userApi.uploadAvatar(file)
       // Update user in auth store with new avatar URL
       if (user) {
-        setUser({ ...user, avatarUrl: response.avatarUrl })
+        updateUser({ avatarUrl: response.avatarUrl })
       }
       
       // Check if this is a local fallback response
@@ -191,17 +193,24 @@ export function ProfilePage() {
       <Card title="Profile Picture" description="Upload and manage your profile picture">
         <div className="flex items-center space-x-6">
           <div className="flex-shrink-0">
-            <div className="w-24 h-24 rounded-full bg-gradient-to-br from-financial-blue to-financial-navy flex items-center justify-center overflow-hidden">
-              {user?.avatarUrl ? (
+            <div className="relative w-24 h-24 rounded-full bg-gradient-to-br from-financial-blue to-financial-navy flex items-center justify-center overflow-hidden">
+              {avatarImageSrc ? (
                 <img
-                  src={user.avatarUrl}
+                  src={avatarImageSrc}
                   alt="Profile"
                   className="w-full h-full object-cover"
                 />
+              ) : isLoadingAvatar ? (
+                <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-white"></div>
               ) : (
                 <span className="text-2xl font-bold text-white">
                   {user?.firstName?.[0]}{user?.lastName?.[0]}
                 </span>
+              )}
+              {avatarError && (
+                <div className="absolute bottom-0 right-0 w-6 h-6 bg-red-500 rounded-full flex items-center justify-center text-xs text-white" title={avatarError}>
+                  !
+                </div>
               )}
             </div>
           </div>

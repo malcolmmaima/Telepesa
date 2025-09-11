@@ -114,8 +114,8 @@ services:
   # Service Discovery
   eureka-server:
     build:
-      context: ./eureka-server
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: eureka-server/Dockerfile
     container_name: telepesa-eureka-server
     ports:
       - "8761:8761"
@@ -136,8 +136,8 @@ services:
   # API Gateway
   api-gateway:
     build:
-      context: ./api-gateway
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: api-gateway/Dockerfile
     container_name: telepesa-api-gateway
     ports:
       - "8080:8080"
@@ -167,8 +167,8 @@ services:
   # Microservices
   user-service:
     build:
-      context: ./user-service
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: user-service/Dockerfile
     container_name: telepesa-user-service
     ports:
       - "8081:8081"
@@ -208,8 +208,8 @@ services:
 
   account-service:
     build:
-      context: ./account-service
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: account-service/Dockerfile
     container_name: telepesa-account-service
     ports:
       - "8082:8082"
@@ -249,8 +249,8 @@ services:
 
   transaction-service:
     build:
-      context: ./transaction-service
-      dockerfile: Dockerfile
+      context: ..
+      dockerfile: transaction-service/Dockerfile
     container_name: telepesa-transaction-service
     ports:
       - "8083:8083"
@@ -290,8 +290,8 @@ services:
 
   loan-service:
     build:
-      context: ./loan-service
-      dockerfile: Dockerfile
+      context: ..
+      dockerfile: loan-service/Dockerfile
     container_name: telepesa-loan-service
     ports:
       - "8084:8084"
@@ -332,8 +332,8 @@ services:
 
   notification-service:
     build:
-      context: ./notification-service
-      dockerfile: Dockerfile
+      context: ..
+      dockerfile: notification-service/Dockerfile
     container_name: telepesa-notification-service
     ports:
       - "8085:8085"

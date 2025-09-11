@@ -35,6 +35,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         String requestUri = request.getRequestURI();
         log.debug("JWT Filter processing request: {} {}", request.getMethod(), requestUri);
         
+        // Skip JWT processing for static files (uploads)
+        if (requestUri.startsWith("/uploads/")) {
+            log.debug("Skipping JWT processing for static file: {}", requestUri);
+            filterChain.doFilter(request, response);
+            return;
+        }
+        
         try {
             String jwt = getJwtFromRequest(request);
             log.debug("JWT token present: {}", jwt != null);

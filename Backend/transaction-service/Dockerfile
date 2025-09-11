@@ -11,7 +11,7 @@ RUN apt-get update && apt-get upgrade -y && \
 WORKDIR /app
 
 # Copy the pre-built JAR file from CI/CD artifacts
-COPY target/*.jar app.jar
+COPY transaction-service/target/*.jar app.jar
 
 # Change ownership to telepesa user
 RUN chown -R telepesa:telepesa /app

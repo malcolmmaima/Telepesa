@@ -72,6 +72,9 @@ public class SecurityConfig {
             )
             
             .authorizeHttpRequests(authz -> authz
+                // Static files - uploaded content (avatars, etc.) - MUST BE FIRST
+                .requestMatchers("/uploads/**").permitAll()
+                
                 // Public endpoints
                 .requestMatchers("/api/users/register", "/api/users/login",
                                 "/api/v1/users/register", "/api/v1/users/login",

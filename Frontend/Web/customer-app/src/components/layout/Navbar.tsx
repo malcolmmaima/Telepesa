@@ -6,14 +6,17 @@ import { useNotifications } from '../../hooks/useNotifications'
 import { Avatar } from '../ui/Avatar'
 import { NotificationsDropdown } from '../ui/NotificationsDropdown'
 import { cn } from '../../lib/utils'
+import { getUserInitials } from '../../lib/avatarUtils'
 
 export const Navbar = () => {
   const [isProfileOpen, setIsProfileOpen] = useState(false)
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false)
-  const { logout } = useAuth()
-  const { userName, userInitials } = useAuthSelectors()
+  const { logout, user } = useAuth()
+  const { userName } = useAuthSelectors()
   const { darkMode, toggleDarkMode } = useDarkMode()
   const { unreadCount } = useNotifications()
+  
+  const userInitials = getUserInitials(user?.firstName, user?.lastName, user?.username)
 
   const handleLogout = () => {
     logout()
@@ -118,7 +121,11 @@ export const Navbar = () => {
                 onClick={() => setIsProfileOpen(!isProfileOpen)}
                 className="flex items-center space-x-2 p-2 rounded-financial hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors duration-200"
               >
-                <Avatar initials={userInitials || undefined} size="sm" />
+                <Avatar 
+                  src={user?.avatarUrl} 
+                  initials={userInitials || undefined} 
+                  size="sm" 
+                />
                 <span className="hidden sm:block text-sm font-medium text-financial-navy dark:text-slate-200">
                   {userName}
                 </span>

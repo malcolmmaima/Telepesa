@@ -118,8 +118,9 @@ export const userApi = {
   uploadAvatar: async (file: File): Promise<{ avatarUrl: string; message: string }> => {
     try {
       const response = await apiService.user.uploadAvatar(file)
+      const avatarUrl = response.data.avatarUrl || response.data.url
       return {
-        avatarUrl: response.data.avatarUrl || response.data.url,
+        avatarUrl: avatarUrl,
         message: response.data.message || 'Profile picture updated successfully!'
       }
     } catch (error: any) {

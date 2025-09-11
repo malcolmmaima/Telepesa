@@ -16,7 +16,7 @@ interface ServiceStatus {
 export function BackendStatus({ showDetails = false }: BackendStatusProps) {
   const { accessToken, user } = useAuth()
   const [services, setServices] = useState<ServiceStatus[]>([
-    { name: 'User Service', url: '/users/profile', status: 'checking' },
+    { name: 'User Service', url: '/users/me/profile', status: 'checking' },
     { name: 'Notifications Service', url: '/notifications', status: 'checking' },
     { name: 'Accounts Service', url: '/accounts', status: 'checking' },
   ])
@@ -31,11 +31,16 @@ export function BackendStatus({ showDetails = false }: BackendStatusProps) {
         }
       })
 
+      const isAuthProtected = response.status === 401 || response.status === 403
       return {
         ...service,
-        status: response.ok ? 'online' : response.status === 403 ? 'online' : 'error',
+        status: response.ok ? 'online' : isAuthProtected ? 'online' : 'error',
         lastChecked: new Date(),
-        error: response.ok ? undefined : `HTTP ${response.status} ${response.statusText}`
+        error: response.ok
+          ? undefined
+          : isAuthProtected
+            ? 'Authenticated access required'
+            : `HTTP ${response.status} ${response.statusText}`
       }
     } catch (error) {
       return {

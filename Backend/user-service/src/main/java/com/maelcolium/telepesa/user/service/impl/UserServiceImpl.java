@@ -514,6 +514,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional
+    @CacheEvict(value = "users", key = "#userId")
     public String uploadAvatar(Long userId, MultipartFile file) {
         log.info("Uploading avatar for user ID: {}", userId);
         
