@@ -130,7 +130,7 @@ export function ProfilePage() {
     try {
       const response = await userApi.uploadAvatar(file)
       if (user) {
-        updateUser({ profilePicture: response.avatarUrl })
+        updateUser({ profilePicture: response.avatarUrl, avatarUrl: response.avatarUrl } as any)
       }
       setMessage({ 
         type: 'success', 
@@ -234,7 +234,7 @@ export function ProfilePage() {
                     try {
                       setUploadingAvatar(true)
                       const resp = await userApi.deleteAvatar()
-                      updateUser({ profilePicture: '' })
+                      updateUser({ profilePicture: '', avatarUrl: '' } as any)
                       setMessage({ type: 'success', text: resp.message })
                     } catch (err: any) {
                       setMessage({ type: 'error', text: err.message || 'Failed to remove profile picture' })

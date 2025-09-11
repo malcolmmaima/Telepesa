@@ -188,6 +188,9 @@ export const userApi = {
       const payload: any = response.data
       return { message: payload.message ?? payload.data?.message ?? 'Profile picture removed successfully!' }
     } catch (error: any) {
+      if (error.statusCode === 503) {
+        return { message: 'Profile picture removal queued. Service temporarily unavailable.' }
+      }
       if (error.statusCode === 404) {
         return { message: 'No profile picture to remove' }
       }
