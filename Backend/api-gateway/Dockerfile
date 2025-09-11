@@ -3,7 +3,7 @@
 FROM eclipse-temurin:17-jre as build
 WORKDIR /workspace/app
 # Expect prebuilt jar provided by CI or local build
-COPY api-gateway/target/api-gateway-*.jar app.jar
+COPY target/api-gateway-*.jar app.jar
 
 # Runtime stage
 FROM eclipse-temurin:17-jre

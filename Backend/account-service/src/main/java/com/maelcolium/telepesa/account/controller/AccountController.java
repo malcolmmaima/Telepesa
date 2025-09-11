@@ -37,6 +37,15 @@ import java.util.List;
 @Slf4j
 @Tag(name = "Account Management", description = "APIs for managing bank accounts")
 public class AccountController {
+    @Operation(summary = "Accounts root endpoint", description = "Basic availability check for accounts API")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Accounts API is reachable")
+    })
+    @GetMapping
+    public ResponseEntity<String> root() {
+        return ResponseEntity.ok("accounts-service: OK");
+    }
+
 
     private final AccountService accountService;
 

@@ -1,4 +1,5 @@
 version: '3.8'
+name: docker-compose
 
 services:
   # Infrastructure Services
@@ -14,7 +15,7 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./docker-compose/init-scripts:/docker-entrypoint-initdb.d
+      - ./init-scripts:/docker-entrypoint-initdb.d
     networks:
       - telepesa-network
     healthcheck:
@@ -114,8 +115,8 @@ services:
   # Service Discovery
   eureka-server:
     build:
-      context: .
-      dockerfile: eureka-server/Dockerfile
+      context: ../eureka-server
+      dockerfile: Dockerfile
     container_name: telepesa-eureka-server
     ports:
       - "8761:8761"
@@ -136,8 +137,8 @@ services:
   # API Gateway
   api-gateway:
     build:
-      context: .
-      dockerfile: api-gateway/Dockerfile
+      context: ./api-gateway
+      dockerfile: Dockerfile
     container_name: telepesa-api-gateway
     ports:
       - "8080:8080"
@@ -167,8 +168,8 @@ services:
   # Microservices
   user-service:
     build:
-      context: .
-      dockerfile: user-service/Dockerfile
+      context: ./user-service
+      dockerfile: Dockerfile
     container_name: telepesa-user-service
     ports:
       - "8081:8081"
@@ -208,8 +209,8 @@ services:
 
   account-service:
     build:
-      context: .
-      dockerfile: account-service/Dockerfile
+      context: ../account-service
+      dockerfile: Dockerfile
     container_name: telepesa-account-service
     ports:
       - "8082:8082"
@@ -249,8 +250,8 @@ services:
 
   transaction-service:
     build:
-      context: ..
-      dockerfile: transaction-service/Dockerfile
+      context: ../transaction-service
+      dockerfile: Dockerfile
     container_name: telepesa-transaction-service
     ports:
       - "8083:8083"
@@ -290,8 +291,8 @@ services:
 
   loan-service:
     build:
-      context: ..
-      dockerfile: loan-service/Dockerfile
+      context: ../loan-service
+      dockerfile: Dockerfile
     container_name: telepesa-loan-service
     ports:
       - "8084:8084"
@@ -332,8 +333,8 @@ services:
 
   notification-service:
     build:
-      context: ..
-      dockerfile: notification-service/Dockerfile
+      context: ../notification-service
+      dockerfile: Dockerfile
     container_name: telepesa-notification-service
     ports:
       - "8085:8085"
