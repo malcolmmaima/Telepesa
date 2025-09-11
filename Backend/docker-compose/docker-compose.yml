@@ -14,7 +14,7 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./init-scripts:/docker-entrypoint-initdb.d
+      - ./docker-compose/init-scripts:/docker-entrypoint-initdb.d
     networks:
       - telepesa-network
     healthcheck:
@@ -114,7 +114,7 @@ services:
   # Service Discovery
   eureka-server:
     build:
-      context: ../eureka-server
+      context: ./eureka-server
       dockerfile: Dockerfile
     container_name: telepesa-eureka-server
     ports:
@@ -136,7 +136,7 @@ services:
   # API Gateway
   api-gateway:
     build:
-      context: ../api-gateway
+      context: ./api-gateway
       dockerfile: Dockerfile
     container_name: telepesa-api-gateway
     ports:
@@ -167,7 +167,7 @@ services:
   # Microservices
   user-service:
     build:
-      context: ../user-service
+      context: ./user-service
       dockerfile: Dockerfile
     container_name: telepesa-user-service
     ports:
@@ -208,7 +208,7 @@ services:
 
   account-service:
     build:
-      context: ../account-service
+      context: ./account-service
       dockerfile: Dockerfile
     container_name: telepesa-account-service
     ports:
@@ -249,7 +249,7 @@ services:
 
   transaction-service:
     build:
-      context: ../transaction-service
+      context: ./transaction-service
       dockerfile: Dockerfile
     container_name: telepesa-transaction-service
     ports:
@@ -290,7 +290,7 @@ services:
 
   loan-service:
     build:
-      context: ../loan-service
+      context: ./loan-service
       dockerfile: Dockerfile
     container_name: telepesa-loan-service
     ports:
@@ -332,7 +332,7 @@ services:
 
   notification-service:
     build:
-      context: ../notification-service
+      context: ./notification-service
       dockerfile: Dockerfile
     container_name: telepesa-notification-service
     ports:

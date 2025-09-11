@@ -31,6 +31,7 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
+import com.maelcolium.telepesa.user.security.UserPrincipal;
 
 /**
  * REST Controller for user management operations
@@ -349,31 +350,58 @@ public class UserController {
      * This is more reliable than manually parsing JWT tokens
      */
     private Long getCurrentUserId(jakarta.servlet.http.HttpServletRequest request) {
+        log.debug("getCurrentUserId called for request: {} {}", request.getMethod(), request.getRequestURI());
+        
         try {
-            // Use Spring Security's Authentication context
+            // Use Spring Security's Authentication context first
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-            if (authentication != null && authentication.getPrincipal() instanceof UserDetails) {
-                UserDetails userDetails = (UserDetails) authentication.getPrincipal();
-                String username = userDetails.getUsername();
-                log.debug("Getting user ID for authenticated user: {}", username);
+            log.debug("Authentication object: {}", authentication != null ? authentication.getClass().getSimpleName() : "null");
+            
+            if (authentication != null && authentication.isAuthenticated() && 
+                !"anonymousUser".equals(authentication.getName())) {
+                Object principal = authentication.getPrincipal();
+                log.debug("Principal type: {}", principal != null ? principal.getClass().getSimpleName() : "null");
+                log.debug("Authentication name: {}", authentication.getName());
+                String username = null;
+
+                // Debug the exact type and class information
+                log.debug("Principal class name: {}", principal.getClass().getName());
+                log.debug("Principal toString: {}", principal.toString());
+                log.debug("Checking instanceof UserPrincipal: {}", principal instanceof UserPrincipal);
                 
-                // Find user by username to get the ID
-                UserDto user = userService.getUserByUsername(username);
+                if (principal instanceof UserPrincipal userPrincipal) {
+                    // Directly get the user ID from UserPrincipal to avoid database calls
+                    log.debug("Using UserPrincipal ID directly: {}", userPrincipal.getId());
+                    return userPrincipal.getId();
+                } else if (principal instanceof UserDetails userDetails) {
+                    username = userDetails.getUsername();
+                    log.debug("Using UserDetails username: {}", username);
+                } else if (principal != null) {
+                    // Try principal name fallback (works for custom principals)
+                    username = authentication.getName();
+                    log.debug("Using authentication name: {}", username);
+                }
+
+                if (username != null && !username.isBlank()) {
+                    log.debug("Getting user ID for authenticated principal: {}", username);
+                    UserDto user = userService.getUserByUsername(username);
+                    return user.getId();
+                } else {
+                    log.warn("No valid username found in authentication context");
+                }
+            } else {
+                log.warn("No valid authentication found in SecurityContext");
+            }
+            
+            // Instead of JWT parsing fallback, let's use a simpler approach
+            // Check if we have X-User-Name header from API Gateway
+            String gatewayUser = request.getHeader("X-User-Name");
+            if (gatewayUser != null && !gatewayUser.isBlank()) {
+                log.debug("Using X-User-Name header: {}", gatewayUser);
+                UserDto user = userService.getUserByUsername(gatewayUser);
                 return user.getId();
             }
             
-            // Fallback to manual JWT parsing if authentication context is not available
-            String authHeader = request.getHeader("Authorization");
-            if (authHeader != null && authHeader.startsWith("Bearer ")) {
-                String token = authHeader.substring(7);
-                // Extract username from JWT token
-                String username = jwtTokenUtil.getUsernameFromToken(token);
-                log.debug("Getting user ID for JWT user: {}", username);
-                
-                // Find user by username to get the ID
-                UserDto user = userService.getUserByUsername(username);
-                return user.getId();
-            }
         } catch (Exception e) {
             log.error("Error extracting user ID: {}", e.getMessage(), e);
             throw new RuntimeException("Invalid authentication token");
