@@ -1,9 +1,13 @@
 import { Outlet, Navigate } from 'react-router-dom'
 import { useAuth } from '../store/auth'
 import { Navbar } from '../components/layout/Navbar'
+import { NotificationToast } from '../components/ui/NotificationToast'
+import { BackendStatus } from '../components/ui/BackendStatus'
+import { useNotifications } from '../hooks/useNotifications'
 
 export function ProtectedLayout() {
   const { isAuthenticated, isLoading } = useAuth()
+  const { newNotification, dismissNewNotification } = useNotifications()
 
   // Show loading state while checking authentication
   if (isLoading) {
@@ -31,6 +35,15 @@ export function ProtectedLayout() {
       <main className="pb-8">
         <Outlet />
       </main>
+      
+      {/* Real-time notification toast */}
+      <NotificationToast 
+        notification={newNotification}
+        onClose={dismissNewNotification}
+      />
+      
+      {/* Backend status indicator (only shows when there are issues) */}
+      <BackendStatus showDetails={false} />
     </div>
   )
 }

@@ -72,6 +72,12 @@ public class User extends BaseEntity {
     @Column(name = "email_verification_token")
     private String emailVerificationToken;
 
+    @Column(name = "avatar_url")
+    private String avatarUrl;
+
+    @Column(name = "date_of_birth")
+    private String dateOfBirth;
+
     /**
      * Check if the user account is active and verified
      */

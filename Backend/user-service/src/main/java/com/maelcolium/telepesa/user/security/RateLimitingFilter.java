@@ -19,9 +19,9 @@ import java.util.concurrent.atomic.AtomicLong;
 @Component
 public class RateLimitingFilter implements Filter {
 
-    private static final int MAX_REQUESTS_PER_MINUTE = 60;
-    private static final int MAX_LOGIN_ATTEMPTS_PER_MINUTE = 5;
-    private static final int MAX_REGISTRATION_ATTEMPTS_PER_MINUTE = 3;
+    private static final int MAX_REQUESTS_PER_MINUTE = 300;  // Increased for development
+    private static final int MAX_LOGIN_ATTEMPTS_PER_MINUTE = 20;
+    private static final int MAX_REGISTRATION_ATTEMPTS_PER_MINUTE = 10;
     private static final long WINDOW_SIZE_MINUTES = 1;
     
     // Store for tracking requests per IP
@@ -91,6 +91,7 @@ public class RateLimitingFilter implements Filter {
         return requestUri.contains("/actuator/health") || 
                requestUri.contains("/swagger-ui") || 
                requestUri.contains("/api-docs") ||
+               requestUri.contains("/avatar") ||  // Skip rate limiting for avatar uploads
                requestUri.endsWith(".css") ||
                requestUri.endsWith(".js") ||
                requestUri.endsWith(".ico");

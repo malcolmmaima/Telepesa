@@ -6,7 +6,10 @@ import com.maelcolium.telepesa.user.dto.LoginRequest;
 import com.maelcolium.telepesa.user.dto.LoginResponse;
 import com.maelcolium.telepesa.user.dto.TokenRefreshRequest;
 import com.maelcolium.telepesa.user.dto.TokenRefreshResponse;
+import com.maelcolium.telepesa.user.dto.UpdateProfileRequest;
+import com.maelcolium.telepesa.user.dto.ChangePasswordRequest;
 import com.maelcolium.telepesa.user.service.UserService;
+import com.maelcolium.telepesa.security.JwtTokenUtil;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -14,6 +17,8 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
+import java.util.Map;
+import java.util.HashMap;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -22,6 +27,10 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 
 /**
  * REST Controller for user management operations
@@ -33,9 +42,11 @@ import org.springframework.web.bind.annotation.*;
 public class UserController {
 
     private final UserService userService;
+    private final JwtTokenUtil jwtTokenUtil;
 
-    public UserController(UserService userService) {
+    public UserController(UserService userService, JwtTokenUtil jwtTokenUtil) {
         this.userService = userService;
+        this.jwtTokenUtil = jwtTokenUtil;
     }
 
     @Operation(summary = "Register a new user")
@@ -78,19 +89,83 @@ public class UserController {
         return ResponseEntity.ok(response);
     }
 
-    @Operation(summary = "Get user by ID")
+    @Operation(summary = "Get current user profile")
     @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "User found"),
-        @ApiResponse(responseCode = "404", description = "User not found"),
-        @ApiResponse(responseCode = "403", description = "Access denied")
+        @ApiResponse(responseCode = "200", description = "Profile retrieved successfully"),
+        @ApiResponse(responseCode = "404", description = "User not found")
     })
-    @GetMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN') or #id == authentication.principal.id")
-    public ResponseEntity<UserDto> getUser(
-            @Parameter(description = "User ID") @PathVariable Long id) {
-        log.debug("Get user request for ID: {}", id);
-        UserDto user = userService.getUser(id);
+    @GetMapping("/me/profile")
+    @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
+    public ResponseEntity<UserDto> getCurrentUserProfile(jakarta.servlet.http.HttpServletRequest request) {
+        Long userId = getCurrentUserId(request);
+        log.debug("Get current user profile request for user ID: {}", userId);
+        UserDto user = userService.getCurrentUserProfile(userId);
         return ResponseEntity.ok(user);
+    }
+
+    @Operation(summary = "Update user profile")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Profile updated successfully"),
+        @ApiResponse(responseCode = "400", description = "Invalid input data"),
+        @ApiResponse(responseCode = "404", description = "User not found")
+    })
+    @PutMapping("/me/profile")
+    @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
+    public ResponseEntity<Map<String, Object>> updateUserProfile(
+            @Valid @RequestBody UpdateProfileRequest request,
+            jakarta.servlet.http.HttpServletRequest httpRequest) {
+        Long userId = getCurrentUserId(httpRequest);
+        log.info("Update user profile request for user ID: {}", userId);
+        UserDto updatedUser = userService.updateUserProfile(userId, request);
+        
+        Map<String, Object> response = new HashMap<>();
+        response.put("user", updatedUser);
+        response.put("message", "Profile updated successfully!");
+        
+        return ResponseEntity.ok(response);
+    }
+
+    @Operation(summary = "Change user password")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Password changed successfully"),
+        @ApiResponse(responseCode = "400", description = "Invalid password data")
+    })
+    @PutMapping("/me/change-password")
+    @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
+    public ResponseEntity<Map<String, String>> changePassword(
+            @Valid @RequestBody ChangePasswordRequest request,
+            jakarta.servlet.http.HttpServletRequest httpRequest) {
+        Long userId = getCurrentUserId(httpRequest);
+        log.info("Change password request for user ID: {}", userId);
+        userService.changePassword(userId, request);
+        
+        Map<String, String> response = new HashMap<>();
+        response.put("message", "Password changed successfully!");
+        
+        return ResponseEntity.ok(response);
+    }
+
+    @Operation(summary = "Upload user avatar/profile picture")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Avatar uploaded successfully"),
+        @ApiResponse(responseCode = "400", description = "Invalid file or file too large")
+    })
+    @PostMapping("/me/avatar")
+    @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
+    public ResponseEntity<Map<String, String>> uploadAvatar(
+            @Parameter(description = "Avatar image file") 
+            @RequestParam("avatar") MultipartFile file,
+            jakarta.servlet.http.HttpServletRequest request) {
+        Long userId = getCurrentUserId(request);
+        log.info("Avatar upload request for user ID: {}", userId);
+        
+        String avatarUrl = userService.uploadAvatar(userId, file);
+        
+        Map<String, String> response = new HashMap<>();
+        response.put("avatarUrl", avatarUrl);
+        response.put("message", "Profile picture updated successfully!");
+        
+        return ResponseEntity.ok(response);
     }
 
     @Operation(summary = "Get user by username")
@@ -104,6 +179,21 @@ public class UserController {
             @Parameter(description = "Username") @PathVariable String username) {
         log.debug("Get user request for username: {}", username);
         UserDto user = userService.getUserByUsername(username);
+        return ResponseEntity.ok(user);
+    }
+
+    @Operation(summary = "Get user by ID")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "User found"),
+        @ApiResponse(responseCode = "404", description = "User not found"),
+        @ApiResponse(responseCode = "403", description = "Access denied")
+    })
+    @GetMapping("/{id:[0-9]+}")
+    @PreAuthorize("hasRole('ADMIN') or #id == authentication.principal.id")
+    public ResponseEntity<UserDto> getUser(
+            @Parameter(description = "User ID") @PathVariable Long id) {
+        log.debug("Get user request for ID: {}", id);
+        UserDto user = userService.getUser(id);
         return ResponseEntity.ok(user);
     }
 
@@ -141,7 +231,7 @@ public class UserController {
         @ApiResponse(responseCode = "404", description = "User not found"),
         @ApiResponse(responseCode = "403", description = "Access denied")
     })
-    @PutMapping("/{id}")
+    @PutMapping("/{id:[0-9]+}")
     @PreAuthorize("hasRole('ADMIN') or #id == authentication.principal.id")
     public ResponseEntity<UserDto> updateUser(
             @Parameter(description = "User ID") @PathVariable Long id,
@@ -157,7 +247,7 @@ public class UserController {
         @ApiResponse(responseCode = "404", description = "User not found"),
         @ApiResponse(responseCode = "403", description = "Access denied")
     })
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/{id:[0-9]+}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> deleteUser(
             @Parameter(description = "User ID") @PathVariable Long id) {
@@ -230,7 +320,7 @@ public class UserController {
         @ApiResponse(responseCode = "200", description = "User account locked"),
         @ApiResponse(responseCode = "404", description = "User not found")
     })
-    @PostMapping("/{id}/lock")
+    @PostMapping("/{id:[0-9]+}/lock")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<String> lockUser(
             @Parameter(description = "User ID") @PathVariable Long id) {
@@ -244,7 +334,7 @@ public class UserController {
         @ApiResponse(responseCode = "200", description = "User account unlocked"),
         @ApiResponse(responseCode = "404", description = "User not found")
     })
-    @PostMapping("/{id}/unlock")
+    @PostMapping("/{id:[0-9]+}/unlock")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<String> unlockUser(
             @Parameter(description = "User ID") @PathVariable Long id) {
@@ -252,4 +342,43 @@ public class UserController {
         userService.unlockUserAccount(id);
         return ResponseEntity.ok("Account unlocked successfully");
     }
-} 
+
+
+    /**
+     * Extract user ID from Spring Security authentication context
+     * This is more reliable than manually parsing JWT tokens
+     */
+    private Long getCurrentUserId(jakarta.servlet.http.HttpServletRequest request) {
+        try {
+            // Use Spring Security's Authentication context
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            if (authentication != null && authentication.getPrincipal() instanceof UserDetails) {
+                UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+                String username = userDetails.getUsername();
+                log.debug("Getting user ID for authenticated user: {}", username);
+                
+                // Find user by username to get the ID
+                UserDto user = userService.getUserByUsername(username);
+                return user.getId();
+            }
+            
+            // Fallback to manual JWT parsing if authentication context is not available
+            String authHeader = request.getHeader("Authorization");
+            if (authHeader != null && authHeader.startsWith("Bearer ")) {
+                String token = authHeader.substring(7);
+                // Extract username from JWT token
+                String username = jwtTokenUtil.getUsernameFromToken(token);
+                log.debug("Getting user ID for JWT user: {}", username);
+                
+                // Find user by username to get the ID
+                UserDto user = userService.getUserByUsername(username);
+                return user.getId();
+            }
+        } catch (Exception e) {
+            log.error("Error extracting user ID: {}", e.getMessage(), e);
+            throw new RuntimeException("Invalid authentication token");
+        }
+        
+        throw new RuntimeException("User not authenticated");
+    }
+}

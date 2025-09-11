@@ -63,13 +63,15 @@ eureka:
 
 app:
   jwt:
-    secret: ${JWT_SECRET:myVerySecretJWTKeyForTelepesaUserService123!@#}
+    secret: ${JWT_SECRET:default-secret-key-for-development-only-change-in-production}
     expiration: ${JWT_EXPIRATION:86400}
   user:
     max-failed-attempts: ${MAX_FAILED_ATTEMPTS:5}
     account-lock-duration: ${ACCOUNT_LOCK_DURATION:30}
     password-reset-expiry: ${PASSWORD_RESET_EXPIRY:3600}
     email-verification-expiry: ${EMAIL_VERIFICATION_EXPIRY:86400}
+  file:
+    upload-dir: ${FILE_UPLOAD_DIR:uploads}
 
 management:
   endpoints:

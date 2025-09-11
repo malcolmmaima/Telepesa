@@ -130,7 +130,13 @@ export function ProfilePage() {
       if (user) {
         setUser({ ...user, avatarUrl: response.avatarUrl })
       }
-      setMessage({ type: 'success', text: response.message || 'Profile picture updated!' })
+      
+      // Check if this is a local fallback response
+      const isLocalFallback = response.avatarUrl.startsWith('blob:')
+      setMessage({ 
+        type: isLocalFallback ? 'warning' : 'success', 
+        text: response.message || 'Profile picture updated!' 
+      })
     } catch (error: any) {
       setMessage({ type: 'error', text: error.message || 'Failed to upload profile picture' })
     } finally {

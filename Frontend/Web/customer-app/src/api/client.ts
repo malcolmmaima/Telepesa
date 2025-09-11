@@ -132,17 +132,17 @@ export const apiService = {
 
   // User management
   user: {
-    getProfile: () => api.get<ApiResponse>('/users/profile'),
+    getProfile: () => api.get<ApiResponse>('/users/me/profile'),
 
-    updateProfile: (data: any) => api.put<ApiResponse>('/users/profile', data),
+    updateProfile: (data: any) => api.put<ApiResponse>('/users/me/profile', data),
 
     changePassword: (data: { currentPassword: string; newPassword: string }) =>
-      api.put<ApiResponse>('/users/change-password', data),
+      api.put<ApiResponse>('/users/me/change-password', data),
 
     uploadAvatar: (file: File) => {
       const formData = new FormData()
       formData.append('avatar', file)
-      return api.post<ApiResponse>('/users/avatar', formData, {
+      return api.post<ApiResponse>('/users/me/avatar', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       })
     },

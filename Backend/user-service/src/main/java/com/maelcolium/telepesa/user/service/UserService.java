@@ -100,4 +100,24 @@ public interface UserService {
      * Unlock user account
      */
     void unlockUserAccount(Long id);
-} 
+
+    /**
+     * Upload user avatar/profile picture
+     */
+    String uploadAvatar(Long userId, org.springframework.web.multipart.MultipartFile file);
+
+    /**
+     * Get current user profile (based on authenticated user)
+     */
+    UserDto getCurrentUserProfile(Long userId);
+
+    /**
+     * Update user profile information
+     */
+    UserDto updateUserProfile(Long userId, com.maelcolium.telepesa.user.dto.UpdateProfileRequest request);
+
+    /**
+     * Change user password
+     */
+    void changePassword(Long userId, com.maelcolium.telepesa.user.dto.ChangePasswordRequest request);
+}

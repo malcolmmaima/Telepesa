@@ -16,6 +16,9 @@ import com.maelcolium.telepesa.user.repository.RefreshTokenRepository;
 import com.maelcolium.telepesa.user.service.AuditLogService;
 import com.maelcolium.telepesa.user.service.DeviceFingerprintService;
 import com.maelcolium.telepesa.user.service.UserService;
+import com.maelcolium.telepesa.user.service.FileStorageService;
+import com.maelcolium.telepesa.user.dto.UpdateProfileRequest;
+import com.maelcolium.telepesa.user.dto.ChangePasswordRequest;
 import com.maelcolium.telepesa.user.dto.TokenRefreshRequest;
 import com.maelcolium.telepesa.user.dto.TokenRefreshResponse;
 import lombok.extern.slf4j.Slf4j;
@@ -30,6 +33,7 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import jakarta.servlet.http.HttpServletRequest;
 import java.time.LocalDateTime;
@@ -51,6 +55,7 @@ public class UserServiceImpl implements UserService {
     private final AuditLogService auditLogService;
     private final DeviceFingerprintService deviceFingerprintService;
     private final RefreshTokenRepository refreshTokenRepository;
+    private final FileStorageService fileStorageService;
 
     @Value("${app.user.max-failed-attempts:5}")
     private int maxFailedAttempts;
@@ -65,7 +70,8 @@ public class UserServiceImpl implements UserService {
                           UserDetailsService userDetailsService,
                           AuditLogService auditLogService,
                           DeviceFingerprintService deviceFingerprintService,
-                          RefreshTokenRepository refreshTokenRepository) {
+                          RefreshTokenRepository refreshTokenRepository,
+                          FileStorageService fileStorageService) {
         this.userRepository = userRepository;
         this.userMapper = userMapper;
         this.passwordEncoder = passwordEncoder;
@@ -74,6 +80,7 @@ public class UserServiceImpl implements UserService {
         this.auditLogService = auditLogService;
         this.deviceFingerprintService = deviceFingerprintService;
         this.refreshTokenRepository = refreshTokenRepository;
+        this.fileStorageService = fileStorageService;
     }
 
     @Override
@@ -504,4 +511,111 @@ public class UserServiceImpl implements UserService {
         
         return request.getRemoteAddr();
     }
-} 
+
+    @Override
+    @Transactional
+    public String uploadAvatar(Long userId, MultipartFile file) {
+        log.info("Uploading avatar for user ID: {}", userId);
+        
+        // Find user
+        User user = userRepository.findById(userId)
+            .orElseThrow(() -> new UserNotFoundException("id", userId.toString()));
+        
+        try {
+            // Store the file
+            String avatarUrl = fileStorageService.storeAvatar(file, userId);
+            
+            // Delete old avatar if exists
+            if (user.getAvatarUrl() != null) {
+                fileStorageService.deleteAvatar(user.getAvatarUrl());
+            }
+            
+            // Update user avatar URL
+            user.setAvatarUrl(avatarUrl);
+            userRepository.save(user);
+            
+            log.info("Avatar uploaded successfully for user ID: {}", userId);
+            return avatarUrl;
+            
+        } catch (Exception e) {
+            log.error("Failed to upload avatar for user {}: {}", userId, e.getMessage());
+            throw new RuntimeException("Failed to upload avatar: " + e.getMessage(), e);
+        }
+    }
+
+    @Override
+    @Cacheable(value = "users", key = "#userId")
+    public UserDto getCurrentUserProfile(Long userId) {
+        log.debug("Getting profile for user ID: {}", userId);
+        
+        User user = userRepository.findById(userId)
+            .orElseThrow(() -> new UserNotFoundException("id", userId.toString()));
+        
+        return userMapper.toDto(user);
+    }
+
+    @Override
+    @Transactional
+    @CacheEvict(value = "users", key = "#userId")
+    public UserDto updateUserProfile(Long userId, UpdateProfileRequest request) {
+        log.info("Updating profile for user ID: {}", userId);
+        
+        User user = userRepository.findById(userId)
+            .orElseThrow(() -> new UserNotFoundException("id", userId.toString()));
+        
+        // Check for duplicate email if changed
+        if (request.getEmail() != null && !request.getEmail().equals(user.getEmail())) {
+            if (userRepository.existsByEmailAndIdNot(request.getEmail(), userId)) {
+                throw new DuplicateUserException("email", request.getEmail());
+            }
+            user.setEmail(request.getEmail());
+        }
+        
+        // Check for duplicate phone number if changed
+        if (request.getPhoneNumber() != null && !request.getPhoneNumber().equals(user.getPhoneNumber())) {
+            if (userRepository.existsByPhoneNumberAndIdNot(request.getPhoneNumber(), userId)) {
+                throw new DuplicateUserException("phone number", request.getPhoneNumber());
+            }
+            user.setPhoneNumber(request.getPhoneNumber());
+        }
+        
+        // Update other fields
+        if (request.getFirstName() != null) {
+            user.setFirstName(request.getFirstName());
+        }
+        if (request.getLastName() != null) {
+            user.setLastName(request.getLastName());
+        }
+        if (request.getDateOfBirth() != null) {
+            user.setDateOfBirth(request.getDateOfBirth());
+        }
+        
+        User savedUser = userRepository.save(user);
+        log.info("Profile updated successfully for user ID: {}", userId);
+        
+        return userMapper.toDto(savedUser);
+    }
+
+    @Override
+    @Transactional
+    public void changePassword(Long userId, ChangePasswordRequest request) {
+        log.info("Changing password for user ID: {}", userId);
+        
+        User user = userRepository.findById(userId)
+            .orElseThrow(() -> new UserNotFoundException("id", userId.toString()));
+        
+        // Verify current password
+        if (!passwordEncoder.matches(request.getCurrentPassword(), user.getPassword())) {
+            throw new BadCredentialsException("Current password is incorrect");
+        }
+        
+        // Encode and set new password
+        user.setPassword(passwordEncoder.encode(request.getNewPassword()));
+        userRepository.save(user);
+        
+        // Invalidate all refresh tokens to force re-login
+        refreshTokenRepository.revokeAllByUser(user);
+        
+        log.info("Password changed successfully for user ID: {}", userId);
+    }
+}

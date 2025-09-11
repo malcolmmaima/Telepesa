@@ -486,6 +486,20 @@
   animation: blink 4s infinite;
 }
 
+/* Real-time notification animations */
+@keyframes shrink-width {
+  from {
+    width: 100%;
+  }
+  to {
+    width: 0%;
+  }
+}
+
+.animate-shrink-width {
+  animation-name: shrink-width;
+}
+
 /* Mobile responsiveness improvements */
 @media (max-width: 640px) {
   .card {

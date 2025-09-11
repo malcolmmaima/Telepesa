@@ -51,7 +51,16 @@ export const notificationsApi = {
     } catch (error: any) {
       console.error('[Notifications API] Error fetching notifications:', error)
       
-      // Return mock data if API fails (for development)
+      // Provide helpful error context
+      if (error.statusCode === 403) {
+        console.warn('[Notifications API] Authentication required or insufficient permissions')
+      } else if (error.statusCode === 404) {
+        console.warn('[Notifications API] Notifications endpoint not found - may not be implemented yet')
+      } else if (error.statusCode === 500) {
+        console.warn('[Notifications API] Server error - backend may be unavailable')
+      }
+      
+      // Return empty state if API fails
       return {
         totalCount: 0,
         unreadCount: 0,
@@ -72,6 +81,14 @@ export const notificationsApi = {
       return data?.count || data?.unreadCount || 0
     } catch (error: any) {
       console.error('[Notifications API] Error fetching unread count:', error)
+      
+      // Provide helpful error context
+      if (error.statusCode === 403) {
+        console.warn('[Notifications API] Authentication required for unread count')
+      } else if (error.statusCode === 404) {
+        console.warn('[Notifications API] Unread count endpoint not implemented')
+      }
+      
       return 0
     }
   },

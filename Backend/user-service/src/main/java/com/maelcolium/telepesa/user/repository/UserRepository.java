@@ -56,6 +56,16 @@ public interface UserRepository extends JpaRepository<User, Long> {
     boolean existsByPhoneNumber(String phoneNumber);
 
     /**
+     * Check if email exists for a different user
+     */
+    boolean existsByEmailAndIdNot(String email, Long id);
+
+    /**
+     * Check if phone number exists for a different user
+     */
+    boolean existsByPhoneNumberAndIdNot(String phoneNumber, Long id);
+
+    /**
      * Find user by email verification token
      */
     Optional<User> findByEmailVerificationToken(String token);

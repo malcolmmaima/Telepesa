@@ -24,6 +24,8 @@ public class UserDto {
     private String firstName;
     private String lastName;
     private String phoneNumber;
+    private String dateOfBirth;
+    private String avatarUrl;
     private UserStatus status;
     
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
