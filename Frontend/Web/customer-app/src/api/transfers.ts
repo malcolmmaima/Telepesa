@@ -108,19 +108,22 @@ export const transfersApi = {
   // Create transfer
   createTransfer: async (request: CreateTransferRequest): Promise<Transfer> => {
     const response = await api.post('/transfers', request)
-    return response.data
+    // Backend may return data in {data: Transfer} format, extract the transfer object
+    return response.data?.data || response.data
   },
 
   // Get transfer by ID
   getTransfer: async (id: number): Promise<Transfer> => {
     const response = await api.get(`/transfers/${id}`)
-    return response.data
+    // Backend may return data in {data: Transfer} format, extract the transfer object
+    return response.data?.data || response.data
   },
 
   // Get transfer by transfer ID
   getTransferByTransferId: async (transferId: string): Promise<Transfer> => {
     const response = await api.get(`/transfers/transfer-id/${transferId}`)
-    return response.data
+    // Backend may return data in {data: Transfer} format, extract the transfer object
+    return response.data?.data || response.data
   },
 
   // Get user transfers
@@ -136,7 +139,8 @@ export const transfersApi = {
     if (transferType) params.transferType = transferType
 
     const response = await api.get(`/transfers/user/${userId}`, { params })
-    return response.data
+    // Backend may return data in {data: PageResponse} format, extract the page response
+    return response.data?.data || response.data
   },
 
   // Get account transfers (both sent and received)
@@ -154,19 +158,22 @@ export const transfersApi = {
   // Calculate transfer fee
   calculateTransferFee: async (request: TransferFeeRequest): Promise<TransferFeeResponse> => {
     const response = await api.post('/transfers/calculate-fee', request)
-    return response.data
+    // Backend may return data in {data: TransferFeeResponse} format, extract the fee response
+    return response.data?.data || response.data
   },
 
   // Cancel transfer (if pending)
   cancelTransfer: async (id: number): Promise<Transfer> => {
     const response = await api.post(`/transfers/${id}/cancel`)
-    return response.data
+    // Backend may return data in {data: Transfer} format, extract the transfer object
+    return response.data?.data || response.data
   },
 
   // Retry failed transfer
   retryTransfer: async (id: number): Promise<Transfer> => {
     const response = await api.post(`/transfers/${id}/retry`)
-    return response.data
+    // Backend may return data in {data: Transfer} format, extract the transfer object
+    return response.data?.data || response.data
   },
 
   // Get transfer limits for user
@@ -178,7 +185,8 @@ export const transfersApi = {
   // Saved Recipients Management
   getSavedRecipients: async (userId: number): Promise<SavedRecipient[]> => {
     const response = await api.get(`/transfers/user/${userId}/recipients`)
-    return response.data
+    // Backend may return data in {data: SavedRecipient[]} format, extract the recipients array
+    return Array.isArray(response.data?.data) ? response.data.data : (Array.isArray(response.data) ? response.data : [])
   },
 
   createSavedRecipient: async (
@@ -206,7 +214,8 @@ export const transfersApi = {
     const response = await api.get('/transfers/banks', {
       params: { country },
     })
-    return response.data
+    // Backend may return data in {data: BankInfo[]} format, extract the banks array
+    return Array.isArray(response.data?.data) ? response.data.data : (Array.isArray(response.data) ? response.data : [])
   },
 
   getBankInfo: async (bankCode: string): Promise<BankInfo> => {

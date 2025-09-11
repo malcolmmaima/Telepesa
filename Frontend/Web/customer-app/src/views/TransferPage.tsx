@@ -144,10 +144,14 @@ export function TransferPage() {
         currency: transferForm.currency,
       }
 
+      console.log('Calculating fees for:', feeRequest)
       const fees = await transfersApi.calculateTransferFee(feeRequest)
+      console.log('Fee calculation result:', fees)
       setFeeInfo(fees)
     } catch (err: any) {
-      console.error('Failed to calculate fees:', err)
+      console.error('Failed to calculate fees:', err.message || err)
+      // Set null to indicate fee calculation failed but don't block the transfer
+      setFeeInfo(null)
     }
   }
 
@@ -510,7 +514,7 @@ export function TransferPage() {
       </form>
 
       {/* Confirmation Modal */}
-      {showConfirmation && feeInfo && (
+      {showConfirmation && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-financial-lg max-w-md w-full p-6 animate-bounce-in">
             <h2 className="text-xl font-bold text-financial-navy mb-4">🔍 Confirm Transfer</h2>
@@ -528,12 +532,17 @@ export function TransferPage() {
                   </div>
                   <div className="flex justify-between">
                     <span className="text-financial-gray">Fee:</span>
-                    <span>{formatCurrency(feeInfo.fee)}</span>
+                    <span>{feeInfo ? formatCurrency(feeInfo.fee) : 'Calculating...'}</span>
                   </div>
                   <div className="flex justify-between font-semibold text-financial-navy border-t border-gray-200 pt-2">
                     <span>Total:</span>
-                    <span>{formatCurrency(feeInfo.totalAmount)}</span>
+                    <span>{feeInfo ? formatCurrency(feeInfo.totalAmount) : formatCurrency(transferForm.amount)}</span>
                   </div>
+                  {!feeInfo && (
+                    <div className="text-xs text-yellow-600 bg-yellow-50 p-2 rounded mt-2">
+                      ⚠️ Fee calculation unavailable. Transfer may include additional charges.
+                    </div>
+                  )}
                 </div>
               </div>
 

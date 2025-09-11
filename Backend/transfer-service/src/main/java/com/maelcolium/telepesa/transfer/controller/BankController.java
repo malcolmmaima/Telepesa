@@ -15,7 +15,7 @@ import java.util.List;
 import java.util.stream.IntStream;
 
 @RestController
-@RequestMapping("/api/transfers")
+@RequestMapping("/api/v1/transfers")
 @RequiredArgsConstructor
 @Slf4j
 @Tag(name = "Bank and Recipients Management", description = "APIs for managing banks and recipients")

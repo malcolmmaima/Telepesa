@@ -41,7 +41,7 @@ ENV SPRING_PROFILES_ACTIVE=docker
 ENV JAVA_OPTS="-Xmx512m -Xms256m"
 
 # Install curl for health check
-RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y --fix-missing curl && rm -rf /var/lib/apt/lists/* && apt-get clean
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=60s --retries=3 \

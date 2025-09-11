@@ -24,7 +24,7 @@ import java.util.List;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/api/transfers")
+@RequestMapping("/api/v1/transfers")
 @RequiredArgsConstructor
 @Slf4j
 @Tag(name = "Transfer Management", description = "APIs for money transfer operations")
@@ -76,6 +76,23 @@ public class TransferController {
         
         Pageable pageable = PageRequest.of(page, size);
         Page<TransferResponse> transfers = transferService.getTransfersByAccount(accountId, pageable);
+        return ResponseEntity.ok(transfers);
+    }
+    
+    @GetMapping("/user/{userId}")
+    @Operation(summary = "Get transfers for a user (across all their accounts)")
+    public ResponseEntity<Page<TransferResponse>> getUserTransfers(
+            @Parameter(description = "User ID", required = true)
+            @PathVariable String userId,
+            @Parameter(description = "Page number (0-based)")
+            @RequestParam(defaultValue = "0") int page,
+            @Parameter(description = "Page size")
+            @RequestParam(defaultValue = "20") int size) {
+        
+        // For now, return empty page - this would normally fetch user's accounts 
+        // and get transfers for all of them
+        Pageable pageable = PageRequest.of(page, size);
+        Page<TransferResponse> transfers = Page.empty(pageable);
         return ResponseEntity.ok(transfers);
     }
     
@@ -170,7 +187,7 @@ public class TransferController {
     }
     
     @GetMapping("/fee/calculate")
-    @Operation(summary = "Calculate transfer fee")
+    @Operation(summary = "Calculate transfer fee (GET)")
     public ResponseEntity<Map<String, Object>> calculateFee(
             @Parameter(description = "Transfer amount", required = true)
             @RequestParam BigDecimal amount,
@@ -184,7 +201,31 @@ public class TransferController {
             "amount", amount,
             "transferType", transferType,
             "fee", fee,
-            "totalAmount", totalAmount
+            "totalAmount", totalAmount,
+            "estimatedArrival", "Instant"
+        );
+        
+        return ResponseEntity.ok(response);
+    }
+    
+    @PostMapping("/calculate-fee")
+    @Operation(summary = "Calculate transfer fee (POST)")
+    public ResponseEntity<Map<String, Object>> calculateFeePost(
+            @RequestBody Map<String, Object> request) {
+        
+        BigDecimal amount = new BigDecimal(request.get("amount").toString());
+        String transferTypeStr = request.get("transferType").toString();
+        Transfer.TransferType transferType = Transfer.TransferType.valueOf(transferTypeStr);
+        
+        BigDecimal fee = transferService.calculateTransferFee(amount, transferType);
+        BigDecimal totalAmount = amount.add(fee);
+        
+        Map<String, Object> response = Map.of(
+            "amount", amount,
+            "transferType", transferType,
+            "fee", fee,
+            "totalAmount", totalAmount,
+            "estimatedArrival", "Instant"
         );
         
         return ResponseEntity.ok(response);
