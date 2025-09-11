@@ -107,6 +107,11 @@ public interface UserService {
     String uploadAvatar(Long userId, org.springframework.web.multipart.MultipartFile file);
 
     /**
+     * Remove user avatar/profile picture and clear avatar URL
+     */
+    String removeAvatar(Long userId);
+
+    /**
      * Get current user profile (based on authenticated user)
      */
     UserDto getCurrentUserProfile(Long userId);

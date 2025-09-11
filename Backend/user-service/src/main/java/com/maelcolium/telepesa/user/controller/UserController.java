@@ -169,6 +169,29 @@ public class UserController {
         return ResponseEntity.ok(response);
     }
 
+    @Operation(summary = "Remove user avatar/profile picture")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Avatar removed successfully"),
+        @ApiResponse(responseCode = "404", description = "No avatar to remove")
+    })
+    @DeleteMapping("/me/avatar")
+    @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
+    public ResponseEntity<Map<String, String>> deleteAvatar(
+            jakarta.servlet.http.HttpServletRequest request) {
+        Long userId = getCurrentUserId(request);
+        log.info("Avatar delete request for user ID: {}", userId);
+
+        String removedUrl = userService.removeAvatar(userId);
+
+        Map<String, String> response = new HashMap<>();
+        response.put("message", "Profile picture removed successfully!");
+        if (removedUrl != null) {
+            response.put("removedUrl", removedUrl);
+        }
+
+        return ResponseEntity.ok(response);
+    }
+
     @Operation(summary = "Get user by username")
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "User found"),
@@ -364,10 +387,14 @@ public class UserController {
                 log.debug("Authentication name: {}", authentication.getName());
                 String username = null;
 
-                // Debug the exact type and class information
-                log.debug("Principal class name: {}", principal.getClass().getName());
-                log.debug("Principal toString: {}", principal.toString());
-                log.debug("Checking instanceof UserPrincipal: {}", principal instanceof UserPrincipal);
+                // Debug the exact type and class information safely
+                if (principal != null) {
+                    log.debug("Principal class name: {}", principal.getClass().getName());
+                    log.debug("Principal toString: {}", principal.toString());
+                    log.debug("Checking instanceof UserPrincipal: {}", principal instanceof UserPrincipal);
+                } else {
+                    log.debug("Principal is null");
+                }
                 
                 if (principal instanceof UserPrincipal userPrincipal) {
                     // Directly get the user ID from UserPrincipal to avoid database calls

@@ -146,6 +146,7 @@ export const apiService = {
         headers: { 'Content-Type': 'multipart/form-data' },
       })
     },
+    deleteAvatar: () => api.delete<ApiResponse>('/users/me/avatar'),
   },
 
   // Accounts

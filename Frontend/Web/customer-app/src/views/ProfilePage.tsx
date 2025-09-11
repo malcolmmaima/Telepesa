@@ -8,7 +8,8 @@ import { useAvatarImage } from '../hooks/useAvatarImage'
 
 export function ProfilePage() {
   const { user, updateUser } = useAuth()
-  const { imageSrc: avatarImageSrc, isLoading: isLoadingAvatar, error: avatarError } = useAvatarImage(user?.avatarUrl)
+  const currentAvatarUrl = (user as any)?.avatarUrl || user?.profilePicture || null
+  const { imageSrc: avatarImageSrc, isLoading: isLoadingAvatar, error: avatarError } = useAvatarImage(currentAvatarUrl)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [isEditing, setIsEditing] = useState(false)
   const [isChangingPassword, setIsChangingPassword] = useState(false)
@@ -128,16 +129,12 @@ export function ProfilePage() {
 
     try {
       const response = await userApi.uploadAvatar(file)
-      // Update user in auth store with new avatar URL
       if (user) {
-        updateUser({ avatarUrl: response.avatarUrl })
+        updateUser({ profilePicture: response.avatarUrl })
       }
-      
-      // Check if this is a local fallback response
-      const isLocalFallback = response.avatarUrl.startsWith('blob:')
       setMessage({ 
-        type: isLocalFallback ? 'warning' : 'success', 
-        text: response.message || 'Profile picture updated!' 
+        type: 'success', 
+        text: response.message || 'Profile picture updated!'
       })
     } catch (error: any) {
       setMessage({ type: 'error', text: error.message || 'Failed to upload profile picture' })
@@ -216,7 +213,7 @@ export function ProfilePage() {
           </div>
           <div className="flex-1">
             <h4 className="font-medium text-financial-navy mb-2">
-              {user?.avatarUrl ? 'Update' : 'Upload'} Profile Picture
+              {currentAvatarUrl ? 'Update' : 'Upload'} Profile Picture
             </h4>
             <p className="text-sm text-financial-gray mb-4">
               Choose a clear photo of yourself. Accepted formats: JPG, PNG, GIF (max 5MB)
@@ -230,12 +227,20 @@ export function ProfilePage() {
               >
                 {uploadingAvatar ? '📤 Uploading...' : '📷 Choose Photo'}
               </Button>
-              {user?.avatarUrl && (
+              {currentAvatarUrl && (
                 <Button
                   variant="ghost"
-                  onClick={() => {
-                    // TODO: Implement remove avatar functionality
-                    setMessage({ type: 'error', text: 'Remove avatar feature coming soon' })
+                  onClick={async () => {
+                    try {
+                      setUploadingAvatar(true)
+                      const resp = await userApi.deleteAvatar()
+                      updateUser({ profilePicture: '' })
+                      setMessage({ type: 'success', text: resp.message })
+                    } catch (err: any) {
+                      setMessage({ type: 'error', text: err.message || 'Failed to remove profile picture' })
+                    } finally {
+                      setUploadingAvatar(false)
+                    }
                   }}
                   disabled={uploadingAvatar}
                   className="text-red-600 hover:text-red-700"

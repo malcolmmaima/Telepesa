@@ -37,14 +37,18 @@ export const userApi = {
   // Get current user profile
   getProfile: async (): Promise<User> => {
     const response = await apiService.user.getProfile()
-    return response.data.data
+    const payload: any = response.data
+    return payload.data ?? payload.user ?? payload
   },
 
   // Update user profile
   updateProfile: async (profileData: UpdateProfileRequest): Promise<ProfileUpdateResponse> => {
     try {
       const response = await apiService.user.updateProfile(profileData)
-      return response.data
+      const payload: any = response.data
+      const user = payload.user ?? payload.data?.user
+      const message = payload.message ?? payload.data?.message ?? 'Profile updated successfully!'
+      return { user, message }
     } catch (error: any) {
       console.error('Profile update failed:', error)
       
@@ -83,7 +87,8 @@ export const userApi = {
   changePassword: async (passwordData: ChangePasswordRequest): Promise<{ message: string }> => {
     try {
       const response = await apiService.user.changePassword(passwordData)
-      return response.data
+      const payload: any = response.data
+      return { message: payload.message ?? 'Password changed successfully!' }
     } catch (error: any) {
       console.error('Change password failed:', error)
       
@@ -118,16 +123,17 @@ export const userApi = {
   uploadAvatar: async (file: File): Promise<{ avatarUrl: string; message: string }> => {
     try {
       const response = await apiService.user.uploadAvatar(file)
-      const avatarUrl = response.data.avatarUrl || response.data.url
+      const payload: any = response.data
+      const avatarUrl = payload.avatarUrl || payload.url || payload.data?.avatarUrl || payload.data?.url
       return {
         avatarUrl: avatarUrl,
-        message: response.data.message || 'Profile picture updated successfully!'
+        message: payload.message || payload.data?.message || 'Profile picture updated successfully!'
       }
     } catch (error: any) {
       console.error('Avatar upload failed:', error)
       
       // Handle different types of backend errors gracefully
-      if (error.statusCode === 500) {
+      if (error.statusCode === 500 || error.statusCode === 503) {
         console.log('Avatar upload endpoint returned 500 error, using local fallback')
         console.log('This likely means the FileStorageService or related dependencies are not properly configured')
         
@@ -172,6 +178,20 @@ export const userApi = {
       })
       
       throw new Error(`Failed to upload profile picture: ${errorMsg}. Please try again.`)
+    }
+  },
+
+  // Delete avatar/profile picture
+  deleteAvatar: async (): Promise<{ message: string }> => {
+    try {
+      const response = await apiService.user.deleteAvatar()
+      const payload: any = response.data
+      return { message: payload.message ?? payload.data?.message ?? 'Profile picture removed successfully!' }
+    } catch (error: any) {
+      if (error.statusCode === 404) {
+        return { message: 'No profile picture to remove' }
+      }
+      throw new Error(error.response?.data?.message || error.message || 'Failed to remove profile picture')
     }
   },
 

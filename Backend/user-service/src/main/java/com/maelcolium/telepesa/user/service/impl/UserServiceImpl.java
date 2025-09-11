@@ -545,6 +545,32 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Transactional
+    @CacheEvict(value = "users", key = "#userId")
+    public String removeAvatar(Long userId) {
+        log.info("Removing avatar for user ID: {}", userId);
+
+        User user = userRepository.findById(userId)
+            .orElseThrow(() -> new UserNotFoundException("id", userId.toString()));
+
+        String existingUrl = user.getAvatarUrl();
+        if (existingUrl != null) {
+            try {
+                fileStorageService.deleteAvatar(existingUrl);
+            } catch (Exception e) {
+                log.warn("Failed to delete avatar file for user {}: {}", userId, e.getMessage());
+            }
+            user.setAvatarUrl(null);
+            userRepository.save(user);
+            log.info("Avatar removed for user ID: {}", userId);
+        } else {
+            log.info("No avatar to remove for user ID: {}", userId);
+        }
+
+        return existingUrl;
+    }
+
+    @Override
     @Cacheable(value = "users", key = "#userId")
     public UserDto getCurrentUserProfile(Long userId) {
         log.debug("Getting profile for user ID: {}", userId);
