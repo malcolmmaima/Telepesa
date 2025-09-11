@@ -20,14 +20,8 @@ public class SecurityConfig {
         http
             .csrf(AbstractHttpConfigurer::disable)
             .authorizeHttpRequests(authz -> authz
-                // Allow access to Swagger UI and API docs
-                .requestMatchers("/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**").permitAll()
-                // Allow access to actuator endpoints
-                .requestMatchers("/actuator/**").permitAll()
-                // Allow access to health checks
-                .requestMatchers("/health", "/info").permitAll()
-                // Require authentication for all other endpoints
-                .anyRequest().authenticated()
+                // Allow all requests (API Gateway handles authentication)
+                .anyRequest().permitAll()
             );
         
         return http.build();

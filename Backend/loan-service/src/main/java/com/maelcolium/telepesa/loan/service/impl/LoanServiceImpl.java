@@ -48,7 +48,7 @@ public class LoanServiceImpl implements LoanService {
 
     @Override
     @Transactional(readOnly = true)
-    @Cacheable(value = "loan-products")
+    // @Cacheable(value = "loan-products") // Temporarily disabled due to Redis deserialization issue
     public List<LoanProductDto> getAllLoanProducts() {
         log.info("Retrieving all loan products");
         
