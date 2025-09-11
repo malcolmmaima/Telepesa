@@ -159,6 +159,7 @@ export function LoansPage() {
       requestedAmount: product.minAmount,
     }))
     setShowApplicationForm(true)
+    setActiveTab('apply') // Switch to apply tab to show the form
   }
 
   const submitApplication = async (e: React.FormEvent) => {

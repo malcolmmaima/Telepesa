@@ -2,7 +2,9 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth, useAuthSelectors } from '../../store/auth'
 import { useDarkMode } from '../../store/darkMode'
+import { useNotifications } from '../../hooks/useNotifications'
 import { Avatar } from '../ui/Avatar'
+import { NotificationsDropdown } from '../ui/NotificationsDropdown'
 import { cn } from '../../lib/utils'
 
 export const Navbar = () => {
@@ -11,6 +13,7 @@ export const Navbar = () => {
   const { logout } = useAuth()
   const { userName, userInitials } = useAuthSelectors()
   const { darkMode, toggleDarkMode } = useDarkMode()
+  const { unreadCount } = useNotifications()
 
   const handleLogout = () => {
     logout()
@@ -85,7 +88,7 @@ export const Navbar = () => {
               )}
             </button>
 
-            {/* Notifications button (placeholder) */}
+            {/* Notifications button */}
             <div className="relative">
               <button
                 onClick={() => setIsNotificationsOpen(v => !v)}
@@ -96,15 +99,17 @@ export const Navbar = () => {
                 <svg className="w-5 h-5 text-financial-navy dark:text-slate-200" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M12 2a7 7 0 00-7 7v3.586l-1.707 1.707A1 1 0 004 16h16a1 1 0 00.707-1.707L19 12.586V9a7 7 0 00-7-7zm0 20a3 3 0 01-3-3h6a3 3 0 01-3 3z" />
                 </svg>
-                <span className="absolute -top-0.5 -right-0.5 inline-flex h-2.5 w-2.5 rounded-full bg-red-500"></span>
+                {unreadCount > 0 && (
+                  <span className="absolute -top-0.5 -right-0.5 inline-flex items-center justify-center h-5 w-5 text-xs font-bold text-white bg-red-500 rounded-full">
+                    {unreadCount > 9 ? '9+' : unreadCount}
+                  </span>
+                )}
               </button>
 
-              {isNotificationsOpen && (
-                <div className="absolute right-0 mt-2 w-72 bg-white dark:bg-slate-800 rounded-financial-lg shadow-financial-lg border border-gray-100 dark:border-slate-700 py-2">
-                  <div className="px-4 py-2 text-sm font-medium text-financial-navy dark:text-slate-200">Notifications</div>
-                  <div className="px-4 py-2 text-sm text-financial-gray dark:text-slate-300">No new notifications</div>
-                </div>
-              )}
+              <NotificationsDropdown 
+                isOpen={isNotificationsOpen} 
+                onClose={() => setIsNotificationsOpen(false)}
+              />
             </div>
 
             {/* Profile Dropdown */}
@@ -169,7 +174,6 @@ export const Navbar = () => {
                 </div>
               )}
             </div>
-          </div>
           </div>
         </div>
       </div>

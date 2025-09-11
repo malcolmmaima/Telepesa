@@ -8,13 +8,13 @@ export function ProtectedLayout() {
   // Show loading state while checking authentication
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-financial-background">
+      <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="w-8 h-8 bg-financial-gradient rounded-lg flex items-center justify-center mx-auto mb-4">
             <span className="text-white font-bold text-lg">T</span>
           </div>
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-financial-navy mx-auto"></div>
-          <p className="text-financial-gray mt-2">Loading...</p>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-financial-navy dark:border-slate-400 mx-auto"></div>
+          <p className="text-financial-gray dark:text-slate-300 mt-2">Loading...</p>
         </div>
       </div>
     )
@@ -26,7 +26,7 @@ export function ProtectedLayout() {
   }
 
   return (
-    <div className="min-h-screen bg-financial-background">
+    <div className="min-h-screen">
       <Navbar />
       <main className="pb-8">
         <Outlet />

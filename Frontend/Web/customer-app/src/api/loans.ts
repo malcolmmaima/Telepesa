@@ -97,7 +97,7 @@ export interface PageResponse<T> {
 export const loansApi = {
   // Get loan products
   getLoanProducts: async (): Promise<LoanProduct[]> => {
-    const response = await api.get('/api/v1/loans/products')
+    const response = await api.get('/loans/products')
     return Array.isArray(response.data?.data) ? response.data.data : (Array.isArray(response.data) ? response.data : [])
   },
 
@@ -140,7 +140,7 @@ export const loansApi = {
       notes: `Employment: ${application.employmentStatus}${application.employerName ? `, Employer: ${application.employerName}` : ''}`
     }
     
-    const response = await api.post('/api/v1/loans', createLoanRequest)
+    const response = await api.post('/loans', createLoanRequest)
     return response.data
   },
 
@@ -154,7 +154,7 @@ export const loansApi = {
     const params: any = { page, size }
     if (status) params.status = status
 
-    const response = await api.get(`/api/v1/loans/user/${userId}`, { params })
+    const response = await api.get(`/loans/user/${userId}`, { params })
     return response.data
   },
 

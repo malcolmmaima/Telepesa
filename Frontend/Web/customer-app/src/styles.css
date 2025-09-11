@@ -22,6 +22,15 @@
     margin: 0;
   }
 
+  html {
+    background-color: #f6f9fb;
+    transition: background-color 0.3s ease;
+  }
+
+  html.dark {
+    background-color: #0f172a;
+  }
+
   body {
     font-family:
       ui-sans-serif,
@@ -35,11 +44,17 @@
     background-color: #f6f9fb;
     color: #0b3b5e;
     transition: background-color 0.3s ease, color 0.3s ease;
+    min-height: 100vh;
   }
 
   .dark body {
     background-color: #0f172a;
     color: #f1f5f9;
+  }
+
+  #root {
+    background-color: inherit;
+    min-height: 100vh;
   }
 }
 

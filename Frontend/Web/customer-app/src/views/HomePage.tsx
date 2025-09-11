@@ -72,7 +72,7 @@ export function HomePage() {
       setError(null)
 
       // Initialize with fallback values
-      let accountsData = { content: [], totalElements: 0 }
+      let accountsData: Account[] = []
       let balanceData = 0
       let transactionsData = { content: [], totalElements: 0 }
 
@@ -98,7 +98,7 @@ export function HomePage() {
       }
 
       // Ensure arrays are always defined
-      const safeAccounts = Array.isArray(accountsData.content) ? accountsData.content : []
+      const safeAccounts = Array.isArray(accountsData) ? accountsData : []
       const safeTransactions = Array.isArray(transactionsData.content)
         ? transactionsData.content
         : []

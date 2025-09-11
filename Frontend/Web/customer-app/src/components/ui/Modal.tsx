@@ -52,7 +52,7 @@ export function Modal({
   }
 
   const modal = (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center">
       {/* Backdrop */}
       <div
         className="absolute inset-0 bg-black bg-opacity-50 transition-opacity"
@@ -62,7 +62,7 @@ export function Modal({
       {/* Modal Container */}
       <div
         className={cn(
-          'relative w-full mx-4 bg-white rounded-financial-lg shadow-xl transform transition-all',
+          'relative w-full mx-4 bg-white dark:bg-slate-800 rounded-financial-lg shadow-xl transform transition-all',
           sizeClasses[size],
           className
         )}
@@ -70,16 +70,16 @@ export function Modal({
       >
         {/* Header */}
         {(title || showCloseButton) && (
-          <div className="flex items-center justify-between p-6 border-b border-gray-200">
+          <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-slate-600">
             {title && (
-              <h2 className="text-xl font-semibold text-financial-navy">
+              <h2 className="text-xl font-semibold text-financial-navy dark:text-slate-200">
                 {title}
               </h2>
             )}
             {showCloseButton && (
               <button
                 onClick={onClose}
-                className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-colors"
+                className="p-2 text-gray-400 hover:text-gray-600 dark:text-slate-400 dark:hover:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-700 rounded-full transition-colors"
                 type="button"
               >
                 <svg

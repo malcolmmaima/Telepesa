@@ -92,9 +92,13 @@ export function TransactionsPage() {
   const loadAccounts = async () => {
     try {
       const response = await accountsApi.getUserAccounts(user!.id, 0, 50)
-      setAccounts(response.content.filter(acc => acc.status === 'ACTIVE'))
+      // getUserAccounts returns Account[] directly, not a paginated response
+      const accounts = Array.isArray(response) ? response : []
+      setAccounts(accounts.filter(acc => acc.status === 'ACTIVE'))
+      console.log('[TransactionsPage] Loaded accounts:', accounts.length, accounts)
     } catch (err) {
       console.error('Failed to load accounts:', err)
+      setAccounts([]) // Ensure we set an empty array on error
     }
   }
 

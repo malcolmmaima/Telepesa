@@ -36,7 +36,7 @@ export const notificationsApi = {
   async getNotifications(page = 1, limit = 20): Promise<NotificationsSummary> {
     try {
       console.log(`[Notifications API] Fetching notifications (page: ${page}, limit: ${limit})`)
-      const response = await api.get(`/api/v1/notifications?page=${page}&limit=${limit}`)
+      const response = await api.get(`/notifications?page=${page}&limit=${limit}`)
       
       // Handle different response structures
       const data = response.data?.data || response.data
@@ -64,7 +64,7 @@ export const notificationsApi = {
   async getUnreadCount(): Promise<number> {
     try {
       console.log('[Notifications API] Fetching unread count')
-      const response = await api.get('/api/v1/notifications/unread-count')
+      const response = await api.get('/notifications/unread-count')
       
       const data = response.data?.data || response.data
       console.log('[Notifications API] Unread count response:', data)
@@ -80,7 +80,7 @@ export const notificationsApi = {
   async markAsRead(notificationId: string): Promise<boolean> {
     try {
       console.log(`[Notifications API] Marking notification ${notificationId} as read`)
-      await api.patch(`/api/v1/notifications/${notificationId}/read`)
+      await api.patch(`/notifications/${notificationId}/read`)
       console.log('[Notifications API] Notification marked as read successfully')
       return true
     } catch (error: any) {
@@ -93,7 +93,7 @@ export const notificationsApi = {
   async markAllAsRead(): Promise<boolean> {
     try {
       console.log('[Notifications API] Marking all notifications as read')
-      await api.patch('/api/v1/notifications/mark-all-read')
+      await api.patch('/notifications/mark-all-read')
       console.log('[Notifications API] All notifications marked as read successfully')
       return true
     } catch (error: any) {
@@ -106,7 +106,7 @@ export const notificationsApi = {
   async deleteNotification(notificationId: string): Promise<boolean> {
     try {
       console.log(`[Notifications API] Deleting notification ${notificationId}`)
-      await api.delete(`/api/v1/notifications/${notificationId}`)
+      await api.delete(`/notifications/${notificationId}`)
       console.log('[Notifications API] Notification deleted successfully')
       return true
     } catch (error: any) {
@@ -119,7 +119,7 @@ export const notificationsApi = {
   async getPreferences(): Promise<NotificationPreferences> {
     try {
       console.log('[Notifications API] Fetching notification preferences')
-      const response = await api.get('/api/v1/notifications/preferences')
+      const response = await api.get('/notifications/preferences')
       
       const data = response.data?.data || response.data
       console.log('[Notifications API] Preferences response:', data)
@@ -152,7 +152,7 @@ export const notificationsApi = {
   async updatePreferences(preferences: Partial<NotificationPreferences>): Promise<boolean> {
     try {
       console.log('[Notifications API] Updating notification preferences:', preferences)
-      await api.patch('/api/v1/notifications/preferences', preferences)
+      await api.patch('/notifications/preferences', preferences)
       console.log('[Notifications API] Preferences updated successfully')
       return true
     } catch (error: any) {
