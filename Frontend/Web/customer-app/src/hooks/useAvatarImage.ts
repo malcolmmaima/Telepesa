@@ -41,7 +41,7 @@ export const useAvatarImage = (avatarUrl: string | null | undefined) => {
         // Since we've configured the backend to allow public access to /uploads/**
         let fetchUrl = avatarUrl
 
-        // Convert relative URLs to full URLs through user service
+        // Convert relative URLs to full URLs through user service directly
         if (avatarUrl.startsWith('/uploads/')) {
           // Access static files directly through user service (port 8081)
           fetchUrl = `http://localhost:8081${avatarUrl}`

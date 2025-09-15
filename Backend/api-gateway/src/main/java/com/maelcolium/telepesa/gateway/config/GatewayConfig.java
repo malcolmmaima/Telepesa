@@ -67,6 +67,7 @@ public class GatewayConfig {
                 .pathMatchers("/api/v1/notifications/public/**").permitAll()
                 .pathMatchers("/api/v1/status/**").permitAll()
                 .pathMatchers("/api/v1/transfers/lookup-account/**").permitAll()
+                .pathMatchers("/uploads/**").permitAll()
                 .pathMatchers("/webjars/**").permitAll()
                 .pathMatchers("/favicon.ico").permitAll()
                 .pathMatchers("/error").permitAll()

@@ -35,6 +35,17 @@ spring:
             - name: SetPath
               args:
                 template: /api/users/login
+        # Static Files Route (uploads)
+        - id: static-files
+          uri: lb://user-service
+          predicates:
+            - Path=/uploads/**
+          filters:
+            - name: Retry
+              args:
+                retries: 3
+                statuses: BAD_GATEWAY,SERVICE_UNAVAILABLE
+                methods: GET
         # User Service Routes
         - id: user-service
           uri: lb://user-service
