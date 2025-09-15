@@ -328,4 +328,132 @@ class TransactionMapperTest {
         assertThat(result.getDescription()).isEqualTo("   ");
         assertThat(result.getReferenceNumber()).isEqualTo("  REF-1234  ");
     }
+
+    // Tests for toEntity method
+    @Test
+    void toEntity_WithValidTransactionDto_ShouldReturnCorrectEntity() {
+        // When
+        Transaction result = transactionMapper.toEntity(transactionDto);
+
+        // Then
+        assertThat(result).isNotNull();
+        assertThat(result.getTransactionId()).isEqualTo(transactionDto.getTransactionId());
+        assertThat(result.getFromAccountId()).isEqualTo(transactionDto.getFromAccountId());
+        assertThat(result.getToAccountId()).isEqualTo(transactionDto.getToAccountId());
+        assertThat(result.getAmount()).isEqualTo(transactionDto.getAmount());
+        assertThat(result.getTransactionType()).isEqualTo(transactionDto.getTransactionType());
+        assertThat(result.getStatus()).isEqualTo(transactionDto.getStatus());
+        assertThat(result.getDescription()).isEqualTo(transactionDto.getDescription());
+        assertThat(result.getReferenceNumber()).isEqualTo(transactionDto.getReferenceNumber());
+        assertThat(result.getUserId()).isEqualTo(transactionDto.getUserId());
+        assertThat(result.getFeeAmount()).isEqualTo(transactionDto.getFeeAmount());
+        assertThat(result.getTotalAmount()).isEqualTo(transactionDto.getTotalAmount());
+        assertThat(result.getProcessedAt()).isEqualTo(transactionDto.getProcessedAt());
+    }
+
+    @Test
+    void toEntity_WithNullTransactionDto_ShouldReturnNull() {
+        // When
+        Transaction result = transactionMapper.toEntity(null);
+
+        // Then
+        assertThat(result).isNull();
+    }
+
+    @Test
+    void toEntity_WithNullValues_ShouldHandleNullsCorrectly() {
+        // Given
+        TransactionDto dtoWithNulls = TransactionDto.builder()
+                .transactionId("TXN-12345678")
+                .fromAccountId(1L)
+                .toAccountId(2L)
+                .amount(new BigDecimal("100.00"))
+                .transactionType(TransactionType.TRANSFER)
+                .status(TransactionStatus.PENDING)
+                .description(null)
+                .referenceNumber(null)
+                .userId(10L)
+                .feeAmount(null)
+                .totalAmount(null)
+                .processedAt(null)
+                .build();
+
+        // When
+        Transaction result = transactionMapper.toEntity(dtoWithNulls);
+
+        // Then
+        assertThat(result).isNotNull();
+        assertThat(result.getTransactionId()).isEqualTo("TXN-12345678");
+        assertThat(result.getDescription()).isNull();
+        assertThat(result.getReferenceNumber()).isNull();
+        assertThat(result.getFeeAmount()).isNull();
+        assertThat(result.getTotalAmount()).isNull();
+        assertThat(result.getProcessedAt()).isNull();
+    }
+
+    @Test
+    void toEntity_WithAllTransactionTypes_ShouldMapCorrectly() {
+        // Test all transaction types
+        TransactionType[] types = TransactionType.values();
+        
+        for (TransactionType type : types) {
+            // Given
+            TransactionDto updatedDto = TransactionDto.builder()
+                    .id(transactionDto.getId())
+                    .transactionId(transactionDto.getTransactionId())
+                    .fromAccountId(transactionDto.getFromAccountId())
+                    .toAccountId(transactionDto.getToAccountId())
+                    .amount(transactionDto.getAmount())
+                    .transactionType(type)
+                    .status(transactionDto.getStatus())
+                    .description(transactionDto.getDescription())
+                    .referenceNumber(transactionDto.getReferenceNumber())
+                    .userId(transactionDto.getUserId())
+                    .feeAmount(transactionDto.getFeeAmount())
+                    .totalAmount(transactionDto.getTotalAmount())
+                    .processedAt(transactionDto.getProcessedAt())
+                    .createdAt(transactionDto.getCreatedAt())
+                    .updatedAt(transactionDto.getUpdatedAt())
+                    .build();
+            
+            // When
+            Transaction result = transactionMapper.toEntity(updatedDto);
+            
+            // Then
+            assertThat(result.getTransactionType()).isEqualTo(type);
+        }
+    }
+
+    @Test
+    void toEntity_WithAllTransactionStatuses_ShouldMapCorrectly() {
+        // Test all transaction statuses
+        TransactionStatus[] statuses = TransactionStatus.values();
+        
+        for (TransactionStatus status : statuses) {
+            // Given
+            TransactionDto updatedDto = TransactionDto.builder()
+                    .id(transactionDto.getId())
+                    .transactionId(transactionDto.getTransactionId())
+                    .fromAccountId(transactionDto.getFromAccountId())
+                    .toAccountId(transactionDto.getToAccountId())
+                    .amount(transactionDto.getAmount())
+                    .transactionType(transactionDto.getTransactionType())
+                    .status(status)
+                    .description(transactionDto.getDescription())
+                    .referenceNumber(transactionDto.getReferenceNumber())
+                    .userId(transactionDto.getUserId())
+                    .feeAmount(transactionDto.getFeeAmount())
+                    .totalAmount(transactionDto.getTotalAmount())
+                    .processedAt(transactionDto.getProcessedAt())
+                    .createdAt(transactionDto.getCreatedAt())
+                    .updatedAt(transactionDto.getUpdatedAt())
+                    .build();
+            
+            // When
+            Transaction result = transactionMapper.toEntity(updatedDto);
+            
+            // Then
+            assertThat(result.getStatus()).isEqualTo(status);
+        }
+    }
 } 
