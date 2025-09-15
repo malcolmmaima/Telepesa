@@ -40,7 +40,7 @@ export function AccountsPage() {
     totalBalance: 0,
     totalAvailableBalance: 0,
     accountCount: 0,
-    currencyCode: 'KES'
+    currencyCode: 'KES',
   })
   const [searchQuery, setSearchQuery] = useState('')
   const [statusFilter, setStatusFilter] = useState<Account['status'] | 'ALL'>('ALL')
@@ -80,7 +80,7 @@ export function AccountsPage() {
         totalBalance: total,
         totalAvailableBalance: total,
         accountCount: accounts.length,
-        currencyCode: 'KES'
+        currencyCode: 'KES',
       })
     }
   }
@@ -213,7 +213,9 @@ export function AccountsPage() {
             <div className="flex justify-between items-center">
               <div className="flex-1">
                 <div className="text-lg opacity-90">Total Balance</div>
-                <div className="text-4xl font-bold my-2">{formatCurrency(balanceSummary.totalBalance)}</div>
+                <div className="text-4xl font-bold my-2">
+                  {formatCurrency(balanceSummary.totalBalance)}
+                </div>
                 <div className="text-base opacity-75">
                   Across {accounts.length} account{accounts.length !== 1 ? 's' : ''}
                 </div>

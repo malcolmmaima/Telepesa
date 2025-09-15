@@ -16,7 +16,7 @@ export function HomePage() {
     totalBalance: 0,
     totalAvailableBalance: 0,
     accountCount: 0,
-    currencyCode: 'KES'
+    currencyCode: 'KES',
   })
   const [accounts, setAccounts] = useState<Account[]>([])
   const [recentTransactions, setRecentTransactions] = useState<Transaction[]>([])
@@ -82,9 +82,12 @@ export function HomePage() {
         totalBalance: 0,
         totalAvailableBalance: 0,
         accountCount: 0,
-        currencyCode: 'KES'
+        currencyCode: 'KES',
       }
-      let transactionsData: { content: Transaction[], totalElements: number } = { content: [], totalElements: 0 }
+      let transactionsData: { content: Transaction[]; totalElements: number } = {
+        content: [],
+        totalElements: 0,
+      }
 
       try {
         // Try to load accounts and balance
@@ -180,8 +183,12 @@ export function HomePage() {
           <div className="flex items-center justify-between">
             <div>
               <div className="text-sm opacity-90">Total Balance</div>
-              <div className="text-2xl font-bold">{formatCurrency(balanceSummary.totalBalance)}</div>
-              <div className="text-xs opacity-75">Available: {formatCurrency(balanceSummary.totalAvailableBalance)}</div>
+              <div className="text-2xl font-bold">
+                {formatCurrency(balanceSummary.totalBalance)}
+              </div>
+              <div className="text-xs opacity-75">
+                Available: {formatCurrency(balanceSummary.totalAvailableBalance)}
+              </div>
             </div>
             <div className="text-3xl opacity-80">💰</div>
           </div>

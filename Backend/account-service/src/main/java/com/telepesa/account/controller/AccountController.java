@@ -88,6 +88,20 @@ public class AccountController {
         ));
     }
 
+    @GetMapping("/{accountId}")
+    public ResponseEntity<AccountDto> getAccountById(@PathVariable("accountId") Long accountId) {
+        log.info("Fetching account by ID: {}", accountId);
+        
+        Optional<AccountDto> account = accountService.getAccountById(accountId);
+        
+        if (account.isPresent()) {
+            return ResponseEntity.ok(account.get());
+        } else {
+            log.warn("Account not found with ID: {}", accountId);
+            return ResponseEntity.notFound().build();
+        }
+    }
+
     @GetMapping("/health")
     public ResponseEntity<Map<String, String>> health() {
         return ResponseEntity.ok(Map.of(

@@ -81,7 +81,6 @@ export const accountsApi = {
     return Array.isArray(response.data?.content) ? response.data.content : []
   },
 
-
   // Get account by ID
   getAccount: async (accountId: number): Promise<Account> => {
     const response = await api.get(`/accounts/${accountId}`)
@@ -158,20 +157,24 @@ export const accountsApi = {
   },
 
   // Get user total balance
-  getUserTotalBalance: async (userId: number): Promise<{
-    totalBalance: number;
-    totalAvailableBalance: number;
-    accountCount: number;
-    currencyCode: string;
+  getUserTotalBalance: async (
+    userId: number
+  ): Promise<{
+    totalBalance: number
+    totalAvailableBalance: number
+    accountCount: number
+    currencyCode: string
   }> => {
     const response = await api.get(`/accounts/user/${userId}/total-balance`)
     // Backend returns balance summary object
-    return response.data || {
-      totalBalance: 0,
-      totalAvailableBalance: 0,
-      accountCount: 0,
-      currencyCode: 'KES'
-    }
+    return (
+      response.data || {
+        totalBalance: 0,
+        totalAvailableBalance: 0,
+        accountCount: 0,
+        currencyCode: 'KES',
+      }
+    )
   },
 
   // Search and filter accounts
