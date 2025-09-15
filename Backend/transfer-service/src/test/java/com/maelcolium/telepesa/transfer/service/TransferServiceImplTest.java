@@ -18,8 +18,9 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.anyString;
 
 @ExtendWith(MockitoExtension.class)
 class TransferServiceImplTest {
@@ -60,12 +61,12 @@ class TransferServiceImplTest {
 
         senderAccount = new AccountServiceClient.AccountResponse(
             "sender-123", "ACC-001", new BigDecimal("5000.00"), 
-            "KES", "ACTIVE", "user-123", "SAVINGS"
+            "KES", "ACTIVE", "user-123", "SAVINGS", "Sender Account"
         );
 
         recipientAccount = new AccountServiceClient.AccountResponse(
             "recipient-123", "ACC-002", new BigDecimal("2000.00"), 
-            "KES", "ACTIVE", "user-456", "SAVINGS"
+            "KES", "ACTIVE", "user-456", "SAVINGS", "Recipient Account"
         );
     }
 
@@ -75,6 +76,7 @@ class TransferServiceImplTest {
         when(accountServiceClient.getAccount("sender-123")).thenReturn(senderAccount);
         when(accountServiceClient.getAccount("recipient-123")).thenReturn(recipientAccount);
         when(transferRepository.save(any(Transfer.class))).thenReturn(transfer);
+        when(transferRepository.findById("transfer-123")).thenReturn(Optional.of(transfer));
 
         // When
         TransferResponse result = transferService.createTransfer("sender-123", createTransferRequest);
@@ -88,7 +90,7 @@ class TransferServiceImplTest {
         
         verify(accountServiceClient).getAccount("sender-123");
         verify(accountServiceClient).getAccount("recipient-123");
-        verify(transferRepository).save(any(Transfer.class));
+        verify(transferRepository, times(3)).save(any(Transfer.class)); // Called 3 times: create, process status update, completion
     }
 
     @Test
@@ -96,7 +98,7 @@ class TransferServiceImplTest {
         // Given
         AccountServiceClient.AccountResponse lowBalanceAccount = new AccountServiceClient.AccountResponse(
             "sender-123", "ACC-001", new BigDecimal("100.00"), 
-            "KES", "ACTIVE", "user-123", "SAVINGS"
+            "KES", "ACTIVE", "user-123", "SAVINGS", "Low Balance Account"
         );
         
         when(accountServiceClient.getAccount("sender-123")).thenReturn(lowBalanceAccount);
