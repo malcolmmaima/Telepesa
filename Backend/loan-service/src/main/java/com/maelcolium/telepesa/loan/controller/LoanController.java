@@ -1,18 +1,21 @@
 package com.maelcolium.telepesa.loan.controller;
 
-import com.maelcolium.telepesa.loan.dto.CreateLoanRequest;
-import com.maelcolium.telepesa.loan.dto.LoanDto;
-import com.maelcolium.telepesa.loan.dto.LoanProductDto;
+import com.maelcolium.telepesa.loan.mapper.LoanMapper;
+import com.maelcolium.telepesa.loan.model.Loan;
+import com.maelcolium.telepesa.loan.repository.LoanRepository;
 import com.maelcolium.telepesa.loan.service.LoanService;
+import com.maelcolium.telepesa.models.dto.LoanDto;
+import com.maelcolium.telepesa.models.dto.LoanProductDto;
 import com.maelcolium.telepesa.models.enums.LoanStatus;
 import com.maelcolium.telepesa.models.enums.LoanType;
+import com.maelcolium.telepesa.models.request.CreateLoanRequest;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -25,6 +28,7 @@ import org.springframework.web.bind.annotation.*;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Collections;
 
 /**
  * REST controller for loan operations
@@ -37,9 +41,13 @@ import java.util.List;
 public class LoanController {
 
     private final LoanService loanService;
+    private final LoanRepository loanRepository;
+    private final LoanMapper loanMapper;
 
-    public LoanController(LoanService loanService) {
+    public LoanController(LoanService loanService, LoanRepository loanRepository, LoanMapper loanMapper) {
         this.loanService = loanService;
+        this.loanRepository = loanRepository;
+        this.loanMapper = loanMapper;
     }
 
     @Operation(
@@ -50,10 +58,64 @@ public class LoanController {
         }
     )
     @GetMapping("/products")
-    public ResponseEntity<List<LoanProductDto>> getLoanProducts() {
+    public ResponseEntity<List<LoanProductDto>> getAllLoanProducts() {
         log.info("Retrieving all loan products");
         List<LoanProductDto> products = loanService.getAllLoanProducts();
         return ResponseEntity.ok(products);
+    }
+
+    @GetMapping("/simple-test")
+    public ResponseEntity<String> simpleTest() {
+        return ResponseEntity.ok("Test endpoint working");
+    }
+
+    @PostMapping("/get-user-loans")
+    public ResponseEntity<Page<LoanDto>> getUserLoansPost(@RequestBody Map<String, Object> request) {
+        Long userId = Long.valueOf(request.get("userId").toString());
+        int page = request.containsKey("page") ? Integer.parseInt(request.get("page").toString()) : 0;
+        int size = request.containsKey("size") ? Integer.parseInt(request.get("size").toString()) : 20;
+        
+        log.info("Getting loans for user: {} with page: {}, size: {}", userId, page, size);
+        
+        try {
+            // Use service method without cache annotations
+            Page<LoanDto> loans = loanService.getUserLoansWithPagination(userId, page, size);
+            return ResponseEntity.ok(loans);
+            
+        } catch (Exception e) {
+            log.error("Error getting user loans: {}", e.getMessage(), e);
+            Page<LoanDto> emptyPage = new PageImpl<>(Collections.emptyList(), 
+                PageRequest.of(page, size), 0);
+            return ResponseEntity.ok(emptyPage);
+        }
+    }
+
+    @GetMapping("/search")
+    public ResponseEntity<List<LoanDto>> searchUserLoans(
+            @RequestParam("userId") Long userId) {
+        
+        log.info("Searching loans for user: {}", userId);
+        
+        try {
+            // Use simple findAll without pagination to avoid any cache issues
+            List<Loan> allLoans = loanRepository.findAll();
+            List<Loan> userLoans = allLoans.stream()
+                .filter(loan -> loan.getUserId().equals(userId))
+                .sorted((a, b) -> b.getCreatedAt().compareTo(a.getCreatedAt()))
+                .limit(20)
+                .collect(java.util.stream.Collectors.toList());
+            
+            List<LoanDto> loanDtos = userLoans.stream()
+                .map(loanMapper::toDto)
+                .collect(java.util.stream.Collectors.toList());
+            
+            log.info("Successfully retrieved {} loans for user: {}", loanDtos.size(), userId);
+            return ResponseEntity.ok(loanDtos);
+            
+        } catch (Exception e) {
+            log.error("Error searching user loans: {}", e.getMessage(), e);
+            return ResponseEntity.ok(Collections.emptyList());
+        }
     }
 
     @Operation(
@@ -79,7 +141,7 @@ public class LoanController {
             @ApiResponse(responseCode = "404", description = "Loan not found")
         }
     )
-    @GetMapping("/{id}")
+    @GetMapping("/loan/{id}")
     public ResponseEntity<LoanDto> getLoan(
         @Parameter(description = "Loan ID", example = "1")
         @PathVariable("id") Long id) {
@@ -140,17 +202,83 @@ public class LoanController {
             @ApiResponse(responseCode = "200", description = "User loans retrieved successfully")
         }
     )
-    @GetMapping("/user/{userId}")
-    public ResponseEntity<Page<LoanDto>> getLoansByUserId(
+    @GetMapping("/by-user-id")
+    public ResponseEntity<Page<LoanDto>> getUserLoans(
         @Parameter(description = "User ID", example = "100")
-        @PathVariable("userId") Long userId,
-        
+        @RequestParam("userId") Long userId,
         @RequestParam(name = "page", defaultValue = "0") int page,
-        @RequestParam(name = "size", defaultValue = "20") int size) {
+        @RequestParam(name = "size", defaultValue = "20") int size,
+        @RequestParam(name = "sort", defaultValue = "createdAt") String sortBy,
+        @RequestParam(name = "direction", defaultValue = "desc") String sortDirection) {
         
-        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
-        Page<LoanDto> loans = loanService.getLoansByUserId(userId, pageable);
+        Sort.Direction direction = sortDirection.equalsIgnoreCase("asc") ? 
+            Sort.Direction.ASC : Sort.Direction.DESC;
+        
+        Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortBy));
+        Page<LoanDto> loans = loanService.getUserLoansWithPagination(userId, page, size);
         return ResponseEntity.ok(loans);
+    }
+
+    @Operation(
+        summary = "Get user loans - clean endpoint",
+        description = "Retrieve loans for a user without cache complications"
+    )
+    @GetMapping("/user/{userId}/clean")
+    public ResponseEntity<Page<LoanDto>> getUserLoansClean(
+            @PathVariable("userId") Long userId,
+            @RequestParam(name = "page", defaultValue = "0") int page,
+            @RequestParam(name = "size", defaultValue = "20") int size) {
+        
+        log.info("Clean endpoint: Retrieving loans for user: {} with page: {}, size: {}", userId, page, size);
+        
+        // Validate pagination parameters
+        if (page < 0) page = 0;
+        if (size <= 0 || size > 100) size = 20;
+        
+        try {
+            Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
+            Page<Loan> loans = loanRepository.findByUserId(userId, pageable);
+            Page<LoanDto> loanDtos = loans.map(loanMapper::toDto);
+            
+            log.info("Successfully retrieved {} loans for user: {}", loanDtos.getTotalElements(), userId);
+            return ResponseEntity.ok(loanDtos);
+            
+        } catch (Exception e) {
+            log.error("Error retrieving loans for user {}: {}", userId, e.getMessage(), e);
+            // Return empty page on error
+            Page<LoanDto> emptyPage = new PageImpl<>(Collections.emptyList());
+            return ResponseEntity.ok(emptyPage);
+        }
+    }
+
+    @GetMapping("/user/{userId}/paginated")
+    public ResponseEntity<Page<LoanDto>> getUserLoansPaginated(
+            @PathVariable("userId") Long userId,
+            @RequestParam(name = "page", defaultValue = "0") int page,
+            @RequestParam(name = "size", defaultValue = "20") int size) {
+        
+        log.info("Getting paginated loans for user: {} with page: {}, size: {}", userId, page, size);
+        
+        // Validate pagination parameters
+        if (page < 0) page = 0;
+        if (size <= 0 || size > 100) size = 20;
+        
+        try {
+            // Direct repository call to bypass any cache issues
+            Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
+            Page<Loan> loans = loanRepository.findByUserId(userId, pageable);
+            Page<LoanDto> loanDtos = loans.map(loanMapper::toDto);
+            
+            log.info("Successfully retrieved {} loans for user: {}", loanDtos.getTotalElements(), userId);
+            return ResponseEntity.ok(loanDtos);
+            
+        } catch (Exception e) {
+            log.error("Error getting paginated loans for user {}: {}", userId, e.getMessage(), e);
+            // Return empty page on error
+            Page<LoanDto> emptyPage = new PageImpl<>(Collections.emptyList(), 
+                PageRequest.of(page, size), 0);
+            return ResponseEntity.ok(emptyPage);
+        }
     }
 
     @Operation(

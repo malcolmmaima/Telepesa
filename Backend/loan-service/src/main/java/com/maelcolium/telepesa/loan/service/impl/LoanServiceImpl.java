@@ -48,7 +48,6 @@ public class LoanServiceImpl implements LoanService {
 
     @Override
     @Transactional(readOnly = true)
-    // @Cacheable(value = "loan-products") // Temporarily disabled due to Redis deserialization issue
     public List<LoanProductDto> getAllLoanProducts() {
         log.info("Retrieving all loan products");
         
@@ -106,7 +105,6 @@ public class LoanServiceImpl implements LoanService {
     }
 
     @Override
-    @CacheEvict(value = {"loans", "loan-applications", "credit-scores"}, allEntries = true)
     public LoanDto createLoan(CreateLoanRequest request) {
         log.info("Creating loan application for user: {} with amount: {}", 
                 request.getUserId(), request.getPrincipalAmount());
@@ -148,7 +146,6 @@ public class LoanServiceImpl implements LoanService {
 
     @Override
     @Transactional(readOnly = true)
-    @Cacheable(value = "loans", key = "#loanId")
     public LoanDto getLoan(Long loanId) {
         log.info("Retrieving loan with ID: {}", loanId);
         
@@ -160,7 +157,6 @@ public class LoanServiceImpl implements LoanService {
 
     @Override
     @Transactional(readOnly = true)
-    @Cacheable(value = "loans", key = "'loanNumber:' + #loanNumber")
     public LoanDto getLoanByNumber(String loanNumber) {
         log.info("Retrieving loan with number: {}", loanNumber);
         
@@ -181,9 +177,13 @@ public class LoanServiceImpl implements LoanService {
 
     @Override
     @Transactional(readOnly = true)
-    @Cacheable(value = "loan-applications", key = "'user:' + #userId + ':page:' + #pageable.pageNumber + ':size:' + #pageable.pageSize")
     public Page<LoanDto> getLoansByUserId(Long userId, Pageable pageable) {
         log.info("Retrieving loans for user: {}", userId);
+        
+        // Ensure pageable is not null to avoid SpEL cache errors
+        if (pageable == null) {
+            pageable = PageRequest.of(0, 20, Sort.by("createdAt").descending());
+        }
         
         Page<Loan> loans = loanRepository.findByUserId(userId, pageable);
         return loans.map(loanMapper::toDto);
@@ -191,9 +191,33 @@ public class LoanServiceImpl implements LoanService {
 
     @Override
     @Transactional(readOnly = true)
-    @Cacheable(value = "loan-applications", key = "'status:' + #status + ':page:' + #pageable.pageNumber + ':size:' + #pageable.pageSize")
+    public Page<LoanDto> getUserLoansWithPagination(Long userId, Pageable pageable) {
+        // Ensure pageable is not null to avoid SpEL cache errors
+        if (pageable == null) {
+            pageable = PageRequest.of(0, 20, Sort.by("createdAt").descending());
+        }
+        
+        log.info("Getting user loans with pagination for user: {}, page: {}, size: {}", 
+                userId, pageable.getPageNumber(), pageable.getPageSize());
+        
+        try {
+            Page<Loan> loans = loanRepository.findByUserId(userId, pageable);
+            return loans.map(loanMapper::toDto);
+        } catch (Exception e) {
+            log.error("Error retrieving user loans: {}", e.getMessage(), e);
+            return new PageImpl<>(Collections.emptyList(), pageable, 0);
+        }
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public Page<LoanDto> getLoansByStatus(LoanStatus status, Pageable pageable) {
         log.info("Retrieving loans with status: {}", status);
+        
+        // Ensure pageable is not null to avoid SpEL cache errors
+        if (pageable == null) {
+            pageable = PageRequest.of(0, 20, Sort.by("createdAt").descending());
+        }
         
         Page<Loan> loans = loanRepository.findByStatus(status, pageable);
         return loans.map(loanMapper::toDto);
@@ -201,9 +225,13 @@ public class LoanServiceImpl implements LoanService {
 
     @Override
     @Transactional(readOnly = true)
-    @Cacheable(value = "loan-applications", key = "'type:' + #loanType + ':page:' + #pageable.pageNumber + ':size:' + #pageable.pageSize")
     public Page<LoanDto> getLoansByType(LoanType loanType, Pageable pageable) {
         log.info("Retrieving loans with type: {}", loanType);
+        
+        // Ensure pageable is not null to avoid SpEL cache errors
+        if (pageable == null) {
+            pageable = PageRequest.of(0, 20, Sort.by("createdAt").descending());
+        }
         
         Page<Loan> loans = loanRepository.findByLoanType(loanType, pageable);
         return loans.map(loanMapper::toDto);
@@ -211,7 +239,6 @@ public class LoanServiceImpl implements LoanService {
 
     @Override
     @Transactional(readOnly = true)
-    @Cacheable(value = "loan-applications", key = "'activeUser:' + #userId")
     public List<LoanDto> getActiveLoansByUserId(Long userId) {
         log.info("Retrieving active loans for user: {}", userId);
         
@@ -222,7 +249,6 @@ public class LoanServiceImpl implements LoanService {
     }
 
     @Override
-    @CacheEvict(value = {"loans", "loan-applications", "credit-scores"}, allEntries = true)
     public LoanDto approveLoan(Long loanId, Long approvedBy) {
         log.info("Approving loan: {} by user: {}", loanId, approvedBy);
         
@@ -244,7 +270,6 @@ public class LoanServiceImpl implements LoanService {
     }
 
     @Override
-    @CacheEvict(value = {"loans", "loan-applications", "credit-scores"}, allEntries = true)
     public LoanDto rejectLoan(Long loanId, String rejectionReason) {
         log.info("Rejecting loan: {} with reason: {}", loanId, rejectionReason);
         
@@ -265,7 +290,6 @@ public class LoanServiceImpl implements LoanService {
     }
 
     @Override
-    @CacheEvict(value = {"loans", "loan-applications", "credit-scores"}, allEntries = true)
     public LoanDto disburseLoan(Long loanId) {
         log.info("Disbursing loan: {}", loanId);
         
@@ -287,7 +311,6 @@ public class LoanServiceImpl implements LoanService {
     }
 
     @Override
-    @CacheEvict(value = {"loans", "loan-applications", "credit-scores"}, allEntries = true)
     public LoanDto makePayment(Long loanId, BigDecimal amount, String paymentMethod) {
         log.info("Making payment of {} for loan: {}", amount, loanId);
         
@@ -324,7 +347,6 @@ public class LoanServiceImpl implements LoanService {
     }
 
     @Override
-    @Cacheable(value = "loan-calculations", key = "'monthlyPayment:' + #principal + ':' + #interestRate + ':' + #termMonths")
     public BigDecimal calculateMonthlyPayment(BigDecimal principal, BigDecimal interestRate, Integer termMonths) {
         if (principal.compareTo(BigDecimal.ZERO) <= 0 || termMonths <= 0) {
             return BigDecimal.ZERO;
@@ -349,7 +371,6 @@ public class LoanServiceImpl implements LoanService {
 
     @Override
     @Transactional(readOnly = true)
-    @Cacheable(value = "credit-scores", key = "'outstandingBalance:' + #userId")
     public BigDecimal getTotalOutstandingBalance(Long userId) {
         log.info("Calculating total outstanding balance for user: {}", userId);
         
@@ -358,7 +379,6 @@ public class LoanServiceImpl implements LoanService {
 
     @Override
     @Transactional(readOnly = true)
-    @Cacheable(value = "loan-applications", key = "'overdue:' + #T(java.time.LocalDate).now()")
     public List<LoanDto> getOverdueLoans() {
         log.info("Retrieving overdue loans");
         
@@ -370,7 +390,6 @@ public class LoanServiceImpl implements LoanService {
 
     @Override
     @Transactional(readOnly = true)
-    @Cacheable(value = "loan-applications", key = "'search:' + #userId + ':' + #status + ':' + #loanType + ':' + #fromDate + ':' + #toDate + ':page:' + #pageable.pageNumber + ':size:' + #pageable.pageSize")
     public Page<LoanDto> searchLoans(Long userId, LoanStatus status, LoanType loanType, 
                                     LocalDate fromDate, LocalDate toDate, Pageable pageable) {
         log.info("Searching loans with criteria - userId: {}, status: {}, type: {}", userId, status, loanType);
@@ -380,7 +399,6 @@ public class LoanServiceImpl implements LoanService {
     }
 
     @Override
-    @CacheEvict(value = {"loans", "loan-applications", "credit-scores"}, allEntries = true)
     public LoanDto updateLoanStatus(Long loanId, LoanStatus status) {
         log.info("Updating loan status: {} to {}", loanId, status);
         

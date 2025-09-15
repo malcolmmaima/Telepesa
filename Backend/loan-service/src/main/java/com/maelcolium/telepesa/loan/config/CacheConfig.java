@@ -22,7 +22,7 @@ import java.util.Map;
  * Provides Redis caching with optimized TTL for different loan data types
  */
 @Configuration
-@EnableCaching
+//@EnableCaching - Disabled to prevent SpEL cache errors
 @ConditionalOnProperty(name = "spring.cache.type", havingValue = "redis")
 public class CacheConfig {
 
@@ -34,21 +34,20 @@ public class CacheConfig {
         RedisTemplate<String, Object> template = new RedisTemplate<>();
         template.setConnectionFactory(connectionFactory);
 
-        // Configure serializers
-        StringRedisSerializer stringSerializer = new StringRedisSerializer();
-        GenericJackson2JsonRedisSerializer jsonSerializer = new GenericJackson2JsonRedisSerializer();
-
-        template.setKeySerializer(stringSerializer);
-        template.setValueSerializer(jsonSerializer);
-        template.setHashKeySerializer(stringSerializer);
-        template.setHashValueSerializer(jsonSerializer);
-
+        // Use String serializer for keys
+        template.setKeySerializer(new StringRedisSerializer());
+        template.setHashKeySerializer(new StringRedisSerializer());
+        
+        // Use JSON serializer for values
+        template.setValueSerializer(new GenericJackson2JsonRedisSerializer());
+        template.setHashValueSerializer(new GenericJackson2JsonRedisSerializer());
+        
         template.afterPropertiesSet();
         return template;
     }
 
     /**
-     * Configure cache manager with different TTL for different cache names
+     * Configure cache manager with different TTL for different cache types
      */
     @Bean
     public CacheManager cacheManager(RedisConnectionFactory connectionFactory) {
@@ -65,9 +64,9 @@ public class CacheConfig {
         // Loan data caches
         cacheConfigurations.put("loans", defaultConfig.entryTtl(Duration.ofMinutes(20)));
         cacheConfigurations.put("loan-applications", defaultConfig.entryTtl(Duration.ofMinutes(15)));
+        cacheConfigurations.put("loan-products", defaultConfig.entryTtl(Duration.ofHours(2)));
+        cacheConfigurations.put("credit-scores", defaultConfig.entryTtl(Duration.ofMinutes(30)));
         cacheConfigurations.put("loan-calculations", defaultConfig.entryTtl(Duration.ofHours(1)));
-        cacheConfigurations.put("credit-scores", defaultConfig.entryTtl(Duration.ofHours(6)));
-        cacheConfigurations.put("collaterals", defaultConfig.entryTtl(Duration.ofMinutes(30)));
 
         return RedisCacheManager.builder(connectionFactory)
             .cacheDefaults(defaultConfig)

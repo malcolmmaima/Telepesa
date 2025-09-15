@@ -46,6 +46,15 @@ public interface LoanService {
      * Get loans by user ID
      */
     Page<LoanDto> getLoansByUserId(Long userId, Pageable pageable);
+    
+
+    /**
+     * Get user loans with pagination - clean implementation without complex cache keys
+     * @param userId The user ID
+     * @param pageable Pagination parameters
+     * @return Page of loan DTOs
+     */
+    Page<LoanDto> getUserLoansWithPagination(Long userId, Pageable pageable);
 
     /**
      * Get loans by status

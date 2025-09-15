@@ -291,7 +291,7 @@ services:
 
   loan-service:
     build:
-      context: ./loan-service
+      context: ../loan-service
       dockerfile: Dockerfile
     container_name: telepesa-loan-service
     ports:
@@ -307,6 +307,8 @@ services:
       ZIPKIN_BASE_URL: http://zipkin:9411
       REDIS_HOST: redis
       REDIS_PASSWORD: telepesa_redis_password
+      SPRING_CACHE_TYPE: none
+      SPRING_AUTOCONFIGURE_EXCLUDE: org.springframework.boot.autoconfigure.cache.CacheAutoConfiguration
       SPRING_DATA_REDIS_HOST: redis
       SPRING_DATA_REDIS_PASSWORD: telepesa_redis_password
       KAFKA_BOOTSTRAP_SERVERS: kafka:9092

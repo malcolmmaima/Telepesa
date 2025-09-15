@@ -58,7 +58,7 @@ public class Loan {
     @Column(name = "principal_amount", nullable = false, precision = 15, scale = 2)
     private BigDecimal principalAmount;
 
-    @Column(name = "interest_rate", nullable = false, precision = 7, scale = 4)
+    @Column(name = "interest_rate", nullable = false, precision = 8, scale = 4)
     private BigDecimal interestRate;
 
     @Column(name = "term_months", nullable = false)

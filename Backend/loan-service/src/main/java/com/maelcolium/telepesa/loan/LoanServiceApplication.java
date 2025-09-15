@@ -2,9 +2,9 @@ package com.maelcolium.telepesa.loan;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
+import org.springframework.cloud.netflix.eureka.EnableEurekaClient;
 import org.springframework.cloud.openfeign.EnableFeignClients;
-import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
+import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 
@@ -22,12 +22,20 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
  * @version 1.0.0
  * @since 1.0.0
  */
-@SpringBootApplication
-@EnableJpaAuditing
+@SpringBootApplication(
+    scanBasePackages = {
+        "com.maelcolium.telepesa.loan",
+        "com.maelcolium.telepesa.models"
+    },
+    exclude = {
+        org.springframework.boot.autoconfigure.cache.CacheAutoConfiguration.class
+    }
+)
+@EnableJpaRepositories(basePackages = "com.maelcolium.telepesa.loan.repository")
 @EnableAsync
 @EnableTransactionManagement
 @EnableFeignClients
-@EnableDiscoveryClient
+@EnableEurekaClient
 public class LoanServiceApplication {
 
     public static void main(String[] args) {

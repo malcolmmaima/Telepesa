@@ -1,4 +1,4 @@
-# Runtime stage for CI/CD (JAR already built)
+# Runtime stage for pre-built JAR
 FROM eclipse-temurin:17-jre
 
 # Install security updates and required packages
@@ -11,7 +11,7 @@ RUN apt-get update && apt-get upgrade -y && \
 # Set working directory
 WORKDIR /app
 
-# Copy the pre-built JAR file from CI/CD artifacts
+# Copy the pre-built JAR file
 COPY target/loan-service-*.jar app.jar
 
 # Change ownership to telepesa user
