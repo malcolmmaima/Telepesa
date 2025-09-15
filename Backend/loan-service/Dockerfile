@@ -12,7 +12,7 @@ RUN apt-get update && apt-get upgrade -y && \
 WORKDIR /app
 
 # Copy the pre-built JAR file from CI/CD artifacts
-COPY loan-service/target/loan-service-*.jar app.jar
+COPY target/loan-service-*.jar app.jar
 
 # Change ownership to telepesa user
 RUN chown -R telepesa:telepesa /app

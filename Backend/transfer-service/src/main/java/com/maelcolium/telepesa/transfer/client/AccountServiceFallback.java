@@ -19,7 +19,23 @@ public class AccountServiceFallback implements AccountServiceClient {
             "KES", 
             "UNAVAILABLE", 
             "", 
-            "UNKNOWN"
+            "UNKNOWN",
+            "Account Holder"
+        );
+    }
+    
+    @Override
+    public AccountResponse getAccountByNumber(String accountNumber) {
+        log.error("Account service is unavailable. Returning fallback for account number: {}", accountNumber);
+        return new AccountResponse(
+            "fallback-id", 
+            accountNumber, 
+            BigDecimal.ZERO, 
+            "KES", 
+            "UNAVAILABLE", 
+            "", 
+            "UNKNOWN",
+            "Account Holder"
         );
     }
     

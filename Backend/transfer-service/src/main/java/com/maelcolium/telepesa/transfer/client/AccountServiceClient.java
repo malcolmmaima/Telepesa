@@ -14,6 +14,9 @@ public interface AccountServiceClient {
     @GetMapping("/api/accounts/{accountId}")
     AccountResponse getAccount(@PathVariable("accountId") String accountId);
     
+    @GetMapping("/api/accounts/by-number/{accountNumber}")
+    AccountResponse getAccountByNumber(@PathVariable("accountNumber") String accountNumber);
+    
     @PostMapping("/api/accounts/{accountId}/debit")
     TransactionResponse debitAccount(@PathVariable("accountId") String accountId, 
                                    @RequestBody DebitRequest request);
@@ -30,8 +33,17 @@ public interface AccountServiceClient {
         String currency,
         String status,
         String userId,
-        String accountType
-    ) {}
+        String accountType,
+        String accountName
+    ) {
+        public String getAccountName() {
+            return accountName != null ? accountName : "Account Holder";
+        }
+        
+        public String getId() {
+            return id;
+        }
+    }
     
     record DebitRequest(
         BigDecimal amount,

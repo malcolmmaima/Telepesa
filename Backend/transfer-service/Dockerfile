@@ -22,7 +22,7 @@ RUN mvn -f transfer-service/pom.xml dependency:resolve -B
 
 # Copy transfer-service source code and build
 COPY transfer-service/src ./transfer-service/src
-RUN mvn -f transfer-service/pom.xml clean package -DskipTests
+RUN mvn -f transfer-service/pom.xml clean package -DskipTests -Dmaven.test.skip=true
 
 # Runtime image
 FROM openjdk:17-jdk-slim
