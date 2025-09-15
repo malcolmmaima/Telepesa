@@ -17,7 +17,7 @@ export const useNotifications = () => {
       setNotifications(prev => [notification, ...prev])
       setNewNotification(notification)
       setUnreadCount(prev => prev + 1)
-      
+
       // Show browser notification if permission is granted
       if ('Notification' in window && Notification.permission === 'granted') {
         new Notification(notification.title, {
@@ -26,7 +26,7 @@ export const useNotifications = () => {
           tag: notification.id, // Prevent duplicate notifications
         })
       }
-      
+
       // Clear the new notification after 5 seconds
       setTimeout(() => setNewNotification(null), 5000)
     }
@@ -39,7 +39,7 @@ export const useNotifications = () => {
     const handleConnectionStatus = (status: { connected: boolean; error?: boolean }) => {
       console.log('WebSocket connection status:', status)
       setIsConnected(status.connected)
-      
+
       if (status.connected) {
         // Connection established, fetch initial unread count
         fetchUnreadCount()
@@ -136,6 +136,6 @@ export const useNotifications = () => {
     clearUnreadCount,
     dismissNewNotification,
     connectWebSocket,
-    disconnectWebSocket
+    disconnectWebSocket,
   }
 }

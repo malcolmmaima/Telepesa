@@ -20,7 +20,11 @@ export const getAvatarUrl = (avatarUrl: string | null | undefined): string | nul
   }
 
   // If it's already a complete URL (http/https) or blob URL, return as is
-  if (avatarUrl.startsWith('http://') || avatarUrl.startsWith('https://') || avatarUrl.startsWith('blob:')) {
+  if (
+    avatarUrl.startsWith('http://') ||
+    avatarUrl.startsWith('https://') ||
+    avatarUrl.startsWith('blob:')
+  ) {
     return avatarUrl
   }
 
@@ -52,21 +56,21 @@ export const getAvatarUrl = (avatarUrl: string | null | undefined): string | nul
  * @returns User initials (e.g., "JD" for John Doe)
  */
 export const getUserInitials = (
-  firstName?: string, 
-  lastName?: string, 
+  firstName?: string,
+  lastName?: string,
   username?: string
 ): string => {
   if (firstName && lastName) {
     return `${firstName[0]}${lastName[0]}`.toUpperCase()
   }
-  
+
   if (firstName) {
     return firstName[0].toUpperCase()
   }
-  
+
   if (username) {
     return username[0].toUpperCase()
   }
-  
+
   return '?'
 }

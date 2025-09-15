@@ -14,7 +14,7 @@ export function PaymentsPage() {
   const [step, setStep] = useState<'select' | 'details' | 'confirm'>('select')
   const [billDetails, setBillDetails] = useState<any>(null)
   const [searchQuery, setSearchQuery] = useState('')
-  
+
   // API state
   const [billers, setBillers] = useState<BillerDto[]>([])
   const [categories, setCategories] = useState<string[]>([])
@@ -30,12 +30,12 @@ export function PaymentsPage() {
     try {
       setBillersLoading(true)
       setBillersError(null)
-      
+
       const [billersData, categoriesData] = await Promise.all([
         getPopularBillers(12), // Load more billers for better selection
         getBillerCategories(),
       ])
-      
+
       setBillers(billersData)
       setCategories(categoriesData)
     } catch (error: any) {

@@ -7,7 +7,6 @@ import { Input } from '../components/ui/Input'
 import { AccountDetailsModal } from '../components/AccountDetailsModal'
 import { formatCurrency, cn } from '../lib/utils'
 
-
 const ACCOUNT_TYPE_ICONS = {
   SAVINGS: '🏦',
   CHECKING: '💳',
@@ -174,10 +173,10 @@ export function AccountsPage() {
       <div className="space-y-6">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-financial-navy mb-2">
-              Your Accounts 🏦
-            </h1>
-            <p className="text-financial-gray">View and manage your existing accounts in one place</p>
+            <h1 className="text-3xl font-bold text-financial-navy mb-2">Your Accounts 🏦</h1>
+            <p className="text-financial-gray">
+              View and manage your existing accounts in one place
+            </p>
           </div>
           <div className="flex flex-col sm:flex-row gap-3">
             <Button
@@ -211,11 +210,15 @@ export function AccountsPage() {
               </div>
               <div className="flex items-center space-x-8">
                 <div className="text-center">
-                  <div className="text-2xl font-bold">{accounts.filter(a => a.status === 'ACTIVE').length}</div>
+                  <div className="text-2xl font-bold">
+                    {accounts.filter(a => a.status === 'ACTIVE').length}
+                  </div>
                   <div className="text-sm opacity-75">Active</div>
                 </div>
                 <div className="text-center">
-                  <div className="text-2xl font-bold">{accounts.filter(a => a.status === 'PENDING').length}</div>
+                  <div className="text-2xl font-bold">
+                    {accounts.filter(a => a.status === 'PENDING').length}
+                  </div>
                   <div className="text-sm opacity-75">Pending</div>
                 </div>
                 <div className="text-6xl opacity-60">💰</div>
@@ -225,7 +228,8 @@ export function AccountsPage() {
           {/* Help Section */}
           <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-financial">
             <p className="text-sm text-blue-700">
-              💡 <strong>Need help?</strong> Contact support for account assistance or visit any branch to open a new account.
+              💡 <strong>Need help?</strong> Contact support for account assistance or visit any
+              branch to open a new account.
             </p>
           </div>
         </div>
@@ -242,7 +246,7 @@ export function AccountsPage() {
                 type="text"
                 placeholder="Search by name, number, or type..."
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={e => setSearchQuery(e.target.value)}
                 className="w-full"
               />
             </div>
@@ -254,7 +258,7 @@ export function AccountsPage() {
               </label>
               <select
                 value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value as Account['status'] | 'ALL')}
+                onChange={e => setStatusFilter(e.target.value as Account['status'] | 'ALL')}
                 className="w-full px-3 py-2 border border-gray-300 rounded-financial focus:ring-2 focus:ring-financial-blue focus:border-financial-blue"
               >
                 <option value="ALL">All Status</option>
@@ -273,7 +277,7 @@ export function AccountsPage() {
               <div className="space-y-2">
                 <select
                   value={typeFilter}
-                  onChange={(e) => setTypeFilter(e.target.value as Account['accountType'] | 'ALL')}
+                  onChange={e => setTypeFilter(e.target.value as Account['accountType'] | 'ALL')}
                   className="w-full px-3 py-2 border border-gray-300 rounded-financial text-sm focus:ring-2 focus:ring-financial-blue focus:border-financial-blue"
                 >
                   <option value="ALL">All Types</option>
@@ -284,7 +288,7 @@ export function AccountsPage() {
                 </select>
                 <select
                   value={sortBy}
-                  onChange={(e) => setSortBy(e.target.value as 'balance' | 'name' | 'date')}
+                  onChange={e => setSortBy(e.target.value as 'balance' | 'name' | 'date')}
                   className="w-full px-3 py-2 border border-gray-300 rounded-financial text-sm focus:ring-2 focus:ring-financial-blue focus:border-financial-blue"
                 >
                   <option value="balance">💰 By Balance</option>
@@ -380,11 +384,13 @@ export function AccountsPage() {
       ) : filteredAccounts.length === 0 && accounts.length > 0 ? (
         <div className="text-center py-12">
           <div className="text-6xl mb-4">🔍</div>
-          <h3 className="text-xl font-semibold text-financial-navy mb-2">No accounts match your filters</h3>
+          <h3 className="text-xl font-semibold text-financial-navy mb-2">
+            No accounts match your filters
+          </h3>
           <p className="text-financial-gray mb-6">
             Try adjusting your search terms or filters to find what you're looking for.
           </p>
-          <Button 
+          <Button
             variant="outline"
             onClick={() => {
               setSearchQuery('')

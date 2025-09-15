@@ -169,7 +169,7 @@ export function LoansPage() {
       // Update application with correct user ID
       const applicationWithUserId = {
         ...application,
-        accountId: user!.id // Use user ID instead of account ID for now
+        accountId: user!.id, // Use user ID instead of account ID for now
       }
       const loan = await loansApi.applyForLoan(applicationWithUserId)
       setApplicationSuccess(loan)

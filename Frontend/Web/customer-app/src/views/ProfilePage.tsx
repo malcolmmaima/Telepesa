@@ -9,7 +9,11 @@ import { useAvatarImage } from '../hooks/useAvatarImage'
 export function ProfilePage() {
   const { user, updateUser } = useAuth()
   const currentAvatarUrl = (user as any)?.avatarUrl || user?.profilePicture || null
-  const { imageSrc: avatarImageSrc, isLoading: isLoadingAvatar, error: avatarError } = useAvatarImage(currentAvatarUrl)
+  const {
+    imageSrc: avatarImageSrc,
+    isLoading: isLoadingAvatar,
+    error: avatarError,
+  } = useAvatarImage(currentAvatarUrl)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [isEditing, setIsEditing] = useState(false)
   const [isChangingPassword, setIsChangingPassword] = useState(false)
@@ -63,7 +67,7 @@ export function ProfilePage() {
         phoneNumber: profileForm.phoneNumber || undefined,
         dateOfBirth: profileForm.dateOfBirth || undefined,
       }
-      
+
       const response = await userApi.updateProfile(profileData)
       updateUser(response.user)
       setMessage({ type: 'success', text: response.message || 'Profile updated successfully!' })
@@ -96,7 +100,7 @@ export function ProfilePage() {
         currentPassword: passwordForm.currentPassword,
         newPassword: passwordForm.newPassword,
       }
-      
+
       const response = await userApi.changePassword(passwordData)
       setMessage({ type: 'success', text: response.message || 'Password changed successfully!' })
       setIsChangingPassword(false)
@@ -132,9 +136,9 @@ export function ProfilePage() {
       if (user) {
         updateUser({ profilePicture: response.avatarUrl, avatarUrl: response.avatarUrl } as any)
       }
-      setMessage({ 
-        type: 'success', 
-        text: response.message || 'Profile picture updated!'
+      setMessage({
+        type: 'success',
+        text: response.message || 'Profile picture updated!',
       })
     } catch (error: any) {
       setMessage({ type: 'error', text: error.message || 'Failed to upload profile picture' })
@@ -192,20 +196,20 @@ export function ProfilePage() {
           <div className="flex-shrink-0">
             <div className="relative w-24 h-24 rounded-full bg-gradient-to-br from-financial-blue to-financial-navy flex items-center justify-center overflow-hidden">
               {avatarImageSrc ? (
-                <img
-                  src={avatarImageSrc}
-                  alt="Profile"
-                  className="w-full h-full object-cover"
-                />
+                <img src={avatarImageSrc} alt="Profile" className="w-full h-full object-cover" />
               ) : isLoadingAvatar ? (
                 <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-white"></div>
               ) : (
                 <span className="text-2xl font-bold text-white">
-                  {user?.firstName?.[0]}{user?.lastName?.[0]}
+                  {user?.firstName?.[0]}
+                  {user?.lastName?.[0]}
                 </span>
               )}
               {avatarError && (
-                <div className="absolute bottom-0 right-0 w-6 h-6 bg-red-500 rounded-full flex items-center justify-center text-xs text-white" title={avatarError}>
+                <div
+                  className="absolute bottom-0 right-0 w-6 h-6 bg-red-500 rounded-full flex items-center justify-center text-xs text-white"
+                  title={avatarError}
+                >
                   !
                 </div>
               )}
@@ -237,7 +241,10 @@ export function ProfilePage() {
                       updateUser({ profilePicture: '', avatarUrl: '' } as any)
                       setMessage({ type: 'success', text: resp.message })
                     } catch (err: any) {
-                      setMessage({ type: 'error', text: err.message || 'Failed to remove profile picture' })
+                      setMessage({
+                        type: 'error',
+                        text: err.message || 'Failed to remove profile picture',
+                      })
                     } finally {
                       setUploadingAvatar(false)
                     }
@@ -432,11 +439,11 @@ export function ProfilePage() {
               <p className="text-sm text-financial-gray">Receive transaction and account updates</p>
             </div>
             <label className="relative inline-flex items-center cursor-pointer">
-              <input 
-                type="checkbox" 
-                className="sr-only peer" 
+              <input
+                type="checkbox"
+                className="sr-only peer"
                 checked={userSettings.emailNotifications}
-                onChange={(e) => handleSettingsChange('emailNotifications', e.target.checked)}
+                onChange={e => handleSettingsChange('emailNotifications', e.target.checked)}
               />
               <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-financial-blue/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-financial-blue"></div>
             </label>
@@ -447,11 +454,11 @@ export function ProfilePage() {
               <p className="text-sm text-financial-gray">Receive transaction alerts via SMS</p>
             </div>
             <label className="relative inline-flex items-center cursor-pointer">
-              <input 
-                type="checkbox" 
-                className="sr-only peer" 
+              <input
+                type="checkbox"
+                className="sr-only peer"
                 checked={userSettings.smsNotifications}
-                onChange={(e) => handleSettingsChange('smsNotifications', e.target.checked)}
+                onChange={e => handleSettingsChange('smsNotifications', e.target.checked)}
               />
               <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-financial-blue/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-financial-blue"></div>
             </label>

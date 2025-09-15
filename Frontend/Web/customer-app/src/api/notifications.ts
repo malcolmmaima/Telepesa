@@ -37,34 +37,39 @@ export const notificationsApi = {
     try {
       console.log(`[Notifications API] Fetching notifications (page: ${page}, limit: ${limit})`)
       const response = await api.get(`/notifications?page=${page}&limit=${limit}`)
-      
+
       // Handle different response structures
       const data = response.data?.data || response.data
       console.log('[Notifications API] Get notifications response:', data)
-      
+
       return {
         totalCount: data?.totalCount || data?.length || 0,
         unreadCount: data?.unreadCount || 0,
-        notifications: Array.isArray(data?.notifications) ? data.notifications : 
-                      Array.isArray(data) ? data : []
+        notifications: Array.isArray(data?.notifications)
+          ? data.notifications
+          : Array.isArray(data)
+            ? data
+            : [],
       }
     } catch (error: any) {
       console.error('[Notifications API] Error fetching notifications:', error)
-      
+
       // Provide helpful error context
       if (error.statusCode === 403) {
         console.warn('[Notifications API] Authentication required or insufficient permissions')
       } else if (error.statusCode === 404) {
-        console.warn('[Notifications API] Notifications endpoint not found - may not be implemented yet')
+        console.warn(
+          '[Notifications API] Notifications endpoint not found - may not be implemented yet'
+        )
       } else if (error.statusCode === 500) {
         console.warn('[Notifications API] Server error - backend may be unavailable')
       }
-      
+
       // Return empty state if API fails
       return {
         totalCount: 0,
         unreadCount: 0,
-        notifications: []
+        notifications: [],
       }
     }
   },
@@ -74,21 +79,21 @@ export const notificationsApi = {
     try {
       console.log('[Notifications API] Fetching unread count')
       const response = await api.get('/notifications/unread-count')
-      
+
       const data = response.data?.data || response.data
       console.log('[Notifications API] Unread count response:', data)
-      
+
       return data?.count || data?.unreadCount || 0
     } catch (error: any) {
       console.error('[Notifications API] Error fetching unread count:', error)
-      
+
       // Provide helpful error context
       if (error.statusCode === 403) {
         console.warn('[Notifications API] Authentication required for unread count')
       } else if (error.statusCode === 404) {
         console.warn('[Notifications API] Unread count endpoint not implemented')
       }
-      
+
       return 0
     }
   },
@@ -137,10 +142,10 @@ export const notificationsApi = {
     try {
       console.log('[Notifications API] Fetching notification preferences')
       const response = await api.get('/notifications/preferences')
-      
+
       const data = response.data?.data || response.data
       console.log('[Notifications API] Preferences response:', data)
-      
+
       return {
         emailNotifications: data?.emailNotifications || false,
         smsNotifications: data?.smsNotifications || false,
@@ -148,11 +153,11 @@ export const notificationsApi = {
         transactionAlerts: data?.transactionAlerts || true,
         securityAlerts: data?.securityAlerts || true,
         promotionalOffers: data?.promotionalOffers || false,
-        ...data
+        ...data,
       }
     } catch (error: any) {
       console.error('[Notifications API] Error fetching preferences:', error)
-      
+
       // Return default preferences if API fails
       return {
         emailNotifications: false,
@@ -160,7 +165,7 @@ export const notificationsApi = {
         pushNotifications: false,
         transactionAlerts: true,
         securityAlerts: true,
-        promotionalOffers: false
+        promotionalOffers: false,
       }
     }
   },
@@ -176,5 +181,5 @@ export const notificationsApi = {
       console.error('[Notifications API] Error updating preferences:', error)
       return false
     }
-  }
+  },
 }

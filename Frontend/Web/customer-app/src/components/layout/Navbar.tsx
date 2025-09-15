@@ -15,7 +15,7 @@ export const Navbar = () => {
   const { userName } = useAuthSelectors()
   const { darkMode, toggleDarkMode } = useDarkMode()
   const { unreadCount } = useNotifications()
-  
+
   const userInitials = getUserInitials(user?.firstName, user?.lastName, user?.username)
 
   const handleLogout = () => {
@@ -32,7 +32,9 @@ export const Navbar = () => {
               <div className="w-8 h-8 bg-financial-gradient rounded-lg flex items-center justify-center">
                 <span className="text-white font-bold text-lg">T</span>
               </div>
-              <span className="text-xl font-bold text-financial-navy dark:text-white">Telepesa</span>
+              <span className="text-xl font-bold text-financial-navy dark:text-white">
+                Telepesa
+              </span>
             </Link>
           </div>
 
@@ -82,11 +84,15 @@ export const Navbar = () => {
               {/* Sun / Moon icon */}
               {darkMode ? (
                 <svg className="w-5 h-5 text-yellow-300" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M21.64 13a1 1 0 0 0-1.05-.14 8 8 0 1 1-9.45-9.45A1 1 0 0 0 10 2a10 10 0 1 0 12 12 1 1 0 0 0-.36-1.99z"/>
+                  <path d="M21.64 13a1 1 0 0 0-1.05-.14 8 8 0 1 1-9.45-9.45A1 1 0 0 0 10 2a10 10 0 1 0 12 12 1 1 0 0 0-.36-1.99z" />
                 </svg>
               ) : (
-                <svg className="w-5 h-5 text-financial-navy" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M6.76 4.84l-1.8-1.79-1.42 1.41 1.79 1.8 1.43-1.42zm10.45 12.73l1.79 1.8 1.42-1.42-1.8-1.79-1.41 1.41zM12 4V1h-1v3h1zm0 19v-3h-1v3h1zm8-8h3v-1h-3v1zM1 12H4v-1H1v1zm15.24-7.16l1.8-1.79-1.42-1.41-1.79 1.8 1.41 1.4zM4.22 18.36l-1.79 1.8 1.41 1.42 1.8-1.79-1.42-1.43zM12 6a6 6 0 100 12 6 6 0 000-12z"/>
+                <svg
+                  className="w-5 h-5 text-financial-navy"
+                  viewBox="0 0 24 24"
+                  fill="currentColor"
+                >
+                  <path d="M6.76 4.84l-1.8-1.79-1.42 1.41 1.79 1.8 1.43-1.42zm10.45 12.73l1.79 1.8 1.42-1.42-1.8-1.79-1.41 1.41zM12 4V1h-1v3h1zm0 19v-3h-1v3h1zm8-8h3v-1h-3v1zM1 12H4v-1H1v1zm15.24-7.16l1.8-1.79-1.42-1.41-1.79 1.8 1.41 1.4zM4.22 18.36l-1.79 1.8 1.41 1.42 1.8-1.79-1.42-1.43zM12 6a6 6 0 100 12 6 6 0 000-12z" />
                 </svg>
               )}
             </button>
@@ -99,7 +105,11 @@ export const Navbar = () => {
                 aria-label="Notifications"
                 title="Notifications"
               >
-                <svg className="w-5 h-5 text-financial-navy dark:text-slate-200" viewBox="0 0 24 24" fill="currentColor">
+                <svg
+                  className="w-5 h-5 text-financial-navy dark:text-slate-200"
+                  viewBox="0 0 24 24"
+                  fill="currentColor"
+                >
                   <path d="M12 2a7 7 0 00-7 7v3.586l-1.707 1.707A1 1 0 004 16h16a1 1 0 00.707-1.707L19 12.586V9a7 7 0 00-7-7zm0 20a3 3 0 01-3-3h6a3 3 0 01-3 3z" />
                 </svg>
                 {unreadCount > 0 && (
@@ -109,8 +119,8 @@ export const Navbar = () => {
                 )}
               </button>
 
-              <NotificationsDropdown 
-                isOpen={isNotificationsOpen} 
+              <NotificationsDropdown
+                isOpen={isNotificationsOpen}
                 onClose={() => setIsNotificationsOpen(false)}
               />
             </div>
@@ -121,11 +131,7 @@ export const Navbar = () => {
                 onClick={() => setIsProfileOpen(!isProfileOpen)}
                 className="flex items-center space-x-2 p-2 rounded-financial hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors duration-200"
               >
-                <Avatar 
-                  src={user?.avatarUrl} 
-                  initials={userInitials || undefined} 
-                  size="sm" 
-                />
+                <Avatar src={user?.avatarUrl} initials={userInitials || undefined} size="sm" />
                 <span className="hidden sm:block text-sm font-medium text-financial-navy dark:text-slate-200">
                   {userName}
                 </span>
@@ -138,14 +144,14 @@ export const Navbar = () => {
                   stroke="currentColor"
                   viewBox="0 0 24 24"
                 >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="m19 9-7 7-7-7"
-                />
-              </svg>
-            </button>
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="m19 9-7 7-7-7"
+                  />
+                </svg>
+              </button>
 
               {/* Dropdown Menu */}
               {isProfileOpen && (

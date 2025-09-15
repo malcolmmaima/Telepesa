@@ -167,7 +167,11 @@ export const accountsApi = {
   getUserTotalBalance: async (userId: number): Promise<number> => {
     const response = await api.get(`/accounts/user/${userId}/total-balance`)
     // Backend may return data in {data: number} format, extract the balance value
-    return typeof response.data?.data === 'number' ? response.data.data : (typeof response.data === 'number' ? response.data : 0)
+    return typeof response.data?.data === 'number'
+      ? response.data.data
+      : typeof response.data === 'number'
+        ? response.data
+        : 0
   },
 
   // Search and filter accounts

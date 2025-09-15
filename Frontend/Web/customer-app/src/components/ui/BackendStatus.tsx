@@ -23,13 +23,16 @@ export function BackendStatus({ showDetails = false }: BackendStatusProps) {
 
   const checkServiceStatus = async (service: ServiceStatus): Promise<ServiceStatus> => {
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api/v1'}${service.url}`, {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${accessToken}`,
-          'Content-Type': 'application/json'
+      const response = await fetch(
+        `${import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api/v1'}${service.url}`,
+        {
+          method: 'GET',
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            'Content-Type': 'application/json',
+          },
         }
-      })
+      )
 
       const isAuthProtected = response.status === 401 || response.status === 403
       return {
@@ -40,14 +43,14 @@ export function BackendStatus({ showDetails = false }: BackendStatusProps) {
           ? undefined
           : isAuthProtected
             ? 'Authenticated access required'
-            : `HTTP ${response.status} ${response.statusText}`
+            : `HTTP ${response.status} ${response.statusText}`,
       }
     } catch (error) {
       return {
         ...service,
         status: 'offline',
         lastChecked: new Date(),
-        error: error instanceof Error ? error.message : 'Connection failed'
+        error: error instanceof Error ? error.message : 'Connection failed',
       }
     }
   }
@@ -55,16 +58,14 @@ export function BackendStatus({ showDetails = false }: BackendStatusProps) {
   const checkAllServices = async () => {
     if (!accessToken || !user) return
 
-    const updatedServices = await Promise.all(
-      services.map(service => checkServiceStatus(service))
-    )
+    const updatedServices = await Promise.all(services.map(service => checkServiceStatus(service)))
     setServices(updatedServices)
   }
 
   useEffect(() => {
     if (accessToken && user) {
       checkAllServices()
-      
+
       // Check every 30 seconds
       const interval = setInterval(checkAllServices, 30000)
       return () => clearInterval(interval)
@@ -73,21 +74,31 @@ export function BackendStatus({ showDetails = false }: BackendStatusProps) {
 
   const getStatusColor = (status: ServiceStatus['status']) => {
     switch (status) {
-      case 'online': return 'text-green-600'
-      case 'offline': return 'text-red-600'
-      case 'error': return 'text-yellow-600'
-      case 'checking': return 'text-gray-600'
-      default: return 'text-gray-600'
+      case 'online':
+        return 'text-green-600'
+      case 'offline':
+        return 'text-red-600'
+      case 'error':
+        return 'text-yellow-600'
+      case 'checking':
+        return 'text-gray-600'
+      default:
+        return 'text-gray-600'
     }
   }
 
   const getStatusIcon = (status: ServiceStatus['status']) => {
     switch (status) {
-      case 'online': return '✅'
-      case 'offline': return '❌'
-      case 'error': return '⚠️'
-      case 'checking': return '⏳'
-      default: return '❓'
+      case 'online':
+        return '✅'
+      case 'offline':
+        return '❌'
+      case 'error':
+        return '⚠️'
+      case 'checking':
+        return '⏳'
+      default:
+        return '❓'
     }
   }
 
@@ -119,9 +130,9 @@ export function BackendStatus({ showDetails = false }: BackendStatusProps) {
           Refresh
         </button>
       </div>
-      
+
       <div className="space-y-2">
-        {services.map((service) => (
+        {services.map(service => (
           <div key={service.name} className="flex items-center justify-between text-sm">
             <div className="flex items-center gap-2">
               <span>{getStatusIcon(service.status)}</span>
@@ -146,7 +157,7 @@ export function BackendStatus({ showDetails = false }: BackendStatusProps) {
           </div>
         </div>
       )}
-      
+
       {!accessToken && (
         <div className="mt-2 pt-2 border-t border-gray-100 dark:border-slate-600">
           <div className="text-xs text-yellow-600 dark:text-yellow-400">

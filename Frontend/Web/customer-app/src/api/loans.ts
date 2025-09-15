@@ -98,7 +98,11 @@ export const loansApi = {
   // Get loan products
   getLoanProducts: async (): Promise<LoanProduct[]> => {
     const response = await api.get('/loans/products')
-    return Array.isArray(response.data?.data) ? response.data.data : (Array.isArray(response.data) ? response.data : [])
+    return Array.isArray(response.data?.data)
+      ? response.data.data
+      : Array.isArray(response.data)
+        ? response.data
+        : []
   },
 
   // Get loan product by type
@@ -137,9 +141,9 @@ export const loansApi = {
       employerName: application.employerName,
       collateral: application.collateral,
       collateralValue: application.collateralValue,
-      notes: `Employment: ${application.employmentStatus}${application.employerName ? `, Employer: ${application.employerName}` : ''}`
+      notes: `Employment: ${application.employmentStatus}${application.employerName ? `, Employer: ${application.employerName}` : ''}`,
     }
-    
+
     const response = await api.post('/loans', createLoanRequest)
     return response.data
   },

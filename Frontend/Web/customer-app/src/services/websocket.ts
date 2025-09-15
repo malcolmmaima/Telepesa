@@ -36,7 +36,7 @@ class WebSocketService {
 
     try {
       const { accessToken, user } = useAuth.getState()
-      
+
       if (!accessToken || !user) {
         console.log('WebSocket: No auth token or user, skipping connection')
         return
@@ -53,7 +53,6 @@ class WebSocketService {
       this.ws.onmessage = this.onMessage.bind(this)
       this.ws.onclose = this.onClose.bind(this)
       this.ws.onerror = this.onError.bind(this)
-
     } catch (error) {
       console.error('WebSocket: Failed to create connection:', error)
       this.isConnecting = false
@@ -65,17 +64,17 @@ class WebSocketService {
     console.log('WebSocket: Connected successfully')
     this.isConnecting = false
     this.reconnectAttempts = 0
-    
+
     // Start heartbeat
     this.startHeartbeat()
-    
+
     // Notify listeners
     this.emit('connection_status', { connected: true })
 
     // Request initial unread count
     this.send({
       type: 'get_unread_count',
-      data: {}
+      data: {},
     })
   }
 
@@ -109,11 +108,15 @@ class WebSocketService {
     console.log('WebSocket: Connection closed', event.code, event.reason)
     this.isConnecting = false
     this.stopHeartbeat()
-    
+
     this.emit('connection_status', { connected: false })
 
     // Attempt to reconnect unless it was a clean close or the endpoint doesn't exist (404)
-    if (event.code !== 1000 && event.code !== 1002 && this.reconnectAttempts < this.maxReconnectAttempts) {
+    if (
+      event.code !== 1000 &&
+      event.code !== 1002 &&
+      this.reconnectAttempts < this.maxReconnectAttempts
+    ) {
       this.scheduleReconnect()
     } else if (event.code === 1002) {
       console.log('WebSocket: Endpoint not found, stopping reconnection attempts')
@@ -124,7 +127,7 @@ class WebSocketService {
   private onError(event: Event) {
     console.warn('WebSocket: Connection failed (WebSocket endpoint may not be implemented yet)')
     this.isConnecting = false
-    this.reconnectAttempts = this.maxReconnectAttempts  // Stop trying to reconnect
+    this.reconnectAttempts = this.maxReconnectAttempts // Stop trying to reconnect
     this.emit('connection_status', { connected: false, error: true })
   }
 
@@ -136,9 +139,9 @@ class WebSocketService {
 
     this.reconnectAttempts++
     const delay = Math.min(this.reconnectInterval * Math.pow(2, this.reconnectAttempts - 1), 30000)
-    
+
     console.log(`WebSocket: Scheduling reconnect attempt ${this.reconnectAttempts} in ${delay}ms`)
-    
+
     setTimeout(() => {
       if (this.ws?.readyState !== WebSocket.OPEN) {
         this.connect()
@@ -148,7 +151,7 @@ class WebSocketService {
 
   private startHeartbeat() {
     this.stopHeartbeat()
-    
+
     this.heartbeatInterval = setInterval(() => {
       if (this.ws?.readyState === WebSocket.OPEN) {
         this.send({ type: 'ping', data: {} })
@@ -204,12 +207,12 @@ class WebSocketService {
   disconnect() {
     console.log('WebSocket: Disconnecting')
     this.stopHeartbeat()
-    
+
     if (this.ws) {
       this.ws.close(1000, 'Client disconnect')
       this.ws = null
     }
-    
+
     this.isConnecting = false
     this.reconnectAttempts = 0
   }
@@ -220,7 +223,7 @@ class WebSocketService {
 
   getConnectionState(): string {
     if (!this.ws) return 'disconnected'
-    
+
     switch (this.ws.readyState) {
       case WebSocket.CONNECTING:
         return 'connecting'
@@ -248,6 +251,6 @@ export function useWebSocket() {
     on: (event: string, callback: (data: any) => void) => wsService.on(event, callback),
     off: (event: string, callback: (data: any) => void) => wsService.off(event, callback),
     isConnected: () => wsService.isConnected(),
-    getConnectionState: () => wsService.getConnectionState()
+    getConnectionState: () => wsService.getConnectionState(),
   }
 }

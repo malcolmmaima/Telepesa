@@ -1,9 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from '../store/auth'
-import {
-  transactionsApi,
-  type Transaction,
-} from '../api/transactions'
+import { transactionsApi, type Transaction } from '../api/transactions'
 import { accountsApi, type Account } from '../api/accounts'
 import { Card } from '../components/ui/Card'
 import { Button } from '../components/ui/Button'
@@ -58,7 +55,6 @@ export function TransactionsPage() {
     endDate: '',
     search: '',
   })
-
 
   // Load data on mount
   useEffect(() => {
@@ -128,7 +124,6 @@ export function TransactionsPage() {
     }
   }
 
-
   const handleFilterChange = (newFilters: typeof filters) => {
     setFilters(newFilters)
     setCurrentPage(0) // Reset to first page when filters change
@@ -184,7 +179,6 @@ export function TransactionsPage() {
             Track all your financial activities and transactions
           </p>
         </div>
-
       </div>
 
       {/* Error Display */}
@@ -276,7 +270,6 @@ export function TransactionsPage() {
           </Button>
         </div>
       </Card>
-
 
       {/* Transaction List */}
       {transactions.length === 0 && !loading ? (

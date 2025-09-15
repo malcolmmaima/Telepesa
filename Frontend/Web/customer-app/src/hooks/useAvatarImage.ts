@@ -15,13 +15,17 @@ export const useAvatarImage = (avatarUrl: string | null | undefined) => {
     // Clear previous state
     setImageSrc(null)
     setError(null)
-    
+
     if (!avatarUrl) {
       return
     }
 
     // If it's already a blob URL or external URL, use it directly
-    if (avatarUrl.startsWith('blob:') || avatarUrl.startsWith('http://') || avatarUrl.startsWith('https://')) {
+    if (
+      avatarUrl.startsWith('blob:') ||
+      avatarUrl.startsWith('http://') ||
+      avatarUrl.startsWith('https://')
+    ) {
       setImageSrc(avatarUrl)
       return
     }
@@ -49,12 +53,12 @@ export const useAvatarImage = (avatarUrl: string | null | undefined) => {
 
         // Prepare headers - only add auth for non-static files
         const headers: HeadersInit = {}
-        
+
         // Only add authentication header for non-static files
         if (!avatarUrl.startsWith('/uploads/')) {
           headers['Authorization'] = `Bearer ${accessToken}`
         }
-        
+
         const response = await fetch(fetchUrl, {
           headers,
         })

@@ -18,7 +18,7 @@ const sizes = {
 
 export const Avatar = ({ src, alt, initials, size = 'md', className }: AvatarProps) => {
   const { imageSrc, isLoading, error } = useAvatarImage(src)
-  
+
   // Show initials if no src, loading failed, or has error
   if (!src || error || (!imageSrc && !isLoading)) {
     return (

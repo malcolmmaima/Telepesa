@@ -118,11 +118,14 @@ export interface TransferLimits {
 // Transfer API Service
 export const transfersApi = {
   // Create transfer
-  createTransfer: async (request: CreateTransferRequest, fromAccountId: string): Promise<Transfer> => {
+  createTransfer: async (
+    request: CreateTransferRequest,
+    fromAccountId: string
+  ): Promise<Transfer> => {
     const response = await api.post('/transfers', request, {
       headers: {
-        'X-Account-Id': fromAccountId
-      }
+        'X-Account-Id': fromAccountId,
+      },
     })
     // Backend may return data in {data: Transfer} format, extract the transfer object
     return response.data?.data || response.data
@@ -202,7 +205,11 @@ export const transfersApi = {
   getSavedRecipients: async (userId: number): Promise<SavedRecipient[]> => {
     const response = await api.get(`/transfers/user/${userId}/recipients`)
     // Backend may return data in {data: SavedRecipient[]} format, extract the recipients array
-    return Array.isArray(response.data?.data) ? response.data.data : (Array.isArray(response.data) ? response.data : [])
+    return Array.isArray(response.data?.data)
+      ? response.data.data
+      : Array.isArray(response.data)
+        ? response.data
+        : []
   },
 
   createSavedRecipient: async (
@@ -231,7 +238,11 @@ export const transfersApi = {
       params: { country },
     })
     // Backend may return data in {data: BankInfo[]} format, extract the banks array
-    return Array.isArray(response.data?.data) ? response.data.data : (Array.isArray(response.data) ? response.data : [])
+    return Array.isArray(response.data?.data)
+      ? response.data.data
+      : Array.isArray(response.data)
+        ? response.data
+        : []
   },
 
   getBankInfo: async (bankCode: string): Promise<BankInfo> => {
@@ -252,7 +263,9 @@ export const transfersApi = {
   },
 
   // Account Lookup Functions
-  lookupAccount: async (accountNumber: string): Promise<{
+  lookupAccount: async (
+    accountNumber: string
+  ): Promise<{
     accountName: string
     accountType: string
     accountId?: number
@@ -268,7 +281,7 @@ export const transfersApi = {
   },
 
   lookupBankAccount: async (
-    accountNumber: string, 
+    accountNumber: string,
     bankCode: string
   ): Promise<{
     accountName: string
@@ -278,7 +291,7 @@ export const transfersApi = {
     try {
       const response = await api.post('/transfers/lookup-bank-account', {
         accountNumber,
-        bankCode
+        bankCode,
       })
       return response.data?.data || response.data
     } catch (error) {

@@ -205,38 +205,38 @@ export function TransferPage() {
 
     try {
       setAccountLookup({ loading: true, result: null, error: null })
-      
+
       // For internal transfers, lookup Telepesa account
       if (transferForm.transferType === 'INTERNAL') {
         const response = await transfersApi.lookupAccount(accountNumber)
-        setAccountLookup({ 
-          loading: false, 
+        setAccountLookup({
+          loading: false,
           result: {
             accountName: response.accountName,
-            accountType: response.accountType
-          }, 
-          error: null 
+            accountType: response.accountType,
+          },
+          error: null,
         })
-        
+
         // Auto-fill recipient name if not already set
         if (!transferForm.recipientName || !selectedRecipient) {
           setTransferForm(prev => ({ ...prev, recipientName: response.accountName }))
         }
       }
-      
+
       // For bank transfers, lookup external bank account
       else if (transferForm.transferType === 'BANK_TRANSFER' && bankCode) {
         const response = await transfersApi.lookupBankAccount(accountNumber, bankCode)
-        setAccountLookup({ 
-          loading: false, 
+        setAccountLookup({
+          loading: false,
           result: {
             accountName: response.accountName,
             accountType: response.accountType || 'CHECKING',
-            bankName: response.bankName
-          }, 
-          error: null 
+            bankName: response.bankName,
+          },
+          error: null,
         })
-        
+
         // Auto-fill recipient name if not already set
         if (!transferForm.recipientName || !selectedRecipient) {
           setTransferForm(prev => ({ ...prev, recipientName: response.accountName }))
@@ -244,10 +244,10 @@ export function TransferPage() {
       }
     } catch (err: any) {
       console.log('Account lookup failed:', err.message)
-      setAccountLookup({ 
-        loading: false, 
-        result: null, 
-        error: err.message || 'Account not found' 
+      setAccountLookup({
+        loading: false,
+        result: null,
+        error: err.message || 'Account not found',
       })
     }
   }
@@ -256,12 +256,12 @@ export function TransferPage() {
   useEffect(() => {
     const accountNumber = transferForm.toAccountNumber
     const bankCode = transferForm.toBankCode
-    
+
     if (accountNumber && accountNumber.length >= 8) {
       const timeoutId = setTimeout(() => {
         lookupAccount(accountNumber, bankCode)
       }, 1000) // Wait 1 second after user stops typing
-      
+
       return () => clearTimeout(timeoutId)
     } else {
       setAccountLookup({ loading: false, result: null, error: null })
@@ -271,17 +271,18 @@ export function TransferPage() {
   const confirmTransfer = async () => {
     try {
       setLoading(true)
-      
+
       // Transform the form data to match backend expectations
       const transferRequest = {
-        recipientAccountId: transferForm.toAccountNumber || transferForm.toAccountId?.toString() || '',
+        recipientAccountId:
+          transferForm.toAccountNumber || transferForm.toAccountId?.toString() || '',
         amount: transferForm.amount,
         transferType: transferForm.transferType,
         description: transferForm.description,
         recipientName: transferForm.recipientName,
-        currency: 'KES'
+        currency: 'KES',
       }
-      
+
       const fromAccountId = transferForm.fromAccountId.toString()
       const transfer = await transfersApi.createTransfer(transferRequest, fromAccountId)
       setTransferSuccess(transfer)
@@ -505,35 +506,61 @@ export function TransferPage() {
                       accountLookup.result && 'border-green-500'
                     )}
                   />
-                  
+
                   {/* Account Lookup Status */}
                   <div className="mt-2">
                     {accountLookup.loading && (
                       <div className="flex items-center text-sm text-blue-600">
-                        <svg className="animate-spin -ml-1 mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24">
-                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        <svg
+                          className="animate-spin -ml-1 mr-2 h-4 w-4"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                        >
+                          <circle
+                            className="opacity-25"
+                            cx="12"
+                            cy="12"
+                            r="10"
+                            stroke="currentColor"
+                            strokeWidth="4"
+                          ></circle>
+                          <path
+                            className="opacity-75"
+                            fill="currentColor"
+                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                          ></path>
                         </svg>
                         Looking up account...
                       </div>
                     )}
-                    
+
                     {accountLookup.result && (
                       <div className="flex items-center text-sm text-green-600 bg-green-50 p-2 rounded">
                         <svg className="mr-2 h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
-                          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd"></path>
+                          <path
+                            fillRule="evenodd"
+                            d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                            clipRule="evenodd"
+                          ></path>
                         </svg>
                         <div>
                           <div className="font-medium">{accountLookup.result.accountName}</div>
-                          <div className="text-xs">{accountLookup.result.accountType} {accountLookup.result.bankName && `• ${accountLookup.result.bankName}`}</div>
+                          <div className="text-xs">
+                            {accountLookup.result.accountType}{' '}
+                            {accountLookup.result.bankName && `• ${accountLookup.result.bankName}`}
+                          </div>
                         </div>
                       </div>
                     )}
-                    
+
                     {accountLookup.error && (
                       <div className="flex items-center text-sm text-red-600 bg-red-50 p-2 rounded">
                         <svg className="mr-2 h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
-                          <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd"></path>
+                          <path
+                            fillRule="evenodd"
+                            d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
+                            clipRule="evenodd"
+                          ></path>
                         </svg>
                         {accountLookup.error}
                       </div>
@@ -574,23 +601,42 @@ export function TransferPage() {
                     accountLookup.result && 'border-green-500'
                   )}
                 />
-                
+
                 {/* Account Lookup Status */}
                 <div className="mt-2">
                   {accountLookup.loading && (
                     <div className="flex items-center text-sm text-blue-600">
-                      <svg className="animate-spin -ml-1 mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      <svg
+                        className="animate-spin -ml-1 mr-2 h-4 w-4"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                      >
+                        <circle
+                          className="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          strokeWidth="4"
+                        ></circle>
+                        <path
+                          className="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                        ></path>
                       </svg>
                       Verifying account...
                     </div>
                   )}
-                  
+
                   {accountLookup.result && (
                     <div className="flex items-center text-sm text-green-600 bg-green-50 p-2 rounded">
                       <svg className="mr-2 h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd"></path>
+                        <path
+                          fillRule="evenodd"
+                          d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                          clipRule="evenodd"
+                        ></path>
                       </svg>
                       <div>
                         <div className="font-medium">{accountLookup.result.accountName}</div>
@@ -598,11 +644,15 @@ export function TransferPage() {
                       </div>
                     </div>
                   )}
-                  
+
                   {accountLookup.error && (
                     <div className="flex items-center text-sm text-red-600 bg-red-50 p-2 rounded">
                       <svg className="mr-2 h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd"></path>
+                        <path
+                          fillRule="evenodd"
+                          d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
+                          clipRule="evenodd"
+                        ></path>
                       </svg>
                       {accountLookup.error}
                     </div>
@@ -714,7 +764,11 @@ export function TransferPage() {
                   </div>
                   <div className="flex justify-between font-semibold text-financial-navy border-t border-gray-200 pt-2">
                     <span>Total:</span>
-                    <span>{feeInfo ? formatCurrency(feeInfo.totalAmount) : formatCurrency(transferForm.amount)}</span>
+                    <span>
+                      {feeInfo
+                        ? formatCurrency(feeInfo.totalAmount)
+                        : formatCurrency(transferForm.amount)}
+                    </span>
                   </div>
                   {!feeInfo && (
                     <div className="text-xs text-yellow-600 bg-yellow-50 p-2 rounded mt-2">
@@ -812,7 +866,6 @@ export function TransferPage() {
                               await transfersApi.cancelTransfer(transfer.id)
                               loadTransferHistory()
                             } catch (_err) {
-                               
                               setError('Failed to cancel transfer')
                             }
                           }}
@@ -828,7 +881,6 @@ export function TransferPage() {
                               await transfersApi.retryTransfer(transfer.id)
                               loadTransferHistory()
                             } catch (_err) {
-                               
                               setError('Failed to retry transfer')
                             }
                           }}
@@ -912,7 +964,6 @@ export function TransferPage() {
                           await transfersApi.deleteSavedRecipient(recipient.id)
                           loadSavedRecipients()
                         } catch (_err) {
-                           
                           setError('Failed to delete recipient')
                         }
                       }}

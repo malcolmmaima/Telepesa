@@ -83,9 +83,10 @@ export function HomePage() {
           accountsApi.getUserTotalBalance(user!.id),
         ])
         accountsData = accountsResponse
-        balanceData = typeof totalBalanceResponse === 'number' && isFinite(totalBalanceResponse) 
-          ? totalBalanceResponse 
-          : 0
+        balanceData =
+          typeof totalBalanceResponse === 'number' && isFinite(totalBalanceResponse)
+            ? totalBalanceResponse
+            : 0
       } catch (err) {
         console.log('Accounts/balance API not available yet')
       }

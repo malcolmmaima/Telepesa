@@ -35,13 +35,10 @@ export function ProtectedLayout() {
       <main className="pb-8">
         <Outlet />
       </main>
-      
+
       {/* Real-time notification toast */}
-      <NotificationToast 
-        notification={newNotification}
-        onClose={dismissNewNotification}
-      />
-      
+      <NotificationToast notification={newNotification} onClose={dismissNewNotification} />
+
       {/* Backend status indicator (only shows when there are issues) */}
       <BackendStatus showDetails={false} />
     </div>

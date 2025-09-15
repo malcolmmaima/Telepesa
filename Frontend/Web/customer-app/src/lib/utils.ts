@@ -19,7 +19,7 @@ export function formatCurrency(amount: number | null | undefined, currency = 'KE
       currency,
     }).format(0)
   }
-  
+
   return new Intl.NumberFormat('en-KE', {
     style: 'currency',
     currency,

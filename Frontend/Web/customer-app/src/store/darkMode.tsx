@@ -34,7 +34,7 @@ export function DarkModeProvider({ children }: DarkModeProviderProps) {
   const setDarkMode = (value: boolean) => {
     setDarkModeState(value)
     localStorage.setItem('darkMode', JSON.stringify(value))
-    
+
     // Update document class for Tailwind dark mode
     if (value) {
       document.documentElement.classList.add('dark')

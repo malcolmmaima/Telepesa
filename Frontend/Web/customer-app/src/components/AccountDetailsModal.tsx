@@ -37,12 +37,12 @@ interface AccountDetailsModalProps {
 
 type ActionTab = 'details' | 'transfer' | 'deposit' | 'withdraw'
 
-export function AccountDetailsModal({ 
-  isOpen, 
-  onClose, 
-  account, 
-  onAccountAction, 
-  loading = false 
+export function AccountDetailsModal({
+  isOpen,
+  onClose,
+  account,
+  onAccountAction,
+  loading = false,
 }: AccountDetailsModalProps) {
   const [activeTab, setActiveTab] = useState<ActionTab>('details')
   const [actionLoading, setActionLoading] = useState(false)
@@ -70,7 +70,7 @@ export function AccountDetailsModal({
     const params = new URLSearchParams({
       fromAccount: account.id.toString(),
       amount: transferAmount,
-      toAccount: recipientAccount
+      toAccount: recipientAccount,
     })
     window.location.href = `/transfer?${params.toString()}`
   }
@@ -139,7 +139,7 @@ export function AccountDetailsModal({
         {/* Tab Navigation */}
         <div className="border-b border-gray-200">
           <nav className="flex space-x-1">
-            {tabs.map((tab) => (
+            {tabs.map(tab => (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
@@ -164,7 +164,9 @@ export function AccountDetailsModal({
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-3">
                   <div>
-                    <label className="text-sm font-medium text-financial-gray">Account Number</label>
+                    <label className="text-sm font-medium text-financial-gray">
+                      Account Number
+                    </label>
                     <div className="text-financial-navy font-mono">{account.accountNumber}</div>
                   </div>
                   <div>
@@ -175,7 +177,12 @@ export function AccountDetailsModal({
                   </div>
                   <div>
                     <label className="text-sm font-medium text-financial-gray">Status</label>
-                    <div className={cn('inline-flex px-2 py-1 rounded text-xs font-medium', STATUS_COLORS[account.status])}>
+                    <div
+                      className={cn(
+                        'inline-flex px-2 py-1 rounded text-xs font-medium',
+                        STATUS_COLORS[account.status]
+                      )}
+                    >
                       {account.status}
                     </div>
                   </div>
@@ -189,7 +196,9 @@ export function AccountDetailsModal({
                   </div>
                   {account.minimumBalance > 0 && (
                     <div>
-                      <label className="text-sm font-medium text-financial-gray">Minimum Balance</label>
+                      <label className="text-sm font-medium text-financial-gray">
+                        Minimum Balance
+                      </label>
                       <div className="text-financial-navy">
                         {formatCurrency(account.minimumBalance)}
                       </div>
@@ -197,7 +206,9 @@ export function AccountDetailsModal({
                   )}
                   {account.lastTransactionAt && (
                     <div>
-                      <label className="text-sm font-medium text-financial-gray">Last Transaction</label>
+                      <label className="text-sm font-medium text-financial-gray">
+                        Last Transaction
+                      </label>
                       <div className="text-financial-navy">
                         {new Date(account.lastTransactionAt).toLocaleDateString()}
                       </div>
@@ -244,7 +255,7 @@ export function AccountDetailsModal({
 
                   <Button
                     variant="ghost"
-                    onClick={() => window.location.href = `/transactions?account=${account.id}`}
+                    onClick={() => (window.location.href = `/transactions?account=${account.id}`)}
                     className="flex items-center gap-2"
                   >
                     📊 View Transactions
@@ -257,8 +268,12 @@ export function AccountDetailsModal({
           {activeTab === 'transfer' && (
             <div className="space-y-4">
               <div className="text-center mb-6">
-                <h3 className="text-lg font-semibold text-financial-navy mb-2">💸 Transfer Money</h3>
-                <p className="text-financial-gray">Send money from this account to another account</p>
+                <h3 className="text-lg font-semibold text-financial-navy mb-2">
+                  💸 Transfer Money
+                </h3>
+                <p className="text-financial-gray">
+                  Send money from this account to another account
+                </p>
               </div>
 
               <div className="space-y-4">
@@ -270,7 +285,7 @@ export function AccountDetailsModal({
                     type="text"
                     placeholder="Enter recipient account number"
                     value={recipientAccount}
-                    onChange={(e) => setRecipientAccount(e.target.value)}
+                    onChange={e => setRecipientAccount(e.target.value)}
                   />
                 </div>
 
@@ -282,7 +297,7 @@ export function AccountDetailsModal({
                     type="number"
                     placeholder="0.00"
                     value={transferAmount}
-                    onChange={(e) => setTransferAmount(e.target.value)}
+                    onChange={e => setTransferAmount(e.target.value)}
                   />
                   <div className="text-xs text-financial-gray mt-1">
                     Available: {formatCurrency(account.balance)}
@@ -316,7 +331,7 @@ export function AccountDetailsModal({
                     type="number"
                     placeholder="0.00"
                     value={depositAmount}
-                    onChange={(e) => setDepositAmount(e.target.value)}
+                    onChange={e => setDepositAmount(e.target.value)}
                   />
                 </div>
 
@@ -334,7 +349,9 @@ export function AccountDetailsModal({
           {activeTab === 'withdraw' && (
             <div className="space-y-4">
               <div className="text-center mb-6">
-                <h3 className="text-lg font-semibold text-financial-navy mb-2">🏧 Withdraw Money</h3>
+                <h3 className="text-lg font-semibold text-financial-navy mb-2">
+                  🏧 Withdraw Money
+                </h3>
                 <p className="text-financial-gray">Withdraw money from this account</p>
               </div>
 
@@ -347,7 +364,7 @@ export function AccountDetailsModal({
                     type="number"
                     placeholder="0.00"
                     value={withdrawAmount}
-                    onChange={(e) => setWithdrawAmount(e.target.value)}
+                    onChange={e => setWithdrawAmount(e.target.value)}
                   />
                   <div className="text-xs text-financial-gray mt-1">
                     Available: {formatCurrency(account.balance)}
@@ -357,8 +374,8 @@ export function AccountDetailsModal({
                 <Button
                   onClick={handleWithdraw}
                   disabled={
-                    !withdrawAmount || 
-                    parseFloat(withdrawAmount) <= 0 || 
+                    !withdrawAmount ||
+                    parseFloat(withdrawAmount) <= 0 ||
                     parseFloat(withdrawAmount) > account.balance
                   }
                   className="w-full"
