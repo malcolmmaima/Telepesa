@@ -3,7 +3,6 @@ import { useAuth } from '../store/auth'
 import {
   transactionsApi,
   type Transaction,
-  type CreateTransactionRequest,
 } from '../api/transactions'
 import { accountsApi, type Account } from '../api/accounts'
 import { Card } from '../components/ui/Card'
@@ -43,7 +42,6 @@ export function TransactionsPage() {
   const [accounts, setAccounts] = useState<Account[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [showCreateForm, setShowCreateForm] = useState(false)
   const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null)
 
   // Pagination
@@ -61,16 +59,6 @@ export function TransactionsPage() {
     search: '',
   })
 
-  // Create transaction form state
-  const [createForm, setCreateForm] = useState<CreateTransactionRequest>({
-    accountId: 0,
-    amount: 0,
-    transactionType: 'DEPOSIT',
-    description: '',
-    recipientAccountId: undefined,
-    recipientAccountNumber: '',
-    currencyCode: 'KES',
-  })
 
   // Load data on mount
   useEffect(() => {
@@ -140,32 +128,6 @@ export function TransactionsPage() {
     }
   }
 
-  const handleCreateTransaction = async (e: React.FormEvent) => {
-    e.preventDefault()
-    try {
-      setLoading(true)
-      await transactionsApi.createTransaction(createForm)
-
-      // Reset form
-      setCreateForm({
-        accountId: 0,
-        amount: 0,
-        transactionType: 'DEPOSIT',
-        description: '',
-        recipientAccountId: undefined,
-        recipientAccountNumber: '',
-        currencyCode: 'KES',
-      })
-      setShowCreateForm(false)
-
-      // Reload transactions
-      await loadTransactions()
-    } catch (err: any) {
-      setError(err.message || 'Failed to create transaction')
-    } finally {
-      setLoading(false)
-    }
-  }
 
   const handleFilterChange = (newFilters: typeof filters) => {
     setFilters(newFilters)
@@ -223,9 +185,6 @@ export function TransactionsPage() {
           </p>
         </div>
 
-        <Button onClick={() => setShowCreateForm(true)} className="hover-lift">
-          ➕ New Transaction
-        </Button>
       </div>
 
       {/* Error Display */}
@@ -318,104 +277,6 @@ export function TransactionsPage() {
         </div>
       </Card>
 
-      {/* Create Transaction Form Modal */}
-      {showCreateForm && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-financial-lg max-w-md w-full p-6 animate-bounce-in max-h-[90vh] overflow-y-auto">
-            <h2 className="text-xl font-bold text-financial-navy mb-4">
-              ➕ Create New Transaction
-            </h2>
-
-            <form onSubmit={handleCreateTransaction} className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-financial-navy mb-2">
-                  Account
-                </label>
-                <select
-                  value={createForm.accountId}
-                  onChange={e =>
-                    setCreateForm({ ...createForm, accountId: Number(e.target.value) })
-                  }
-                  className="w-full input"
-                  required
-                >
-                  <option value={0}>Select Account</option>
-                  {accounts.map(account => (
-                    <option key={account.id} value={account.id}>
-                      {account.accountName} - {formatCurrency(account.balance)}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-financial-navy mb-2">
-                  Transaction Type
-                </label>
-                <select
-                  value={createForm.transactionType}
-                  onChange={e =>
-                    setCreateForm({ ...createForm, transactionType: e.target.value as any })
-                  }
-                  className="w-full input"
-                >
-                  <option value="DEPOSIT">💰 Deposit</option>
-                  <option value="WITHDRAWAL">📤 Withdrawal</option>
-                  <option value="TRANSFER">🔄 Transfer</option>
-                  <option value="PAYMENT">💳 Payment</option>
-                  <option value="LOAN_DISBURSEMENT">💰 Loan Disbursement</option>
-                  <option value="LOAN_REPAYMENT">📈 Loan Repayment</option>
-                </select>
-              </div>
-
-              <Input
-                label="Amount"
-                type="number"
-                min="0.01"
-                step="0.01"
-                value={createForm.amount}
-                onChange={e => setCreateForm({ ...createForm, amount: Number(e.target.value) })}
-                placeholder="0.00"
-                required
-              />
-
-              {createForm.transactionType === 'TRANSFER' && (
-                <Input
-                  label="Recipient Account Number"
-                  value={createForm.recipientAccountNumber}
-                  onChange={e =>
-                    setCreateForm({ ...createForm, recipientAccountNumber: e.target.value })
-                  }
-                  placeholder="Enter recipient account number"
-                  required
-                />
-              )}
-
-              <Input
-                label="Description"
-                value={createForm.description}
-                onChange={e => setCreateForm({ ...createForm, description: e.target.value })}
-                placeholder="Transaction description..."
-                required
-              />
-
-              <div className="flex gap-3 pt-4">
-                <Button
-                  type="button"
-                  variant="secondary"
-                  onClick={() => setShowCreateForm(false)}
-                  className="flex-1"
-                >
-                  Cancel
-                </Button>
-                <Button type="submit" disabled={loading} className="flex-1">
-                  {loading ? '⏳ Creating...' : '✅ Create Transaction'}
-                </Button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
 
       {/* Transaction List */}
       {transactions.length === 0 && !loading ? (
@@ -424,10 +285,9 @@ export function TransactionsPage() {
           <h3 className="text-xl font-semibold text-financial-navy mb-2">No transactions found</h3>
           <p className="text-financial-gray mb-6">
             {Object.values(filters).some(v => v)
-              ? 'Try adjusting your filters or create a new transaction.'
-              : 'Start by creating your first transaction!'}
+              ? 'Try adjusting your filters.'
+              : 'No transactions available yet.'}
           </p>
-          <Button onClick={() => setShowCreateForm(true)}>➕ Create Your First Transaction</Button>
         </div>
       ) : (
         <div className="space-y-4">

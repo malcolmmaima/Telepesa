@@ -52,6 +52,9 @@ class JwtAuthenticationFilterTest {
         jwtAuthenticationFilter = new JwtAuthenticationFilter(jwtTokenUtil, userDetailsService);
         // Clear security context before each test
         SecurityContextHolder.clearContext();
+        // Mock request URI to prevent NullPointerException
+        when(request.getRequestURI()).thenReturn("/api/test");
+        when(request.getMethod()).thenReturn("GET");
     }
 
     @Test
