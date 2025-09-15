@@ -1,6 +1,6 @@
 package com.maelcolium.telepesa.loan.controller;
 
-import com.maelcolium.telepesa.loan.dto.LoanProductDto;
+import com.maelcolium.telepesa.models.dto.LoanProductDto;
 import com.maelcolium.telepesa.loan.service.LoanService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;

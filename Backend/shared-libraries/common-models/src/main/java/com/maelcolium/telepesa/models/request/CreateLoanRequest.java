@@ -37,6 +37,19 @@ public class CreateLoanRequest {
     @Max(value = 360, message = "Term cannot exceed 360 months")
     private Integer termInMonths;
     
+    @DecimalMin(value = "0.0", message = "Interest rate cannot be negative")
+    @DecimalMax(value = "100.0", message = "Interest rate cannot exceed 100%")
+    private BigDecimal interestRate;
+    
+    private Integer termMonths; // Alias for termInMonths
+    
+    private String accountNumber;
+    
+    @DecimalMin(value = "0.0", message = "Monthly income cannot be negative")
+    private BigDecimal monthlyIncome;
+    
+    private String notes;
+    
     @NotBlank(message = "Purpose is required")
     @Size(max = 500, message = "Purpose cannot exceed 500 characters")
     private String purpose;

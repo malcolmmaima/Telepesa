@@ -1,7 +1,7 @@
 package com.maelcolium.telepesa.loan.controller;
 
-import com.maelcolium.telepesa.loan.dto.CreateLoanRequest;
-import com.maelcolium.telepesa.loan.dto.LoanDto;
+import com.maelcolium.telepesa.models.dto.LoanDto;
+import com.maelcolium.telepesa.models.request.CreateLoanRequest;
 import com.maelcolium.telepesa.loan.exception.LoanNotFoundException;
 import com.maelcolium.telepesa.loan.exception.LoanOperationException;
 import com.maelcolium.telepesa.loan.service.LoanService;

@@ -81,7 +81,8 @@ public class LoanController {
         
         try {
             // Use service method without cache annotations
-            Page<LoanDto> loans = loanService.getUserLoansWithPagination(userId, page, size);
+            Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
+            Page<LoanDto> loans = loanService.getUserLoansWithPagination(userId, pageable);
             return ResponseEntity.ok(loans);
             
         } catch (Exception e) {
@@ -217,7 +218,7 @@ public class LoanController {
             Sort.Direction.ASC : Sort.Direction.DESC;
         
         Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortBy));
-        Page<LoanDto> loans = loanService.getUserLoansWithPagination(userId, page, size);
+        Page<LoanDto> loans = loanService.getUserLoansWithPagination(userId, pageable);
         return ResponseEntity.ok(loans);
     }
 

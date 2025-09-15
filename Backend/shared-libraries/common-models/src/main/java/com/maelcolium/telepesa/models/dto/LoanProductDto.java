@@ -9,6 +9,7 @@ import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Data
 @Builder
@@ -22,6 +23,8 @@ public class LoanProductDto {
     private BigDecimal minAmount;
     private BigDecimal maxAmount;
     private BigDecimal interestRate;
+    private BigDecimal minInterestRate;
+    private BigDecimal maxInterestRate;
     private Integer minTermMonths;
     private Integer maxTermMonths;
     private BigDecimal processingFee;
@@ -30,6 +33,9 @@ public class LoanProductDto {
     private BigDecimal maxLtvRatio; // Loan-to-Value ratio
     private String eligibilityCriteria;
     private String requiredDocuments;
+    private List<String> requirements;
+    private List<String> features;
+    private String currency;
     private Boolean isActive;
     
     @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")

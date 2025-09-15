@@ -12,7 +12,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Data
-@Builder
+@Builder(toBuilder = true)
 @NoArgsConstructor
 @AllArgsConstructor
 public class LoanDto {
@@ -24,7 +24,12 @@ public class LoanDto {
     private LoanType loanType;
     private BigDecimal principalAmount;
     private BigDecimal interestRate;
-    private Integer termInMonths;
+    private Integer termMonths;
+    private LocalDateTime dueDate;
+    private String approvedBy;
+    private Integer creditScore;
+    private BigDecimal monthlyIncome;
+    private String notes;
     private BigDecimal monthlyPayment;
     private BigDecimal totalAmount;
     private BigDecimal outstandingBalance;

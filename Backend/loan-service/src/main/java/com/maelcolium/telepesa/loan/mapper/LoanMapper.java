@@ -1,6 +1,6 @@
 package com.maelcolium.telepesa.loan.mapper;
 
-import com.maelcolium.telepesa.loan.dto.LoanDto;
+import com.maelcolium.telepesa.models.dto.LoanDto;
 import com.maelcolium.telepesa.loan.model.Loan;
 import org.mapstruct.Mapper;
 import org.mapstruct.ReportingPolicy;

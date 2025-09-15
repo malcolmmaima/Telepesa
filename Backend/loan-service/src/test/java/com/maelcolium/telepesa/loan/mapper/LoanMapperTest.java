@@ -1,6 +1,6 @@
 package com.maelcolium.telepesa.loan.mapper;
 
-import com.maelcolium.telepesa.loan.dto.LoanDto;
+import com.maelcolium.telepesa.models.dto.LoanDto;
 import com.maelcolium.telepesa.loan.model.Loan;
 import com.maelcolium.telepesa.models.enums.LoanStatus;
 import com.maelcolium.telepesa.models.enums.LoanType;

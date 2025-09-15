@@ -1,8 +1,8 @@
 package com.maelcolium.telepesa.loan.service.impl;
 
-import com.maelcolium.telepesa.loan.dto.CreateLoanRequest;
-import com.maelcolium.telepesa.loan.dto.LoanDto;
-import com.maelcolium.telepesa.loan.dto.LoanProductDto;
+import com.maelcolium.telepesa.models.request.CreateLoanRequest;
+import com.maelcolium.telepesa.models.dto.LoanDto;
+import com.maelcolium.telepesa.models.dto.LoanProductDto;
 import com.maelcolium.telepesa.loan.exception.LoanNotFoundException;
 import com.maelcolium.telepesa.loan.exception.LoanOperationException;
 import com.maelcolium.telepesa.loan.mapper.LoanMapper;
@@ -16,13 +16,17 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 

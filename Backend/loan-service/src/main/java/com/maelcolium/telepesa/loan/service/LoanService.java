@@ -1,8 +1,8 @@
 package com.maelcolium.telepesa.loan.service;
 
-import com.maelcolium.telepesa.loan.dto.CreateLoanRequest;
-import com.maelcolium.telepesa.loan.dto.LoanDto;
-import com.maelcolium.telepesa.loan.dto.LoanProductDto;
+import com.maelcolium.telepesa.models.request.CreateLoanRequest;
+import com.maelcolium.telepesa.models.dto.LoanDto;
+import com.maelcolium.telepesa.models.dto.LoanProductDto;
 import com.maelcolium.telepesa.models.enums.LoanStatus;
 import com.maelcolium.telepesa.models.enums.LoanType;
 import org.springframework.data.domain.Page;
