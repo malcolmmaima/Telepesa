@@ -115,12 +115,22 @@ spring:
             - name: RewritePath
               args:
                 regexp: /api/v1/notifications/(?<remaining>.*)
-                replacement: /api/notifications/${remaining}
+                replacement: /api/v1/notifications/${remaining}
             - name: Retry
               args:
                 retries: 3
                 statuses: BAD_GATEWAY,SERVICE_UNAVAILABLE
                 methods: GET,POST,PUT,DELETE
+        # WebSocket Notification Route
+        - id: notification-websocket
+          uri: lb:ws://notification-service
+          predicates:
+            - Path=/ws/notifications
+          filters:
+            - name: Retry
+              args:
+                retries: 3
+                statuses: BAD_GATEWAY,SERVICE_UNAVAILABLE
         # Transfer Service Routes
         - id: transfer-service
           uri: lb://transfer-service

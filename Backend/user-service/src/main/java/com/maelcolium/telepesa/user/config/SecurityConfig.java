@@ -75,10 +75,13 @@ public class SecurityConfig {
                 // Static files - uploaded content (avatars, etc.) - MUST BE FIRST
                 .requestMatchers("/uploads/**").permitAll()
                 
-                // Public endpoints
+                // Public endpoints - Authentication
                 .requestMatchers("/api/users/register", "/api/users/login",
                                 "/api/v1/users/register", "/api/v1/users/login",
                                 "/api/users/refresh", "/api/v1/users/refresh").permitAll()
+                .requestMatchers("/api/v1/auth/login", "/api/v1/auth/register", 
+                                "/api/v1/auth/refresh", "/api/auth/login", 
+                                "/api/auth/register", "/api/auth/refresh").permitAll()
                 .requestMatchers("/api/users/verify-email", "/api/users/resend-verification").permitAll()
                 .requestMatchers("/api/users/forgot-password", "/api/users/reset-password").permitAll()
                 .requestMatchers("/api/v1/users/verify-email", "/api/v1/users/resend-verification").permitAll()

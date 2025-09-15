@@ -1,0 +1,12 @@
+#!/bin/sh
+# Simple Maven wrapper script
+
+if [ -z "$MAVEN_HOME" ]; then
+    MAVEN_HOME="/usr/share/maven"
+fi
+
+if [ -x "$MAVEN_HOME/bin/mvn" ]; then
+    exec "$MAVEN_HOME/bin/mvn" "$@"
+else
+    exec mvn "$@"
+fi
