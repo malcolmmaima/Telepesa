@@ -8,20 +8,20 @@ import org.springframework.web.bind.annotation.RequestBody;
 
 import java.math.BigDecimal;
 
-@FeignClient(name = "account-service", fallback = AccountServiceFallback.class)
+@FeignClient(name = "account-service", fallback = AccountServiceFallback.class, configuration = com.maelcolium.telepesa.transfer.config.FeignConfig.class)
 public interface AccountServiceClient {
     
-    @GetMapping("/api/accounts/{accountId}")
+    @GetMapping("/api/v1/accounts/{accountId}")
     AccountResponse getAccount(@PathVariable("accountId") String accountId);
     
-    @GetMapping("/api/accounts/by-number/{accountNumber}")
+    @GetMapping("/api/v1/accounts/by-number/{accountNumber}")
     AccountResponse getAccountByNumber(@PathVariable("accountNumber") String accountNumber);
     
-    @PostMapping("/api/accounts/{accountId}/debit")
+    @PostMapping("/api/v1/accounts/{accountId}/debit")
     TransactionResponse debitAccount(@PathVariable("accountId") String accountId, 
                                    @RequestBody DebitRequest request);
     
-    @PostMapping("/api/accounts/{accountId}/credit")
+    @PostMapping("/api/v1/accounts/{accountId}/credit")
     TransactionResponse creditAccount(@PathVariable("accountId") String accountId, 
                                     @RequestBody CreditRequest request);
     

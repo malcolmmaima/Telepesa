@@ -4,6 +4,7 @@ import {
   transfersApi,
   type Transfer,
   type CreateTransferRequest,
+  type TransferFormData,
   type SavedRecipient,
   type TransferFeeResponse,
   type BankInfo,
@@ -44,7 +45,7 @@ export function TransferPage() {
   const [banks, setBanks] = useState<BankInfo[]>([])
 
   // Form states
-  const [transferForm, setTransferForm] = useState<CreateTransferRequest>({
+  const [transferForm, setTransferForm] = useState<TransferFormData>({
     fromAccountId: 0,
     recipientName: '',
     amount: 0,
@@ -270,7 +271,19 @@ export function TransferPage() {
   const confirmTransfer = async () => {
     try {
       setLoading(true)
-      const transfer = await transfersApi.createTransfer(transferForm)
+      
+      // Transform the form data to match backend expectations
+      const transferRequest = {
+        recipientAccountId: transferForm.toAccountNumber || transferForm.toAccountId?.toString() || '',
+        amount: transferForm.amount,
+        transferType: transferForm.transferType,
+        description: transferForm.description,
+        recipientName: transferForm.recipientName,
+        currency: 'KES'
+      }
+      
+      const fromAccountId = transferForm.fromAccountId.toString()
+      const transfer = await transfersApi.createTransfer(transferRequest, fromAccountId)
       setTransferSuccess(transfer)
       setShowConfirmation(false)
 
@@ -292,6 +305,7 @@ export function TransferPage() {
         await loadTransferHistory()
       }
     } catch (err: any) {
+      console.error('Transfer failed:', err)
       setError(err.message || 'Transfer failed')
       setShowConfirmation(false)
     } finally {

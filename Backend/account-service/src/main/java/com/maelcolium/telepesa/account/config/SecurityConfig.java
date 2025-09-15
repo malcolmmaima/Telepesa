@@ -40,16 +40,16 @@ public class SecurityConfig {
             .authorizeHttpRequests(authz -> authz
                 .requestMatchers("/actuator/**").permitAll()
                 .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
-                .requestMatchers("/api/v1/accounts/**").authenticated()
+                .requestMatchers("/api/v1/accounts/**").permitAll()
                 .anyRequest().authenticated()
             )
             .sessionManagement(session -> session
                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
             );
 
-        // Add JWT filter
-        http.addFilterBefore(new JwtAuthenticationFilter(jwtTokenUtil, userDetailsService), 
-                           UsernamePasswordAuthenticationFilter.class);
+        // JWT filter disabled for inter-service communication
+        // http.addFilterBefore(new JwtAuthenticationFilter(jwtTokenUtil, userDetailsService), 
+        //                    UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }

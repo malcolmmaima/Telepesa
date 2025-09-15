@@ -4,6 +4,7 @@ import { Button } from '../components/ui/Button'
 import { Input } from '../components/ui/Input'
 import { formatCurrency } from '../lib/utils'
 import { BillerDto, getPopularBillers, getBillerCategories, getBillers } from '../api/billers'
+import { RecentPayments } from '../components/RecentPayments'
 
 export function PaymentsPage() {
   const [selectedBiller, setSelectedBiller] = useState<BillerDto | null>(null)
@@ -346,55 +347,7 @@ export function PaymentsPage() {
       </Card>
 
       {/* Recent Payments */}
-      <Card title="Recent Payments" description="Your recent bill payments">
-        <div className="space-y-3">
-          {[
-            {
-              biller: 'Kenya Power (KPLC)',
-              account: '••••1234',
-              amount: 1500,
-              date: '2025-01-08',
-              status: 'Completed',
-            },
-            {
-              biller: 'Safaricom Postpaid',
-              account: '••••5678',
-              amount: 800,
-              date: '2025-01-05',
-              status: 'Completed',
-            },
-            {
-              biller: 'Nairobi Water',
-              account: '••••9012',
-              amount: 650,
-              date: '2025-01-03',
-              status: 'Completed',
-            },
-          ].map((payment, index) => (
-            <div
-              key={index}
-              className="flex items-center justify-between p-3 bg-gray-50 rounded-financial"
-            >
-              <div className="flex-1">
-                <h4 className="font-medium text-financial-navy">{payment.biller}</h4>
-                <p className="text-sm text-financial-gray">Account: {payment.account}</p>
-              </div>
-              <div className="text-right">
-                <p className="font-semibold text-financial-navy">
-                  {formatCurrency(payment.amount)}
-                </p>
-                <p className="text-xs text-green-600">{payment.status}</p>
-              </div>
-              <div className="text-right ml-4">
-                <p className="text-sm text-financial-gray">{payment.date}</p>
-              </div>
-            </div>
-          ))}
-          <Button variant="outline" className="w-full">
-            View All Payments
-          </Button>
-        </div>
-      </Card>
+      <RecentPayments />
     </div>
   )
 }

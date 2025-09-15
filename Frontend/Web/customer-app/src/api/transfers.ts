@@ -31,6 +31,18 @@ export interface Transfer {
 }
 
 export interface CreateTransferRequest {
+  recipientAccountId: string
+  amount: number
+  transferType: Transfer['transferType']
+  description: string
+  reference?: string
+  currency?: string
+  recipientName?: string
+  recipientPhoneNumber?: string
+}
+
+// Frontend form interface (separate from API request)
+export interface TransferFormData {
   fromAccountId: number
   toAccountId?: number
   toAccountNumber?: string
@@ -106,8 +118,12 @@ export interface TransferLimits {
 // Transfer API Service
 export const transfersApi = {
   // Create transfer
-  createTransfer: async (request: CreateTransferRequest): Promise<Transfer> => {
-    const response = await api.post('/transfers', request)
+  createTransfer: async (request: CreateTransferRequest, fromAccountId: string): Promise<Transfer> => {
+    const response = await api.post('/transfers', request, {
+      headers: {
+        'X-Account-Id': fromAccountId
+      }
+    })
     // Backend may return data in {data: Transfer} format, extract the transfer object
     return response.data?.data || response.data
   },
