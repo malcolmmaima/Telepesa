@@ -82,17 +82,19 @@ export function TransferPage() {
 
   const loadUserAccounts = async () => {
     try {
-      const userAccounts = await accountsApi.getUserActiveAccounts(user!.id)
+      const userAccounts = await accountsApi.getUserAccounts(user!.id, 0, 50)
       // Ensure we always get an array
       const accountsArray = Array.isArray(userAccounts) ? userAccounts : []
-      setAccounts(accountsArray)
-      if (accountsArray.length > 0 && !transferForm.fromAccountId) {
-        setTransferForm(prev => ({ ...prev, fromAccountId: accountsArray[0].id }))
+      // Filter for active accounts only
+      const activeAccounts = accountsArray.filter(account => account.status === 'ACTIVE')
+      setAccounts(activeAccounts)
+      if (activeAccounts.length > 0 && !transferForm.fromAccountId) {
+        setTransferForm(prev => ({ ...prev, fromAccountId: activeAccounts[0].id }))
       }
     } catch (err: any) {
-      // Silently handle - use fallback empty accounts for now
+      console.error('Failed to load user accounts:', err)
       setAccounts([])
-      console.log('Accounts API not available yet')
+      setError('Failed to load accounts. Please refresh the page.')
     }
   }
 

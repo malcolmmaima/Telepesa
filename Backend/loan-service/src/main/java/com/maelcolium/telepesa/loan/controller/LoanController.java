@@ -3,6 +3,7 @@ package com.maelcolium.telepesa.loan.controller;
 import com.maelcolium.telepesa.loan.mapper.LoanMapper;
 import com.maelcolium.telepesa.loan.model.Loan;
 import com.maelcolium.telepesa.loan.repository.LoanRepository;
+import com.maelcolium.telepesa.loan.security.SecurityUtils;
 import com.maelcolium.telepesa.loan.service.LoanService;
 import com.maelcolium.telepesa.models.dto.LoanDto;
 import com.maelcolium.telepesa.models.dto.LoanProductDto;
@@ -45,11 +46,13 @@ public class LoanController {
     private final LoanService loanService;
     private final LoanRepository loanRepository;
     private final LoanMapper loanMapper;
+    private final SecurityUtils securityUtils;
 
-    public LoanController(LoanService loanService, LoanRepository loanRepository, LoanMapper loanMapper) {
+    public LoanController(LoanService loanService, LoanRepository loanRepository, LoanMapper loanMapper, SecurityUtils securityUtils) {
         this.loanService = loanService;
         this.loanRepository = loanRepository;
         this.loanMapper = loanMapper;
+        this.securityUtils = securityUtils;
     }
 
     @Operation(
@@ -73,18 +76,18 @@ public class LoanController {
 
     @PostMapping("/get-user-loans")
     public ResponseEntity<Page<LoanDto>> getUserLoansPost(@RequestBody Map<String, Object> request) {
-        Long userId = Long.valueOf(request.get("userId").toString());
+        Long userId = securityUtils.getCurrentUserId();
+        if (userId == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        
         int page = request.containsKey("page") ? Integer.parseInt(request.get("page").toString()) : 0;
         int size = request.containsKey("size") ? Integer.parseInt(request.get("size").toString()) : 20;
         
-        log.info("Getting loans for user: {} with page: {}, size: {}", userId, page, size);
-        
         try {
-            // Use service method without cache annotations
-            Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
+            Pageable pageable = PageRequest.of(page, size);
             Page<LoanDto> loans = loanService.getUserLoansWithPagination(userId, pageable);
             return ResponseEntity.ok(loans);
-            
         } catch (Exception e) {
             log.error("Error getting user loans: {}", e.getMessage(), e);
             Page<LoanDto> emptyPage = new PageImpl<>(Collections.emptyList(), 
@@ -94,27 +97,19 @@ public class LoanController {
     }
 
     @GetMapping("/search")
-    public ResponseEntity<List<LoanDto>> searchUserLoans(
-            @RequestParam("userId") Long userId) {
+    public ResponseEntity<List<LoanDto>> searchUserLoans() {
         
-        log.info("Searching loans for user: {}", userId);
+        Long userId = securityUtils.getCurrentUserId();
+        if (userId == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        
+        log.info("Searching loans for authenticated user: {}", userId);
         
         try {
-            // Use simple findAll without pagination to avoid any cache issues
-            List<Loan> allLoans = loanRepository.findAll();
-            List<Loan> userLoans = allLoans.stream()
-                .filter(loan -> loan.getUserId().equals(userId))
-                .sorted((a, b) -> b.getCreatedAt().compareTo(a.getCreatedAt()))
-                .limit(20)
-                .collect(java.util.stream.Collectors.toList());
-            
-            List<LoanDto> loanDtos = userLoans.stream()
-                .map(loanMapper::toDto)
-                .collect(java.util.stream.Collectors.toList());
-            
-            log.info("Successfully retrieved {} loans for user: {}", loanDtos.size(), userId);
-            return ResponseEntity.ok(loanDtos);
-            
+            List<LoanDto> loans = loanService.getActiveLoansByUserId(userId);
+            log.info("Successfully retrieved {} loans for user: {}", loans.size(), userId);
+            return ResponseEntity.ok(loans);
         } catch (Exception e) {
             log.error("Error searching user loans: {}", e.getMessage(), e);
             return ResponseEntity.ok(Collections.emptyList());
@@ -131,7 +126,15 @@ public class LoanController {
     )
     @PostMapping
     public ResponseEntity<LoanDto> createLoan(@Valid @RequestBody CreateLoanRequest request) {
-        log.info("Creating loan application for user: {}", request.getUserId());
+        Long userId = securityUtils.getCurrentUserId();
+        if (userId == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        
+        // Set the authenticated user's ID in the request
+        request.setUserId(userId);
+        
+        log.info("Creating loan application for authenticated user: {}", userId);
         LoanDto loan = loanService.createLoan(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(loan);
     }
@@ -149,7 +152,18 @@ public class LoanController {
         @Parameter(description = "Loan ID", example = "1")
         @PathVariable("id") Long id) {
         
+        Long userId = securityUtils.getCurrentUserId();
+        if (userId == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        
         LoanDto loan = loanService.getLoan(id);
+        
+        // Ensure user can only access their own loans
+        if (!loan.getUserId().equals(userId)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+        
         return ResponseEntity.ok(loan);
     }
 
@@ -205,14 +219,17 @@ public class LoanController {
             @ApiResponse(responseCode = "200", description = "User loans retrieved successfully")
         }
     )
-    @GetMapping("/by-user-id")
+    @GetMapping("/my-loans")
     public ResponseEntity<Page<LoanDto>> getUserLoans(
-        @Parameter(description = "User ID", example = "100")
-        @RequestParam("userId") Long userId,
         @RequestParam(name = "page", defaultValue = "0") int page,
         @RequestParam(name = "size", defaultValue = "20") int size,
         @RequestParam(name = "sort", defaultValue = "createdAt") String sortBy,
         @RequestParam(name = "direction", defaultValue = "desc") String sortDirection) {
+        
+        Long userId = securityUtils.getCurrentUserId();
+        if (userId == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
         
         Sort.Direction direction = sortDirection.equalsIgnoreCase("asc") ? 
             Sort.Direction.ASC : Sort.Direction.DESC;

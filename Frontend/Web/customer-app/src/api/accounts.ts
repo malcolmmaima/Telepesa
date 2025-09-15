@@ -81,12 +81,6 @@ export const accountsApi = {
     return Array.isArray(response.data?.content) ? response.data.content : []
   },
 
-  // Get user active accounts only
-  getUserActiveAccounts: async (userId: number): Promise<Account[]> => {
-    const response = await api.get(`/accounts/user/${userId}/active`)
-    // Backend returns data in {data: Account[]} format, extract the accounts array
-    return Array.isArray(response.data?.data) ? response.data.data : []
-  },
 
   // Get account by ID
   getAccount: async (accountId: number): Promise<Account> => {
