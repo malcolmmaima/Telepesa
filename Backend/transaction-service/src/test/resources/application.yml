@@ -1,0 +1,71 @@
+spring:
+  application:
+    name: transaction-service-test
+  profiles:
+    active: test
+  
+  datasource:
+    url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    username: sa
+    password:
+    driver-class-name: org.h2.Driver
+    
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.H2Dialect
+        show_sql: false
+    show-sql: false
+    
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+
+  flyway:
+    enabled: false
+
+  security:
+    jwt:
+      secret: testSecretKeyForJWTTokenGeneration123!@#
+      expiration: 86400000
+
+server:
+  port: 0
+
+# Disable Eureka for tests
+eureka:
+  client:
+    enabled: false
+    register-with-eureka: false
+    fetch-registry: false
+
+# Application specific configuration
+app:
+  jwt:
+    secret: testSecretKeyForJWTTokenGeneration123!@#
+    expiration: 86400
+  transaction:
+    max-daily-limit: 1000000.00
+    max-monthly-limit: 5000000.00
+    fee-percentage: 0.01
+    minimum-fee: 10.00
+    maximum-fee: 1000.00
+
+logging:
+  level:
+    com.maelcolium.telepesa: INFO
+    org.hibernate.SQL: ERROR
+    org.springframework.web: ERROR
+    org.springframework.security: ERROR
+    org.springframework.boot.autoconfigure: ERROR
+    org.springframework.cloud: ERROR
+
+management:
+  endpoints:
+    enabled-by-default: false
+  endpoint:
+    health:
+      enabled: true

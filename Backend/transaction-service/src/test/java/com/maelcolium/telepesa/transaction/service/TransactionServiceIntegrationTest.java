@@ -13,6 +13,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
@@ -28,9 +29,15 @@ import static org.assertj.core.api.Assertions.*;
  * Integration tests for TransactionService
  * Tests complete transaction workflows with database interactions
  */
-@SpringBootTest
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.NONE)
 @ActiveProfiles("test")
 @Transactional
+@TestPropertySource(properties = {
+    "eureka.client.enabled=false",
+    "eureka.client.register-with-eureka=false",
+    "eureka.client.fetch-registry=false",
+    "spring.cloud.discovery.enabled=false"
+})
 class TransactionServiceIntegrationTest {
 
     @Autowired
@@ -228,10 +235,10 @@ class TransactionServiceIntegrationTest {
     @Test
     void getAccountBalance_ShouldCalculateCorrectBalance() {
         // Given - Create credits and debits for account
-        createTransactionForAccount(1L, null, new BigDecimal("1000.00")); // Credit
-        createTransactionForAccount(1L, null, new BigDecimal("500.00"));  // Credit
-        createTransactionForAccount(null, 1L, new BigDecimal("300.00"));  // Debit
-        createTransactionForAccount(null, 1L, new BigDecimal("200.00"));  // Debit
+        createDepositTransaction(1L, new BigDecimal("1000.00")); // Credit
+        createDepositTransaction(1L, new BigDecimal("500.00"));  // Credit
+        createWithdrawalTransaction(1L, new BigDecimal("300.00"));  // Debit
+        createWithdrawalTransaction(1L, new BigDecimal("200.00"));  // Debit
 
         // When
         BigDecimal balance = transactionService.getAccountBalance(1L);
@@ -263,9 +270,9 @@ class TransactionServiceIntegrationTest {
     void getTotalCreditsByAccountId_ShouldReturnCorrectAmount() {
         // Given
         LocalDateTime since = LocalDateTime.now().minusDays(1);
-        createTransactionForAccount(1L, null, new BigDecimal("1000.00")); // Credit to account 1
-        createTransactionForAccount(1L, null, new BigDecimal("500.00"));  // Credit to account 1
-        createTransactionForAccount(null, 1L, new BigDecimal("300.00"));  // Debit from account 1
+        createDepositTransaction(1L, new BigDecimal("1000.00")); // Credit to account 1
+        createDepositTransaction(1L, new BigDecimal("500.00"));  // Credit to account 1
+        createWithdrawalTransaction(1L, new BigDecimal("300.00"));  // Debit from account 1
 
         // When
         BigDecimal totalCredits = transactionService.getTotalCreditsByAccountId(1L, since);
@@ -278,15 +285,15 @@ class TransactionServiceIntegrationTest {
     void getTotalDebitsByAccountId_ShouldReturnCorrectAmount() {
         // Given
         LocalDateTime since = LocalDateTime.now().minusDays(1);
-        createTransactionForAccount(1L, null, new BigDecimal("1000.00")); // Credit to account 1
-        createTransactionForAccount(null, 1L, new BigDecimal("300.00"));  // Debit from account 1
-        createTransactionForAccount(null, 1L, new BigDecimal("200.00"));  // Debit from account 1
+        createWithdrawalTransaction(1L, new BigDecimal("800.00"));  // Debit from account 1
+        createWithdrawalTransaction(1L, new BigDecimal("200.00"));  // Debit from account 1
+        createDepositTransaction(1L, new BigDecimal("500.00"));  // Credit to account 1
 
         // When
         BigDecimal totalDebits = transactionService.getTotalDebitsByAccountId(1L, since);
 
         // Then
-        assertThat(totalDebits).isEqualTo(new BigDecimal("500.00"));
+        assertThat(totalDebits).isEqualTo(new BigDecimal("1000.00"));
     }
 
     @Test
@@ -418,5 +425,33 @@ class TransactionServiceIntegrationTest {
                 .userId(100L)
                 .build();
         transactionService.createTransaction(request);
+    }
+
+    private void createDepositTransaction(Long accountId, BigDecimal amount) {
+        CreateTransactionRequest request = CreateTransactionRequest.builder()
+                .fromAccountId(999L) // System account for deposits
+                .toAccountId(accountId)
+                .amount(amount)
+                .transactionType(TransactionType.DEPOSIT)
+                .description("Test deposit")
+                .userId(100L)
+                .build();
+        TransactionDto transaction = transactionService.createTransaction(request);
+        // Complete the transaction so it's included in balance calculations
+        transactionService.updateTransactionStatus(transaction.getId(), TransactionStatus.COMPLETED);
+    }
+
+    private void createWithdrawalTransaction(Long accountId, BigDecimal amount) {
+        CreateTransactionRequest request = CreateTransactionRequest.builder()
+                .fromAccountId(accountId)
+                .toAccountId(998L) // System account for withdrawals
+                .amount(amount)
+                .transactionType(TransactionType.WITHDRAWAL)
+                .description("Test withdrawal")
+                .userId(100L)
+                .build();
+        TransactionDto transaction = transactionService.createTransaction(request);
+        // Complete the transaction so it's included in balance calculations
+        transactionService.updateTransactionStatus(transaction.getId(), TransactionStatus.COMPLETED);
     }
 }

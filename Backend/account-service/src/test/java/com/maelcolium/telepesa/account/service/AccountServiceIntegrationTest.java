@@ -15,6 +15,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
@@ -30,9 +31,15 @@ import static org.assertj.core.api.Assertions.*;
  * Integration tests for AccountService
  * Tests complete account workflows with database interactions
  */
-@SpringBootTest
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.NONE)
 @ActiveProfiles("test")
 @Transactional
+@TestPropertySource(properties = {
+    "eureka.client.enabled=false",
+    "eureka.client.register-with-eureka=false",
+    "eureka.client.fetch-registry=false",
+    "spring.cloud.discovery.enabled=false"
+})
 class AccountServiceIntegrationTest {
 
     @Autowired
@@ -276,10 +283,16 @@ class AccountServiceIntegrationTest {
     @Test
     void getUserTotalBalance_ShouldCalculateCorrectTotal() {
         // Given
-        createAccountForUser(100L, AccountType.SAVINGS, new BigDecimal("12000.00"));
-        createAccountForUser(100L, AccountType.CHECKING, new BigDecimal("15000.00"));
-        createAccountForUser(100L, AccountType.BUSINESS, new BigDecimal("20000.00"));
-        createAccountForUser(200L, AccountType.SAVINGS, new BigDecimal("18000.00")); // Different user
+        AccountDto account1 = accountService.createAccount(createAccountRequest(100L, AccountType.SAVINGS, new BigDecimal("12000.00")));
+        AccountDto account2 = accountService.createAccount(createAccountRequest(100L, AccountType.CHECKING, new BigDecimal("15000.00")));
+        AccountDto account3 = accountService.createAccount(createAccountRequest(100L, AccountType.BUSINESS, new BigDecimal("20000.00")));
+        AccountDto account4 = accountService.createAccount(createAccountRequest(200L, AccountType.SAVINGS, new BigDecimal("18000.00"))); // Different user
+        
+        // Activate all accounts so they're included in total balance calculation
+        accountService.activateAccount(account1.getId());
+        accountService.activateAccount(account2.getId());
+        accountService.activateAccount(account3.getId());
+        accountService.activateAccount(account4.getId());
 
         // When
         BigDecimal user100Total = accountService.getUserTotalBalance(100L);
@@ -324,6 +337,14 @@ class AccountServiceIntegrationTest {
     private CreateAccountRequest createAccountRequest(AccountType type, BigDecimal initialDeposit) {
         return CreateAccountRequest.builder()
                 .userId(100L)
+                .accountType(type)
+                .initialDeposit(initialDeposit)
+                .build();
+    }
+
+    private CreateAccountRequest createAccountRequest(Long userId, AccountType type, BigDecimal initialDeposit) {
+        return CreateAccountRequest.builder()
+                .userId(userId)
                 .accountType(type)
                 .initialDeposit(initialDeposit)
                 .build();
