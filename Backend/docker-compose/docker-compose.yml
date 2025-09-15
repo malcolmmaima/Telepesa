@@ -284,8 +284,8 @@ services:
 
   loan-service:
     build:
-      context: ../loan-service
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: loan-service/Dockerfile
     container_name: telepesa-loan-service
     ports:
       - "8084:8084"
@@ -305,7 +305,7 @@ services:
       SPRING_DATA_REDIS_HOST: redis
       SPRING_DATA_REDIS_PASSWORD: telepesa_redis_password
       KAFKA_BOOTSTRAP_SERVERS: kafka:9092
-      JWT_SECRET: myVerySecretJWTKeyForTelepesaUserService123!@#
+      JWT_SECRET: myVerySecretJWTKeyForTelepesaUserService123!@#ExtraLongSecureKeyPart456ForHMACCompatibility789
     depends_on:
       postgres:
         condition: service_healthy

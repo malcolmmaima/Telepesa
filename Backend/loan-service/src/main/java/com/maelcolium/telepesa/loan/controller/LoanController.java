@@ -96,7 +96,7 @@ public class LoanController {
         }
     }
 
-    @GetMapping("/search")
+    @GetMapping("/user/search")
     public ResponseEntity<List<LoanDto>> searchUserLoans() {
         
         Long userId = securityUtils.getCurrentUserId();

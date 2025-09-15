@@ -25,7 +25,8 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
 @SpringBootApplication(
     scanBasePackages = {
         "com.maelcolium.telepesa.loan",
-        "com.maelcolium.telepesa.models"
+        "com.maelcolium.telepesa.models",
+        "com.maelcolium.telepesa.security"
     },
     exclude = {
         org.springframework.boot.autoconfigure.cache.CacheAutoConfiguration.class
