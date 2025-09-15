@@ -58,7 +58,6 @@ public class NotificationController {
 
     @GetMapping
     @Operation(summary = "Get all notifications", description = "Retrieve all notifications with pagination")
-    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Page<NotificationDto>> getNotifications(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {

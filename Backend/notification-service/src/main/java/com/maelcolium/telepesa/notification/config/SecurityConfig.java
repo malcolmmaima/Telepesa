@@ -25,7 +25,6 @@ public class SecurityConfig {
             .authorizeHttpRequests(authz -> authz
                 .requestMatchers("/actuator/**", "/h2-console/**").permitAll()
                 .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
-                .requestMatchers("/api/v1/notifications/**").permitAll()
                 .anyRequest().permitAll()
             )
             .headers(headers -> headers.frameOptions().disable()); // For H2 console in dev
