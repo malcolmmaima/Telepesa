@@ -77,8 +77,8 @@ export const accountsApi = {
     const response = await api.get(`/accounts/user/${userId}`, {
       params: { page, size, sortBy, sortDir },
     })
-    // Backend returns data in {data: Account[]} format, extract the accounts array
-    return Array.isArray(response.data?.data) ? response.data.data : []
+    // Backend returns paginated response with content array
+    return Array.isArray(response.data?.content) ? response.data.content : []
   },
 
   // Get user active accounts only
@@ -164,14 +164,20 @@ export const accountsApi = {
   },
 
   // Get user total balance
-  getUserTotalBalance: async (userId: number): Promise<number> => {
+  getUserTotalBalance: async (userId: number): Promise<{
+    totalBalance: number;
+    totalAvailableBalance: number;
+    accountCount: number;
+    currencyCode: string;
+  }> => {
     const response = await api.get(`/accounts/user/${userId}/total-balance`)
-    // Backend may return data in {data: number} format, extract the balance value
-    return typeof response.data?.data === 'number'
-      ? response.data.data
-      : typeof response.data === 'number'
-        ? response.data
-        : 0
+    // Backend returns balance summary object
+    return response.data || {
+      totalBalance: 0,
+      totalAvailableBalance: 0,
+      accountCount: 0,
+      currencyCode: 'KES'
+    }
   },
 
   // Search and filter accounts

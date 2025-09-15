@@ -23,11 +23,6 @@ public class AccountService {
 
     private final AccountRepository accountRepository;
 
-    public List<AccountDto> getAllAccounts() {
-        return accountRepository.findAll().stream()
-                .map(this::convertToDto)
-                .collect(Collectors.toList());
-    }
 
     public Optional<AccountDto> getAccountById(Long id) {
         return accountRepository.findById(id)
@@ -72,6 +67,7 @@ public class AccountService {
         return accountRepository.findByAccountNumber(accountNumber)
                 .map(account -> {
                     account.setBalance(newBalance);
+                    account.setAvailableBalance(newBalance); // Update available balance too
                     account.setUpdatedAt(LocalDateTime.now());
                     Account savedAccount = accountRepository.save(account);
                     log.info("Updated balance for account {}: {}", accountNumber, newBalance);

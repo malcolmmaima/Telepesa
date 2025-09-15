@@ -36,7 +36,12 @@ export function AccountsPage() {
   const [error, setError] = useState<string | null>(null)
   const [selectedAccount, setSelectedAccount] = useState<Account | null>(null)
   const [modalAccount, setModalAccount] = useState<Account | null>(null)
-  const [totalBalance, setTotalBalance] = useState(0)
+  const [balanceSummary, setBalanceSummary] = useState({
+    totalBalance: 0,
+    totalAvailableBalance: 0,
+    accountCount: 0,
+    currencyCode: 'KES'
+  })
   const [searchQuery, setSearchQuery] = useState('')
   const [statusFilter, setStatusFilter] = useState<Account['status'] | 'ALL'>('ALL')
   const [typeFilter, setTypeFilter] = useState<Account['accountType'] | 'ALL'>('ALL')
@@ -65,13 +70,18 @@ export function AccountsPage() {
 
   const loadTotalBalance = async () => {
     try {
-      const balance = await accountsApi.getUserTotalBalance(user!.id)
-      setTotalBalance(balance)
+      const balanceData = await accountsApi.getUserTotalBalance(user!.id)
+      setBalanceSummary(balanceData)
     } catch (err) {
       console.error('Failed to load total balance:', err)
       // Calculate from current accounts as fallback
       const total = accounts.reduce((sum, account) => sum + account.balance, 0)
-      setTotalBalance(total)
+      setBalanceSummary({
+        totalBalance: total,
+        totalAvailableBalance: total,
+        accountCount: accounts.length,
+        currencyCode: 'KES'
+      })
     }
   }
 
@@ -203,7 +213,7 @@ export function AccountsPage() {
             <div className="flex justify-between items-center">
               <div className="flex-1">
                 <div className="text-lg opacity-90">Total Balance</div>
-                <div className="text-4xl font-bold my-2">{formatCurrency(totalBalance)}</div>
+                <div className="text-4xl font-bold my-2">{formatCurrency(balanceSummary.totalBalance)}</div>
                 <div className="text-base opacity-75">
                   Across {accounts.length} account{accounts.length !== 1 ? 's' : ''}
                 </div>
@@ -568,7 +578,7 @@ export function AccountsPage() {
           <Card className="p-4">
             <div className="text-sm text-financial-gray">Avg Balance</div>
             <div className="text-2xl font-bold text-financial-navy">
-              {formatCurrency(accounts.length ? totalBalance / accounts.length : 0)}
+              {formatCurrency(accounts.length ? balanceSummary.totalBalance / accounts.length : 0)}
             </div>
           </Card>
         </div>

@@ -21,28 +21,6 @@ public class AccountController {
 
     private final AccountService accountService;
 
-    @GetMapping
-    public ResponseEntity<List<AccountDto>> getAllAccounts() {
-        log.info("Fetching all accounts");
-        List<AccountDto> accounts = accountService.getAllAccounts();
-        return ResponseEntity.ok(accounts);
-    }
-
-    @GetMapping("/{id}")
-    public ResponseEntity<AccountDto> getAccountById(@PathVariable("id") Long id) {
-        log.info("Fetching account by ID: {}", id);
-        Optional<AccountDto> account = accountService.getAccountById(id);
-        return account.map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
-    }
-
-    @GetMapping("/number/{accountNumber}")
-    public ResponseEntity<AccountDto> getAccountByNumber(@PathVariable("accountNumber") String accountNumber) {
-        log.info("Fetching account by number: {}", accountNumber);
-        Optional<AccountDto> account = accountService.getAccountByNumber(accountNumber);
-        return account.map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
-    }
 
     @GetMapping("/user/{userId}")
     public ResponseEntity<Object> getAccountsByUserId(
@@ -51,6 +29,7 @@ public class AccountController {
             @RequestParam(value = "size", defaultValue = "10") int size,
             @RequestParam(value = "sortBy", defaultValue = "createdAt") String sortBy,
             @RequestParam(value = "sortDir", defaultValue = "desc") String sortDir) {
+        
         log.info("Fetching accounts for user ID: {} with pagination - page: {}, size: {}", userId, page, size);
         
         List<AccountDto> allAccounts = accountService.getAccountsByUserId(userId);
@@ -79,26 +58,13 @@ public class AccountController {
 
     @PostMapping
     public ResponseEntity<AccountDto> createAccount(@RequestBody Map<String, Object> request) {
-        log.info("Creating new account with request: {}", request);
-        
         Long userId = Long.valueOf(request.get("userId").toString());
         String accountType = request.get("accountType").toString();
         
+        log.info("Creating new account with request: {}", request);
+        
         AccountDto account = accountService.createAccount(userId, accountType);
         return ResponseEntity.status(HttpStatus.CREATED).body(account);
-    }
-
-    @PutMapping("/{accountNumber}/balance")
-    public ResponseEntity<AccountDto> updateAccountBalance(
-            @PathVariable("accountNumber") String accountNumber,
-            @RequestBody Map<String, BigDecimal> request) {
-        log.info("Updating balance for account: {}", accountNumber);
-        
-        BigDecimal newBalance = request.get("balance");
-        Optional<AccountDto> updatedAccount = accountService.updateAccountBalance(accountNumber, newBalance);
-        
-        return updatedAccount.map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
     }
 
     @GetMapping("/user/{userId}/total-balance")
