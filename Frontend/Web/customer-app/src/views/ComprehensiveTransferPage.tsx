@@ -2,9 +2,11 @@ import { useState, useEffect } from 'react'
 import { useAuth } from '../store/auth'
 import { transfersApi, type CreateTransferRequest } from '../api/transfers'
 import { accountsApi, type Account } from '../api/accounts'
+import { securityApi } from '../api/security'
 import { Card } from '../components/ui/Card'
 import { Button } from '../components/ui/Button'
 import { Input } from '../components/ui/Input'
+import { TransactionPinModal } from '../components/security/TransactionPinModal'
 import { formatCurrency, cn } from '../lib/utils'
 
 type TransferType = 'INTERNAL' | 'SWIFT' | 'RTGS' | 'PESALINK' | 'MPESA'
@@ -107,6 +109,13 @@ export function ComprehensiveTransferPage() {
   
   // Data states
   const [accounts, setAccounts] = useState<Account[]>([])
+  const [hasPinSet, setHasPinSet] = useState(false)
+  const [checkingPin, setCheckingPin] = useState(true)
+  
+  // Security states
+  const [showPinModal, setShowPinModal] = useState(false)
+  const [pinMode, setPinMode] = useState<'verify' | 'create'>('verify')
+  const [pendingTransfer, setPendingTransfer] = useState<CreateTransferRequest | null>(null)
   
   // Form state
   const [form, setForm] = useState<TransferForm>({
@@ -130,12 +139,25 @@ export function ComprehensiveTransferPage() {
     mpesaNumber: ''
   })
 
-  // Load user accounts on mount
+  // Load user accounts and check PIN status on mount
   useEffect(() => {
     if (user?.id) {
       loadUserAccounts()
+      checkPinStatus()
     }
   }, [user?.id])
+
+  const checkPinStatus = async () => {
+    try {
+      const pinStatus = await securityApi.getTransactionPinStatus()
+      setHasPinSet(pinStatus.isSet)
+    } catch (err) {
+      console.log('PIN status check failed, assuming no PIN set')
+      setHasPinSet(false)
+    } finally {
+      setCheckingPin(false)
+    }
+  }
 
   // Update currency when transfer type changes
   useEffect(() => {
@@ -189,66 +211,81 @@ export function ComprehensiveTransferPage() {
       return
     }
 
-    if (form.transferType === 'INTERNAL' && !form.recipientAccountNumber) {
-      setError('Please enter recipient account number')
+    // Check if PIN is required
+    if (!hasPinSet) {
+      // Prompt user to create PIN first
+      setPinMode('create')
+      setShowPinModal(true)
       return
     }
 
-    if (form.transferType === 'MPESA' && !form.mpesaNumber) {
-      setError('Please enter M-Pesa number')
-      return
+    // Prepare transfer request
+    const transferRequest: CreateTransferRequest = {
+      recipientAccountId: form.transferType === 'MPESA' ? form.mpesaNumber : form.recipientAccountNumber,
+      amount: form.amount,
+      transferType: form.transferType,
+      description: form.description,
+      recipientName: form.recipientName,
+      currency: form.currency,
+      swiftCode: form.swiftCode || undefined,
+      recipientBankName: form.recipientBankName || undefined,
+      recipientBankAddress: form.recipientBankAddress || undefined,
+      intermediaryBankSwift: form.intermediaryBankSwift || undefined,
+      sortCode: form.sortCode || undefined,
+      pesalinkBankCode: form.pesalinkBankCode || undefined,
+      mpesaNumber: form.mpesaNumber || undefined
     }
 
-    if (form.transferType === 'PESALINK' && (!form.recipientAccountNumber || !form.pesalinkBankCode)) {
-      setError('Please enter account number and select bank')
-      return
+    // Store pending transfer and show PIN verification
+    setPendingTransfer(transferRequest)
+    setPinMode('verify')
+    setShowPinModal(true)
+  }
+
+  const handlePinSuccess = async (pin: string) => {
+    if (pinMode === 'create') {
+      try {
+        await securityApi.createTransactionPin({ pin })
+        setHasPinSet(true)
+        setError(null)
+        // After creating PIN, proceed with transfer if there's a pending one
+        if (pendingTransfer) {
+          await executeTransfer(pendingTransfer)
+        }
+      } catch (err: any) {
+        setError('Failed to create PIN: ' + err.message)
+      }
+    } else if (pinMode === 'verify' && pendingTransfer) {
+      try {
+        const verification = await securityApi.verifyTransactionPin({ pin })
+        if (verification.valid) {
+          await executeTransfer(pendingTransfer)
+        } else {
+          setError('Invalid PIN. Please try again.')
+        }
+      } catch (err: any) {
+        setError('PIN verification failed: ' + err.message)
+      }
     }
+  }
 
-    if (form.transferType === 'RTGS' && (!form.recipientAccountNumber || !form.sortCode)) {
-      setError('Please enter account number and sort code')
-      return
-    }
-
-    if (form.transferType === 'SWIFT' && (!form.recipientAccountNumber || !form.swiftCode || !form.recipientBankName)) {
-      setError('Please fill in all SWIFT transfer details')
-      return
-    }
-
-    const selectedAccount = accounts.find(acc => acc.id === form.fromAccountId)
-    if (!selectedAccount) {
-      setError('Please select a valid account')
-      return
-    }
-
-    const fee = calculateFee(form.transferType, form.amount)
-    const totalAmount = form.amount + fee
-
-    if (totalAmount > selectedAccount.balance) {
-      setError(`Insufficient balance. Available: ${formatCurrency(selectedAccount.balance)}`)
-      return
-    }
-
+  const executeTransfer = async (transferRequest: CreateTransferRequest) => {
     try {
       setLoading(true)
+      setPendingTransfer(null)
 
-      const transferRequest: CreateTransferRequest = {
-        recipientAccountId: form.transferType === 'MPESA' ? form.mpesaNumber : form.recipientAccountNumber,
-        amount: form.amount,
-        transferType: form.transferType,
-        description: form.description,
-        recipientName: form.recipientName,
-        currency: form.currency,
-        // SWIFT fields
-        swiftCode: form.swiftCode || undefined,
-        recipientBankName: form.recipientBankName || undefined,
-        recipientBankAddress: form.recipientBankAddress || undefined,
-        intermediaryBankSwift: form.intermediaryBankSwift || undefined,
-        // RTGS fields
-        sortCode: form.sortCode || undefined,
-        // PesaLink fields
-        pesalinkBankCode: form.pesalinkBankCode || undefined,
-        // M-Pesa fields
-        mpesaNumber: form.mpesaNumber || undefined
+      const selectedAccount = accounts.find(acc => acc.id === form.fromAccountId)
+      if (!selectedAccount) {
+        setError('Please select a valid account')
+        return
+      }
+
+      const fee = calculateFee(form.transferType, form.amount)
+      const totalAmount = form.amount + fee
+
+      if (totalAmount > selectedAccount.balance) {
+        setError(`Insufficient balance. Available: ${formatCurrency(selectedAccount.balance)}`)
+        return
       }
 
       const result = await transfersApi.createTransfer(transferRequest, selectedAccount.accountNumber)
@@ -654,6 +691,23 @@ export function ComprehensiveTransferPage() {
           )}
         </Button>
       </form>
+
+      {/* Transaction PIN Modal */}
+      <TransactionPinModal
+        isOpen={showPinModal}
+        onClose={() => {
+          setShowPinModal(false)
+          setPendingTransfer(null)
+        }}
+        onSuccess={handlePinSuccess}
+        mode={pinMode}
+        title={pinMode === 'create' ? '🔐 Create Transaction PIN' : '🔒 Enter Transaction PIN'}
+        description={
+          pinMode === 'create' 
+            ? 'Create a 4-digit PIN to secure your transactions. This PIN will be required for all future transfers.'
+            : 'Enter your 4-digit transaction PIN to authorize this transfer.'
+        }
+      />
     </div>
   )
 }

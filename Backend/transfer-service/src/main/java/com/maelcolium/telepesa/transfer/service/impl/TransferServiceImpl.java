@@ -1,6 +1,7 @@
 package com.maelcolium.telepesa.transfer.service.impl;
 
 import com.maelcolium.telepesa.transfer.client.AccountServiceClient;
+import com.maelcolium.telepesa.transfer.client.TransactionServiceClient;
 import com.maelcolium.telepesa.transfer.dto.CreateTransferRequest;
 import com.maelcolium.telepesa.transfer.dto.TransferResponse;
 import com.maelcolium.telepesa.transfer.entity.Transfer;
@@ -31,6 +32,7 @@ public class TransferServiceImpl implements TransferService {
     
     private final TransferRepository transferRepository;
     private final AccountServiceClient accountServiceClient;
+    private final TransactionServiceClient transactionServiceClient;
     
     @Override
     public TransferResponse createTransfer(String senderAccountId, CreateTransferRequest request) {
@@ -374,18 +376,20 @@ public class TransferServiceImpl implements TransferService {
     
     private TransferResponse processRTGSTransfer(Transfer transfer) {
         try {
-            // Debit sender account
-            accountServiceClient.debitAccount(transfer.getSenderAccountId(), 
-                new AccountServiceClient.DebitRequest(transfer.getTotalAmount(), 
-                    "RTGS transfer to " + transfer.getRecipientName()));
+            // Credit recipient account
+            accountServiceClient.creditAccount(transfer.getRecipientAccountId(), 
+                new AccountServiceClient.CreditRequest(transfer.getAmount(), 
+                    "Transfer from " + transfer.getSenderName()));
             
-            // TODO: Integrate with Central Bank RTGS system
-            // For now, mark as processing (RTGS takes 2-4 hours)
-            transfer.setStatus(Transfer.TransferStatus.PROCESSING);
-            transfer.setProcessedBy("RTGS_GATEWAY");
+            transfer.setStatus(Transfer.TransferStatus.COMPLETED);
+            transfer.setProcessedAt(LocalDateTime.now());
             
-            Transfer savedTransfer = transferRepository.save(transfer);
-            return mapToResponse(savedTransfer);
+            Transfer completedTransfer = transferRepository.save(transfer);
+            
+            // Create transaction records for both sender and recipient
+            createTransactionRecords(completedTransfer);
+            
+            return mapToResponse(completedTransfer);
             
         } catch (Exception e) {
             transfer.setStatus(Transfer.TransferStatus.FAILED);
@@ -415,6 +419,48 @@ public class TransferServiceImpl implements TransferService {
             transfer.setFailureReason("SWIFT processing failed: " + e.getMessage());
             transferRepository.save(transfer);
             throw new RuntimeException("SWIFT transfer failed", e);
+        }
+    }
+    
+    private void createTransactionRecords(Transfer transfer) {
+        try {
+            // Create debit transaction for sender
+            transactionServiceClient.createTransaction(
+                new TransactionServiceClient.CreateTransactionRequest(
+                    Long.parseLong(transfer.getSenderAccountId()),
+                    transfer.getAmount().negate(), // Negative for debit
+                    "TRANSFER",
+                    "Transfer to " + transfer.getRecipientName(),
+                    Long.parseLong(transfer.getRecipientAccountId()),
+                    transfer.getRecipientAccountId(),
+                    transfer.getTransferReference(),
+                    transfer.getTransferFee(),
+                    transfer.getTotalAmount().negate(),
+                    transfer.getCurrency()
+                )
+            );
+            
+            // Create credit transaction for recipient (only for internal transfers)
+            if (transfer.getTransferType() == Transfer.TransferType.INTERNAL) {
+                transactionServiceClient.createTransaction(
+                    new TransactionServiceClient.CreateTransactionRequest(
+                        Long.parseLong(transfer.getRecipientAccountId()),
+                        transfer.getAmount(), // Positive for credit
+                        "TRANSFER",
+                        "Transfer from " + transfer.getSenderName(),
+                        Long.parseLong(transfer.getSenderAccountId()),
+                        transfer.getSenderAccountId(),
+                        transfer.getTransferReference(),
+                        BigDecimal.ZERO,
+                        transfer.getAmount(),
+                        transfer.getCurrency()
+                    )
+                );
+            }
+        } catch (Exception e) {
+            log.warn("Failed to create transaction records for transfer {}: {}", 
+                transfer.getId(), e.getMessage());
+            // Don't fail the transfer if transaction recording fails
         }
     }
     

@@ -6,8 +6,10 @@ import { z } from 'zod'
 import Lottie from 'lottie-react'
 import { api } from '../api/client'
 import { useAuth } from '../store/auth'
+import { securityApi } from '../api/security'
 import { Input } from '../components/ui/Input'
 import { Button } from '../components/ui/Button'
+import { SecurityQuestionsModal } from '../components/security/SecurityQuestionsModal'
 import type { ApiError } from '../types'
 
 const registerSchema = z
@@ -30,6 +32,8 @@ type RegisterForm = z.infer<typeof registerSchema>
 export function RegisterPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [serverError, setServerError] = useState<string | null>(null)
+  const [showSecurityQuestions, setShowSecurityQuestions] = useState(false)
+  const [registrationData, setRegistrationData] = useState<any>(null)
   const navigate = useNavigate()
   const { setSession } = useAuth()
 
@@ -46,13 +50,31 @@ export function RegisterPage() {
     setServerError(null)
 
     try {
-      const { confirmPassword: _confirmPassword, ...registrationData } = data
+      const { confirmPassword: _confirmPassword, ...regData } = data
+      
+      // Store registration data and show security questions setup
+      setRegistrationData(regData)
+      setShowSecurityQuestions(true)
+      setIsLoading(false)
+    } catch (error: any) {
+      setIsLoading(false)
+      const apiError = error as ApiError
+      setServerError(apiError.message || 'Registration failed. Please try again.')
+    }
+  }
+
+  const handleSecurityQuestionsSuccess = async () => {
+    if (!registrationData) return
+
+    setIsLoading(true)
+    try {
+      // Complete registration
       await api.post('/users/register', registrationData)
 
       // Auto-login after successful registration
       const loginResponse = await api.post('/users/login', {
-        usernameOrEmail: data.email,
-        password: data.password,
+        usernameOrEmail: registrationData.email,
+        password: registrationData.password,
       })
 
       const { accessToken, refreshToken, user } = loginResponse.data
@@ -285,12 +307,12 @@ export function RegisterPage() {
 
               <div className="text-center">
                 <p className="text-financial-gray text-sm">
-                  Already have an account?
+                  Already have an account?{' '}
                   <Link
                     to="/login"
-                    className="ml-1 text-financial-blue hover:text-financial-navy transition-colors font-medium"
+                    className="font-medium text-financial-blue hover:text-financial-navy transition-colors"
                   >
-                    Sign in here 👈
+                    Sign in
                   </Link>
                 </p>
               </div>
@@ -304,6 +326,19 @@ export function RegisterPage() {
           </div>
         </div>
       </div>
+
+      {/* Security Questions Modal */}
+      <SecurityQuestionsModal
+        isOpen={showSecurityQuestions}
+        onClose={() => {
+          setShowSecurityQuestions(false)
+          setRegistrationData(null)
+        }}
+        onSuccess={handleSecurityQuestionsSuccess}
+        mode="setup"
+        title="🛡️ Setup Security Questions"
+        description="Choose 3 security questions to help protect your account. These will be used for account recovery."
+      />
     </div>
   )
 }

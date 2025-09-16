@@ -18,7 +18,7 @@ export function BackendStatus({ showDetails = false }: BackendStatusProps) {
   const [services, setServices] = useState<ServiceStatus[]>([
     { name: 'User Service', url: '/users/me/profile', status: 'checking' },
     { name: 'Notifications Service', url: '/notifications', status: 'checking' },
-    { name: 'Accounts Service', url: '/accounts', status: 'checking' },
+    { name: 'Accounts Service', url: '/accounts/health', status: 'checking' },
   ])
 
   const checkServiceStatus = async (service: ServiceStatus): Promise<ServiceStatus> => {
