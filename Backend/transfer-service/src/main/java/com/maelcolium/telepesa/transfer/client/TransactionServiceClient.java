@@ -10,7 +10,7 @@ import java.math.BigDecimal;
 @FeignClient(name = "transaction-service", url = "${services.transaction-service.url:http://transaction-service:8083}", configuration = com.maelcolium.telepesa.transfer.config.FeignConfig.class)
 public interface TransactionServiceClient {
 
-    @PostMapping("/api/v1/transactions")
+    @PostMapping("/api/v1/transactions/internal")
     TransactionResponse createTransaction(@RequestBody CreateTransactionRequest request);
 
     record CreateTransactionRequest(
