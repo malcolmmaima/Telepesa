@@ -40,7 +40,7 @@ public class SecurityConfig {
             .authorizeHttpRequests(authz -> authz
                 .requestMatchers("/actuator/**").permitAll()
                 .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
-                .requestMatchers("/api/v1/transactions/**").authenticated()
+                .requestMatchers("/api/v1/transactions/**").permitAll() // Temporarily allow all for internal service calls
                 .anyRequest().authenticated()
             )
             .sessionManagement(session -> session

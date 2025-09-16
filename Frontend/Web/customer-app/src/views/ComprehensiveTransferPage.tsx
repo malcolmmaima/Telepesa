@@ -311,6 +311,7 @@ export function ComprehensiveTransferPage() {
 
       const result = await transfersApi.createTransfer(transferRequest, selectedAccount.accountNumber)
       
+      // Transfer is automatically processed during creation for most types
       setSuccess({
         id: result.id?.toString() || '',
         transferReference: result.transferId || '',

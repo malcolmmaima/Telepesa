@@ -93,18 +93,34 @@ public class TransferServiceImpl implements TransferService {
         Transfer savedTransfer = transferRepository.save(transfer);
         
         // Process transfer based on type
+        log.info("=== PROCESSING TRANSFER BY TYPE ===");
+        log.info("Transfer type: {}, Transfer ID: {}", request.getTransferType(), savedTransfer.getId());
+        
         switch (request.getTransferType()) {
             case INTERNAL:
-                return processTransfer(savedTransfer.getId());
+                log.info("Processing INTERNAL transfer - calling processTransfer method");
+                try {
+                    TransferResponse response = processTransfer(savedTransfer.getId());
+                    log.info("INTERNAL transfer processing completed successfully");
+                    return response;
+                } catch (Exception e) {
+                    log.error("INTERNAL transfer processing failed: {}", e.getMessage(), e);
+                    throw e;
+                }
             case PESALINK:
+                log.info("Processing PESALINK transfer");
                 return processPesaLinkTransfer(savedTransfer);
             case MPESA:
+                log.info("Processing MPESA transfer");
                 return processMpesaTransfer(savedTransfer);
             case RTGS:
+                log.info("Processing RTGS transfer");
                 return processRTGSTransfer(savedTransfer);
             case SWIFT:
+                log.info("Processing SWIFT transfer");
                 return processSWIFTTransfer(savedTransfer);
             default:
+                log.info("Processing default transfer type - marking as PROCESSING");
                 // For other types, mark as processing and return
                 savedTransfer.setStatus(Transfer.TransferStatus.PROCESSING);
                 transferRepository.save(savedTransfer);
@@ -152,81 +168,117 @@ public class TransferServiceImpl implements TransferService {
     @Override
     @CacheEvict(value = {"transfers", "accountTransfers", "sentTransfers", "receivedTransfers"}, allEntries = true)
     public TransferResponse processTransfer(String transferId) {
+        log.info("=== STARTING TRANSFER PROCESSING ===");
         log.info("Processing transfer with ID: {}", transferId);
-        Transfer transfer = transferRepository.findById(transferId)
-                .orElseThrow(() -> new IllegalArgumentException("Transfer not found: " + transferId));
-        
-        log.info("Transfer found with status: {}", transfer.getStatus());
-        if (transfer.getStatus() != Transfer.TransferStatus.PENDING) {
-            throw new IllegalStateException("Transfer is not in PENDING status: " + transfer.getStatus());
-        }
-        
-        log.info("Setting transfer status to PROCESSING");
-        transfer.setStatus(Transfer.TransferStatus.PROCESSING);
-        transfer.setProcessedAt(LocalDateTime.now());
-        transferRepository.save(transfer);
         
         try {
-            // Debit sender account
-            log.info("Debiting sender account: {} with amount: {}", transfer.getSenderAccountId(), transfer.getTotalAmount());
-            AccountServiceClient.DebitRequest debitRequest = new AccountServiceClient.DebitRequest(
-                transfer.getTotalAmount(),
-                transfer.getCurrency(),
-                transfer.getTransferReference(),
-                "Transfer to " + transfer.getRecipientAccountId()
-            );
+            Transfer transfer = transferRepository.findById(transferId)
+                    .orElseThrow(() -> new IllegalArgumentException("Transfer not found: " + transferId));
             
-            AccountServiceClient.TransactionResponse debitResponse = 
-                accountServiceClient.debitAccount(transfer.getSenderAccountId(), debitRequest);
+            log.info("Transfer found - ID: {}, Status: {}, Type: {}, Amount: {}", 
+                transfer.getId(), transfer.getStatus(), transfer.getTransferType(), transfer.getAmount());
             
-            log.info("Debit response status: {}", debitResponse.status());
-            if (!"COMPLETED".equals(debitResponse.status())) {
-                throw new RuntimeException("Failed to debit sender account: " + debitResponse.status());
+            if (transfer.getStatus() == Transfer.TransferStatus.COMPLETED) {
+                log.info("Transfer is already COMPLETED - skipping processing but ensuring transaction records exist");
+                // Ensure transaction records exist for completed transfers
+                try {
+                    createTransactionRecords(transfer);
+                } catch (Exception e) {
+                    log.warn("Failed to create transaction records for already completed transfer: {}", e.getMessage());
+                }
+                return mapToResponse(transfer);
+            } else if (transfer.getStatus() == Transfer.TransferStatus.FAILED) {
+                log.warn("Transfer is already FAILED - cannot process");
+                throw new IllegalStateException("Transfer is already FAILED: " + transfer.getStatus());
+            } else if (transfer.getStatus() != Transfer.TransferStatus.PENDING) {
+                log.warn("Transfer status is {} - will proceed with processing", transfer.getStatus());
             }
             
-            // Credit recipient account (only for INTERNAL transfers)
-            if (transfer.getTransferType() == Transfer.TransferType.INTERNAL) {
-                log.info("Crediting recipient account: {} with amount: {}", transfer.getRecipientAccountId(), transfer.getAmount());
-                AccountServiceClient.CreditRequest creditRequest = new AccountServiceClient.CreditRequest(
-                    transfer.getAmount(), // Don't include fee for recipient
+            log.info("Setting transfer status to PROCESSING");
+            transfer.setStatus(Transfer.TransferStatus.PROCESSING);
+            transfer.setProcessedAt(LocalDateTime.now());
+            transferRepository.save(transfer);
+            log.info("Transfer status updated to PROCESSING and saved");
+            
+            try {
+                // Debit sender account
+                log.info("=== STARTING DEBIT OPERATION ===");
+                log.info("Debiting sender account: {} with amount: {}", transfer.getSenderAccountId(), transfer.getTotalAmount());
+                AccountServiceClient.DebitRequest debitRequest = new AccountServiceClient.DebitRequest(
+                    transfer.getTotalAmount(),
                     transfer.getCurrency(),
                     transfer.getTransferReference(),
-                    "Transfer from " + transfer.getSenderAccountId()
+                    "Transfer to " + transfer.getRecipientAccountId()
                 );
                 
-                AccountServiceClient.TransactionResponse creditResponse = 
-                    accountServiceClient.creditAccount(transfer.getRecipientAccountId(), creditRequest);
+                AccountServiceClient.TransactionResponse debitResponse = 
+                    accountServiceClient.debitAccount(transfer.getSenderAccountId(), debitRequest);
                 
-                log.info("Credit response status: {}", creditResponse.status());
-                if (!"COMPLETED".equals(creditResponse.status())) {
-                    // Reverse the debit transaction
-                    log.error("Failed to credit recipient account. Reversing debit transaction.");
-                    // In real scenario, implement compensation transaction
-                    transfer.setStatus(Transfer.TransferStatus.FAILED);
-                    transfer.setFailureReason("Failed to credit recipient account: " + creditResponse.status());
-                    transferRepository.save(transfer);
-                    return mapToResponse(transfer);
+                log.info("Debit operation completed - Response status: {}", debitResponse.status());
+                if (!"COMPLETED".equals(debitResponse.status())) {
+                    log.error("Debit operation failed with status: {}", debitResponse.status());
+                    throw new RuntimeException("Failed to debit sender account: " + debitResponse.status());
                 }
+                log.info("=== DEBIT OPERATION SUCCESSFUL ===");
+                
+                // Credit recipient account (only for INTERNAL transfers)
+                if (transfer.getTransferType() == Transfer.TransferType.INTERNAL) {
+                    log.info("=== STARTING CREDIT OPERATION ===");
+                    log.info("Crediting recipient account: {} with amount: {}", transfer.getRecipientAccountId(), transfer.getAmount());
+                    AccountServiceClient.CreditRequest creditRequest = new AccountServiceClient.CreditRequest(
+                        transfer.getAmount(), // Don't include fee for recipient
+                        transfer.getCurrency(),
+                        transfer.getTransferReference(),
+                        "Transfer from " + transfer.getSenderAccountId()
+                    );
+                    
+                    AccountServiceClient.TransactionResponse creditResponse = 
+                        accountServiceClient.creditAccount(transfer.getRecipientAccountId(), creditRequest);
+                    
+                    log.info("Credit operation completed - Response status: {}", creditResponse.status());
+                    if (!"COMPLETED".equals(creditResponse.status())) {
+                        // Reverse the debit transaction
+                        log.error("Failed to credit recipient account. Status: {} - Marking transfer as FAILED", creditResponse.status());
+                        transfer.setStatus(Transfer.TransferStatus.FAILED);
+                        transfer.setFailureReason("Failed to credit recipient account: " + creditResponse.status());
+                        transferRepository.save(transfer);
+                        return mapToResponse(transfer);
+                    }
+                    log.info("=== CREDIT OPERATION SUCCESSFUL ===");
+                } else {
+                    log.info("Skipping credit operation - Transfer type is: {}", transfer.getTransferType());
+                }
+                
+                // Mark as completed
+                log.info("=== MARKING TRANSFER AS COMPLETED ===");
+                transfer.setStatus(Transfer.TransferStatus.COMPLETED);
+                transfer.setProcessedBy("SYSTEM");
+                transfer.setProcessedAt(LocalDateTime.now());
+                log.info("Transfer marked as COMPLETED");
+                
+                // Create transaction records for completed transfer
+                log.info("=== STARTING TRANSACTION RECORD CREATION ===");
+                log.info("About to create transaction records for transfer: {}", transfer.getId());
+                createTransactionRecords(transfer);
+                log.info("=== TRANSACTION RECORD CREATION COMPLETED ===");
+                
+            } catch (Exception e) {
+                log.error("=== TRANSFER PROCESSING FAILED ===");
+                log.error("Transfer processing failed for {}: {}", transferId, e.getMessage(), e);
+                transfer.setStatus(Transfer.TransferStatus.FAILED);
+                transfer.setFailureReason(e.getMessage());
             }
             
-            // Mark as completed
-            log.info("Marking transfer as COMPLETED");
-            transfer.setStatus(Transfer.TransferStatus.COMPLETED);
-            transfer.setProcessedBy("SYSTEM");
-            transfer.setProcessedAt(LocalDateTime.now());
-            
-            // Create transaction records for completed transfer
-            log.info("About to create transaction records for transfer: {}", transfer.getId());
-            createTransactionRecords(transfer);
+            log.info("Saving final transfer state - Status: {}", transfer.getStatus());
+            Transfer updatedTransfer = transferRepository.save(transfer);
+            log.info("=== TRANSFER PROCESSING COMPLETED ===");
+            return mapToResponse(updatedTransfer);
             
         } catch (Exception e) {
-            log.error("Transfer processing failed for {}: {}", transferId, e.getMessage(), e);
-            transfer.setStatus(Transfer.TransferStatus.FAILED);
-            transfer.setFailureReason(e.getMessage());
+            log.error("=== CRITICAL ERROR IN TRANSFER PROCESSING ===");
+            log.error("Critical error processing transfer {}: {}", transferId, e.getMessage(), e);
+            throw e;
         }
-        
-        Transfer updatedTransfer = transferRepository.save(transfer);
-        return mapToResponse(updatedTransfer);
     }
     
     @Override
@@ -452,50 +504,101 @@ public class TransferServiceImpl implements TransferService {
     }
     
     private void createTransactionRecords(Transfer transfer) {
-        log.info("Creating transaction records for transfer {}", transfer.getId());
+        log.info("=== CREATING TRANSACTION RECORDS ===");
+        log.info("Creating transaction records for transfer {} - Type: {}, Amount: {}, Reference: {}", 
+            transfer.getId(), transfer.getTransferType(), transfer.getAmount(), transfer.getTransferReference());
+        
         try {
+            // Get account IDs from account numbers
+            log.info("Getting sender account details for: {}", transfer.getSenderAccountId());
+            AccountServiceClient.AccountResponse senderAccount = accountServiceClient.getAccountByNumber(transfer.getSenderAccountId());
+            Long senderAccountId = Long.parseLong(senderAccount.id());
+            Long senderUserId = Long.parseLong(senderAccount.userId());
+            
+            log.info("Getting recipient account details for: {}", transfer.getRecipientAccountId());
+            AccountServiceClient.AccountResponse recipientAccount = accountServiceClient.getAccountByNumber(transfer.getRecipientAccountId());
+            Long recipientAccountId = Long.parseLong(recipientAccount.id());
+            Long recipientUserId = Long.parseLong(recipientAccount.userId());
+            
             // Create debit transaction for sender
-            log.info("Creating debit transaction for sender account: {}", transfer.getSenderAccountId());
+            log.info("=== CREATING DEBIT TRANSACTION ===");
+            log.info("Creating debit transaction for sender account ID: {} with amount: {}", 
+                senderAccountId, transfer.getAmount());
+            
             TransactionServiceClient.CreateTransactionRequest debitRequest = new TransactionServiceClient.CreateTransactionRequest(
-                Long.parseLong(transfer.getSenderAccountId()),
-                transfer.getAmount().negate(), // Negative for debit
-                "TRANSFER",
-                "Transfer to " + transfer.getRecipientName(),
-                Long.parseLong(transfer.getRecipientAccountId()),
-                transfer.getRecipientAccountId(),
-                transfer.getTransferReference(),
-                transfer.getTransferFee(),
-                transfer.getTotalAmount().negate(),
-                transfer.getCurrency()
+                senderAccountId,
+                recipientAccountId,
+                transfer.getAmount(),
+                com.maelcolium.telepesa.models.enums.TransactionType.TRANSFER,
+                "Transfer to " + transfer.getRecipientAccountId(),
+                senderUserId,
+                transfer.getTransferFee()
             );
             
+            log.info("Calling transaction service to create debit transaction...");
             TransactionServiceClient.TransactionResponse debitResponse = transactionServiceClient.createTransaction(debitRequest);
+            log.info("=== DEBIT TRANSACTION CREATED SUCCESSFULLY ===");
             log.info("Created debit transaction with ID: {}", debitResponse.transactionId());
             
             // Create credit transaction for recipient (only for internal transfers)
             if (transfer.getTransferType() == Transfer.TransferType.INTERNAL) {
-                log.info("Creating credit transaction for recipient account: {}", transfer.getRecipientAccountId());
+                log.info("=== CREATING CREDIT TRANSACTION ===");
+                log.info("Creating credit transaction for recipient account ID: {} with amount: {}", 
+                    recipientAccountId, transfer.getAmount());
+                
                 TransactionServiceClient.CreateTransactionRequest creditRequest = new TransactionServiceClient.CreateTransactionRequest(
-                    Long.parseLong(transfer.getRecipientAccountId()),
-                    transfer.getAmount(), // Positive for credit
-                    "TRANSFER",
-                    "Transfer from " + transfer.getSenderName(),
-                    Long.parseLong(transfer.getSenderAccountId()),
-                    transfer.getSenderAccountId(),
-                    transfer.getTransferReference(),
-                    BigDecimal.ZERO,
+                    recipientAccountId,
+                    senderAccountId,
                     transfer.getAmount(),
-                    transfer.getCurrency()
+                    com.maelcolium.telepesa.models.enums.TransactionType.TRANSFER,
+                    "Transfer from " + transfer.getSenderName(),
+                    recipientUserId,
+                    BigDecimal.ZERO
                 );
                 
+                log.info("Calling transaction service to create credit transaction...");
                 TransactionServiceClient.TransactionResponse creditResponse = transactionServiceClient.createTransaction(creditRequest);
+                log.info("=== CREDIT TRANSACTION CREATED SUCCESSFULLY ===");
                 log.info("Created credit transaction with ID: {}", creditResponse.transactionId());
+            } else {
+                log.info("Skipping credit transaction - Transfer type is: {}", transfer.getTransferType());
             }
+            
+            log.info("=== ALL TRANSACTION RECORDS CREATED SUCCESSFULLY ===");
             log.info("Successfully created transaction records for transfer {}", transfer.getId());
+            
         } catch (Exception e) {
+            log.error("=== TRANSACTION RECORD CREATION FAILED ===");
             log.error("Failed to create transaction records for transfer {}: {}", 
                 transfer.getId(), e.getMessage(), e);
-            // Don't fail the transfer if transaction recording fails
+            log.error("Exception details: ", e);
+            
+            // Try to create a fallback transaction record
+            try {
+                log.info("Attempting to create fallback transaction record...");
+                // Get sender account details for fallback
+                AccountServiceClient.AccountResponse senderAccount = accountServiceClient.getAccountByNumber(transfer.getSenderAccountId());
+                Long senderAccountId = Long.parseLong(senderAccount.id());
+                Long senderUserId = Long.parseLong(senderAccount.userId());
+                
+                // Create at least a debit record with minimal data
+                TransactionServiceClient.CreateTransactionRequest fallbackRequest = new TransactionServiceClient.CreateTransactionRequest(
+                    senderAccountId,
+                    null, // No recipient for fallback
+                    transfer.getAmount(),
+                    com.maelcolium.telepesa.models.enums.TransactionType.TRANSFER,
+                    "Transfer - ID: " + transfer.getId(),
+                    senderUserId,
+                    transfer.getTransferFee()
+                );
+                
+                TransactionServiceClient.TransactionResponse fallbackResponse = transactionServiceClient.createTransaction(fallbackRequest);
+                log.info("Fallback transaction record created with ID: {}", fallbackResponse.transactionId());
+                
+            } catch (Exception fallbackException) {
+                log.error("Fallback transaction creation also failed: {}", fallbackException.getMessage(), fallbackException);
+                // Don't fail the transfer if transaction recording fails completely
+            }
         }
     }
     

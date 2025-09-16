@@ -210,6 +210,13 @@ export const transfersApi = {
     return response.data?.data || response.data
   },
 
+  // Process pending transfer
+  processTransfer: async (transferId: string): Promise<Transfer> => {
+    const response = await api.post(`/transfers/${transferId}/process`)
+    // Backend may return data in {data: Transfer} format, extract the transfer object
+    return response.data?.data || response.data
+  },
+
   // Retry failed transfer
   retryTransfer: async (id: number): Promise<Transfer> => {
     const response = await api.post(`/transfers/${id}/retry`)
