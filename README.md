@@ -269,16 +269,22 @@ The Telepesa web application provides a modern, responsive interface for all ban
 <table>
   <tr>
     <td align="center">
-      <img src="Screenshots/Web/Screenshot 2025-09-16 at 16.32.45.png" width="300" alt="Login Page"/>
+      <img src="Screenshots/Web/Screenshot 2025-09-16 at 16.32.45.png" width="400" alt="Login Page"/>
       <br/><b>Login Page</b>
     </td>
     <td align="center">
-      <img src="Screenshots/Web/Screenshot 2025-09-16 at 16.32.58.png" width="300" alt="Dashboard"/>
-      <br/><b>Main Dashboard</b>
+      <img src="Screenshots/Web/Screenshot 2025-09-16 at 16.32.58.png" width="400" alt="Dashboard"/>
+      <br/><b>Register Account</b>
+    </td>
+  </tr>
+  <tr>
+    <td align="center">
+      <img src="Screenshots/Web/Screenshot 2025-09-16 at 16.33.44.png" width="400" alt="Account Overview"/>
+      <br/><b>Dashboard Home</b>
     </td>
     <td align="center">
-      <img src="Screenshots/Web/Screenshot 2025-09-16 at 16.33.44.png" width="300" alt="Account Overview"/>
-      <br/><b>Account Overview</b>
+      <img src="Screenshots/Web/Screenshot 2025-09-16 at 16.34.05.png" width="400" alt="Transfer Page"/>
+      <br/><b>Accounts Interface</b>
     </td>
   </tr>
 </table>
@@ -288,7 +294,7 @@ The Telepesa web application provides a modern, responsive interface for all ban
   <tr>
     <td align="center">
       <img src="Screenshots/Web/Screenshot 2025-09-16 at 16.34.05.png" width="300" alt="Transfer Page"/>
-      <br/><b>Transfer Interface</b>
+      <br/><b>Accounts Interface</b>
     </td>
     <td align="center">
       <img src="Screenshots/Web/Screenshot 2025-09-16 at 16.34.24.png" width="300" alt="Transfer Form"/>
@@ -296,7 +302,7 @@ The Telepesa web application provides a modern, responsive interface for all ban
     </td>
     <td align="center">
       <img src="Screenshots/Web/Screenshot 2025-09-16 at 16.34.38.png" width="300" alt="Payment Options"/>
-      <br/><b>Payment Options</b>
+      <br/><b>Bill Payments</b>
     </td>
   </tr>
 </table>
@@ -306,15 +312,15 @@ The Telepesa web application provides a modern, responsive interface for all ban
   <tr>
     <td align="center">
       <img src="Screenshots/Web/Screenshot 2025-09-16 at 16.34.45.png" width="300" alt="Transaction History"/>
-      <br/><b>Transaction History</b>
+      <br/><b>Bill Payments</b>
     </td>
     <td align="center">
       <img src="Screenshots/Web/Screenshot 2025-09-16 at 16.34.54.png" width="300" alt="Transaction Details"/>
-      <br/><b>Transaction Details</b>
+      <br/><b>Loan Details</b>
     </td>
     <td align="center">
       <img src="Screenshots/Web/Screenshot 2025-09-16 at 16.35.02.png" width="300" alt="Transaction Filters"/>
-      <br/><b>Transaction Filters</b>
+      <br/><b>Loan Details</b>
     </td>
   </tr>
 </table>
@@ -324,15 +330,15 @@ The Telepesa web application provides a modern, responsive interface for all ban
   <tr>
     <td align="center">
       <img src="Screenshots/Web/Screenshot 2025-09-16 at 16.35.09.png" width="300" alt="Account Settings"/>
-      <br/><b>Account Settings</b>
+      <br/><b>My Loan Status</b>
     </td>
     <td align="center">
       <img src="Screenshots/Web/Screenshot 2025-09-16 at 16.35.22.png" width="300" alt="Profile Management"/>
-      <br/><b>Profile Management</b>
+      <br/><b>Loan Calculator</b>
     </td>
     <td align="center">
       <img src="Screenshots/Web/Screenshot 2025-09-16 at 16.35.34.png" width="300" alt="Security Settings"/>
-      <br/><b>Security Settings</b>
+      <br/><b>Profile Settings</b>
     </td>
   </tr>
 </table>
@@ -342,21 +348,21 @@ The Telepesa web application provides a modern, responsive interface for all ban
   <tr>
     <td align="center">
       <img src="Screenshots/Web/Screenshot 2025-09-16 at 16.35.39.png" width="300" alt="Notifications"/>
-      <br/><b>Notifications</b>
+      <br/><b>Profile Settings</b>
     </td>
     <td align="center">
       <img src="Screenshots/Web/Screenshot 2025-09-16 at 16.35.46.png" width="300" alt="Bill Payments"/>
-      <br/><b>Bill Payments</b>
+      <br/><b>Security Settings</b>
     </td>
     <td align="center">
       <img src="Screenshots/Web/Screenshot 2025-09-16 at 16.35.55.png" width="300" alt="Reports"/>
-      <br/><b>Reports & Analytics</b>
+      <br/><b>Security Settings</b>
     </td>
   </tr>
   <tr>
     <td align="center" colspan="3">
       <img src="Screenshots/Web/Screenshot 2025-09-16 at 16.36.07.png" width="300" alt="Mobile Responsive"/>
-      <br/><b>Mobile Responsive Design</b>
+      <br/><b>Help & Support</b>
     </td>
   </tr>
 </table>
