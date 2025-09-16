@@ -1,9 +1,31 @@
 # Multi-stage Docker build for API Gateway
 # Build stage
-FROM eclipse-temurin:17-jre as build
-WORKDIR /workspace/app
-# Expect prebuilt jar provided by CI or local build
-COPY target/api-gateway-*.jar app.jar
+FROM openjdk:17-jdk-slim as builder
+
+# Install Maven
+RUN apt-get update && apt-get install -y maven && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+# Copy parent POM and shared libraries first
+COPY pom.xml .
+COPY shared-libraries ./shared-libraries
+
+# Install parent POM to local repository
+RUN mvn -N clean install -DskipTests
+
+# Install shared libraries to local repository
+RUN cd shared-libraries/common-models && mvn clean install -DskipTests
+RUN cd shared-libraries/security-utils && mvn clean install -DskipTests
+RUN cd shared-libraries/common-exceptions && mvn clean install -DskipTests
+
+# Copy API gateway files
+COPY api-gateway/pom.xml ./api-gateway/
+COPY api-gateway/src ./api-gateway/src
+
+# Build the API gateway
+WORKDIR /app/api-gateway
+RUN mvn clean package -DskipTests
 
 # Runtime stage
 FROM eclipse-temurin:17-jre
@@ -19,7 +41,7 @@ RUN apt-get update && apt-get upgrade -y && \
 WORKDIR /app
 
 # Copy the JAR from build stage
-COPY --from=build /workspace/app/app.jar app.jar
+COPY --from=builder /app/api-gateway/target/api-gateway-1.0.0.jar app.jar
 
 # Change ownership to telepesa user
 RUN chown -R telepesa:telepesa /app

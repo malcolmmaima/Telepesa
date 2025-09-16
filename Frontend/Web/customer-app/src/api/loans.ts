@@ -45,13 +45,27 @@ export interface LoanProduct {
   loanType: Loan['loanType']
   minAmount: number
   maxAmount: number
+  interestRate?: number | null
   minInterestRate: number
   maxInterestRate: number
   minTermMonths: number
   maxTermMonths: number
+  processingFee?: number | null
+  processingFeePercentage?: number | null
+  requiresCollateral?: boolean | null
+  maxLtvRatio?: number | null
+  eligibilityCriteria?: string | null
+  requiredDocuments?: string | null
   description: string
   requirements: string[]
   features: string[]
+  currency: string
+  isActive: boolean
+  createdAt?: string | null
+  updatedAt?: string | null
+  effectiveRate?: number | null
+  termRange?: string | null
+  amountRange?: string | null
 }
 
 export interface LoanPayment {

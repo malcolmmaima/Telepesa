@@ -41,7 +41,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             try {
                 username = jwtTokenUtil.getUsernameFromToken(jwtToken);
             } catch (Exception e) {
-                logger.debug("Unable to get JWT Token or JWT Token has expired");
+                logger.warn("JWT token validation failed: " + e.getMessage());
             }
         }
         
@@ -50,6 +50,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             
             // Validate token
             if (jwtTokenUtil.validateToken(jwtToken)) {
+                logger.info("JWT token validated successfully for user: " + username);
                 
                 // Create authentication token with basic user role
                 UsernamePasswordAuthenticationToken authToken = 
@@ -63,7 +64,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 
                 // Set authentication in security context
                 SecurityContextHolder.getContext().setAuthentication(authToken);
+            } else {
+                logger.warn("JWT token validation failed for user: " + username);
             }
+        } else if (jwtToken != null) {
+            logger.warn("No username extracted from JWT token");
         }
         
         filterChain.doFilter(request, response);

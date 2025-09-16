@@ -137,8 +137,8 @@ services:
   # API Gateway
   api-gateway:
     build:
-      context: ../api-gateway
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: api-gateway/Dockerfile
     container_name: telepesa-api-gateway
     ports:
       - "8080:8080"
@@ -148,7 +148,7 @@ services:
       ZIPKIN_BASE_URL: http://zipkin:9411
       REDIS_HOST: redis
       REDIS_PASSWORD: telepesa_redis_password
-      JWT_SECRET: myVerySecretJWTKeyForTelepesaUserService123!@#
+      JWT_SECRET: myVerySecretJWTKeyForTelepesaUserService123!@#ExtraLongSecureKeyPart456ForHMACCompatibility789
     depends_on:
       eureka-server:
         condition: service_healthy
@@ -186,7 +186,7 @@ services:
       SPRING_DATA_REDIS_HOST: redis
       SPRING_DATA_REDIS_PASSWORD: telepesa_redis_password
       KAFKA_BOOTSTRAP_SERVERS: kafka:9092
-      JWT_SECRET: myVerySecretJWTKeyForTelepesaUserService123!@#
+      JWT_SECRET: myVerySecretJWTKeyForTelepesaUserService123!@#ExtraLongSecureKeyPart456ForHMACCompatibility789
     depends_on:
       postgres:
         condition: service_healthy

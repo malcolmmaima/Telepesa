@@ -8,6 +8,7 @@ import org.springframework.security.config.annotation.web.reactive.EnableWebFlux
 import org.springframework.security.config.web.server.ServerHttpSecurity;
 import org.springframework.security.oauth2.jwt.ReactiveJwtDecoder;
 import org.springframework.security.oauth2.jwt.NimbusReactiveJwtDecoder;
+import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
 import org.springframework.security.web.server.SecurityWebFilterChain;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.reactive.CorsWebFilter;
@@ -37,9 +38,9 @@ public class GatewayConfig {
     public ReactiveJwtDecoder reactiveJwtDecoder() {
         SecretKey secretKey = new SecretKeySpec(
             jwtSecret.getBytes(StandardCharsets.UTF_8), 
-            "HmacSHA256"
+            "HmacSHA512"
         );
-        return NimbusReactiveJwtDecoder.withSecretKey(secretKey).build();
+        return NimbusReactiveJwtDecoder.withSecretKey(secretKey).macAlgorithm(MacAlgorithm.HS512).build();
     }
 
     @Bean
@@ -66,6 +67,8 @@ public class GatewayConfig {
                 .pathMatchers("/api/v1/users/forgot-password/**").permitAll()
                 .pathMatchers("/api/v1/status/**").permitAll()
                 .pathMatchers("/api/v1/transfers/lookup-account/**").permitAll()
+                .pathMatchers("/api/v1/billers/**").permitAll()
+                .pathMatchers("/api/v1/bills/**").permitAll()
                 .pathMatchers("/uploads/**").permitAll()
                 .pathMatchers("/webjars/**").permitAll()
                 .pathMatchers("/favicon.ico").permitAll()

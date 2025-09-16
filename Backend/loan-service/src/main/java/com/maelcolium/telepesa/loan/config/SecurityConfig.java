@@ -36,9 +36,8 @@ public class SecurityConfig {
                 // Public endpoints
                 .requestMatchers("/health", "/actuator/**").permitAll()
                 .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
-                .requestMatchers("/api/loans/products/**").permitAll() // Public loan products
                 // Secured endpoints - require authentication
-                .requestMatchers("/api/loans/**").authenticated()
+                .requestMatchers("/api/v1/loans/**").authenticated()
                 .anyRequest().authenticated()
             )
             .exceptionHandling(ex -> ex.authenticationEntryPoint(jwtAuthenticationEntryPoint))
