@@ -293,75 +293,69 @@ The Telepesa web application provides a modern, responsive interface for all ban
 <table>
   <tr>
     <td align="center">
-      <img src="Screenshots/Web/Screenshot 2025-09-16 at 16.34.05.png" width="300" alt="Transfer Page"/>
-      <br/><b>Accounts Interface</b>
-    </td>
-    <td align="center">
-      <img src="Screenshots/Web/Screenshot 2025-09-16 at 16.34.24.png" width="300" alt="Transfer Form"/>
+      <img src="Screenshots/Web/Screenshot 2025-09-16 at 16.34.24.png" width="400" alt="Transfer Form"/>
       <br/><b>Transfer Form</b>
     </td>
     <td align="center">
-      <img src="Screenshots/Web/Screenshot 2025-09-16 at 16.34.38.png" width="300" alt="Payment Options"/>
+      <img src="Screenshots/Web/Screenshot 2025-09-16 at 16.34.38.png" width="400" alt="Payment Options"/>
       <br/><b>Bill Payments</b>
     </td>
   </tr>
 </table>
 
-### Transaction Management
+### Loan Management
 <table>
   <tr>
     <td align="center">
-      <img src="Screenshots/Web/Screenshot 2025-09-16 at 16.34.45.png" width="300" alt="Transaction History"/>
+      <img src="Screenshots/Web/Screenshot 2025-09-16 at 16.34.45.png" width="400" alt="Transaction History"/>
       <br/><b>Bill Payments</b>
     </td>
     <td align="center">
-      <img src="Screenshots/Web/Screenshot 2025-09-16 at 16.34.54.png" width="300" alt="Transaction Details"/>
-      <br/><b>Loan Details</b>
-    </td>
-    <td align="center">
-      <img src="Screenshots/Web/Screenshot 2025-09-16 at 16.35.02.png" width="300" alt="Transaction Filters"/>
+      <img src="Screenshots/Web/Screenshot 2025-09-16 at 16.34.54.png" width="400" alt="Transaction Details"/>
       <br/><b>Loan Details</b>
     </td>
   </tr>
-</table>
-
-### Account & Profile Management
-<table>
   <tr>
     <td align="center">
-      <img src="Screenshots/Web/Screenshot 2025-09-16 at 16.35.09.png" width="300" alt="Account Settings"/>
+      <img src="Screenshots/Web/Screenshot 2025-09-16 at 16.35.02.png" width="400" alt="Transaction Filters"/>
+      <br/><b>Loan Details</b>
+    </td>
+    <td align="center">
+      <img src="Screenshots/Web/Screenshot 2025-09-16 at 16.35.09.png" width="400" alt="Account Settings"/>
       <br/><b>My Loan Status</b>
     </td>
+  </tr>
+  <tr>
     <td align="center">
-      <img src="Screenshots/Web/Screenshot 2025-09-16 at 16.35.22.png" width="300" alt="Profile Management"/>
+      <img src="Screenshots/Web/Screenshot 2025-09-16 at 16.35.22.png" width="400" alt="Profile Management"/>
       <br/><b>Loan Calculator</b>
     </td>
     <td align="center">
-      <img src="Screenshots/Web/Screenshot 2025-09-16 at 16.35.34.png" width="300" alt="Security Settings"/>
+      <img src="Screenshots/Web/Screenshot 2025-09-16 at 16.35.34.png" width="400" alt="Security Settings"/>
       <br/><b>Profile Settings</b>
     </td>
   </tr>
 </table>
 
-### Additional Features
+### Settings & Support
 <table>
   <tr>
     <td align="center">
-      <img src="Screenshots/Web/Screenshot 2025-09-16 at 16.35.39.png" width="300" alt="Notifications"/>
+      <img src="Screenshots/Web/Screenshot 2025-09-16 at 16.35.39.png" width="400" alt="Notifications"/>
       <br/><b>Profile Settings</b>
     </td>
     <td align="center">
-      <img src="Screenshots/Web/Screenshot 2025-09-16 at 16.35.46.png" width="300" alt="Bill Payments"/>
-      <br/><b>Security Settings</b>
-    </td>
-    <td align="center">
-      <img src="Screenshots/Web/Screenshot 2025-09-16 at 16.35.55.png" width="300" alt="Reports"/>
+      <img src="Screenshots/Web/Screenshot 2025-09-16 at 16.35.46.png" width="400" alt="Bill Payments"/>
       <br/><b>Security Settings</b>
     </td>
   </tr>
   <tr>
-    <td align="center" colspan="3">
-      <img src="Screenshots/Web/Screenshot 2025-09-16 at 16.36.07.png" width="300" alt="Mobile Responsive"/>
+    <td align="center">
+      <img src="Screenshots/Web/Screenshot 2025-09-16 at 16.35.55.png" width="400" alt="Reports"/>
+      <br/><b>Security Settings</b>
+    </td>
+    <td align="center">
+      <img src="Screenshots/Web/Screenshot 2025-09-16 at 16.36.07.png" width="400" alt="Mobile Responsive"/>
       <br/><b>Help & Support</b>
     </td>
   </tr>
