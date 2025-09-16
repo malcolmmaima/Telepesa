@@ -125,4 +125,13 @@ public interface UserService {
      * Change user password
      */
     void changePassword(Long userId, com.maelcolium.telepesa.user.dto.ChangePasswordRequest request);
+
+    // Transaction PIN operations
+    com.maelcolium.telepesa.user.dto.TransactionPinResponse createTransactionPin(Long userId, com.maelcolium.telepesa.user.dto.CreatePinRequest request);
+
+    java.util.Map<String, Boolean> verifyTransactionPin(Long userId, com.maelcolium.telepesa.user.dto.VerifyPinRequest request);
+
+    com.maelcolium.telepesa.user.dto.TransactionPinResponse changeTransactionPin(Long userId, com.maelcolium.telepesa.user.dto.ChangePinRequest request);
+
+    com.maelcolium.telepesa.user.dto.TransactionPinResponse getTransactionPinStatus(Long userId);
 }

@@ -38,6 +38,7 @@ import org.springframework.web.multipart.MultipartFile;
 import jakarta.servlet.http.HttpServletRequest;
 import java.time.LocalDateTime;
 import java.util.UUID;
+import java.time.format.DateTimeFormatter;
 
 /**
  * Implementation of UserService with comprehensive user management functionality
@@ -117,6 +118,83 @@ public class UserServiceImpl implements UserService {
         // emailService.sendEmailVerification(savedUser.getEmail(), savedUser.getEmailVerificationToken());
 
         return userMapper.toDto(savedUser);
+    }
+
+    @Override
+    @Transactional
+    public com.maelcolium.telepesa.user.dto.TransactionPinResponse createTransactionPin(Long userId, com.maelcolium.telepesa.user.dto.CreatePinRequest request) {
+        User user = userRepository.findById(userId)
+            .orElseThrow(() -> new UserNotFoundException("id", userId.toString()));
+
+        if (user.getTransactionPinHash() != null) {
+            throw new IllegalStateException("Transaction PIN already set");
+        }
+
+        user.setTransactionPinHash(passwordEncoder.encode(request.getPin()));
+        user.setPinSetAt(LocalDateTime.now());
+        user.setPinUpdatedAt(LocalDateTime.now());
+        userRepository.save(user);
+
+        return toPinResponse(user);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public java.util.Map<String, Boolean> verifyTransactionPin(Long userId, com.maelcolium.telepesa.user.dto.VerifyPinRequest request) {
+        User user = userRepository.findById(userId)
+            .orElseThrow(() -> new UserNotFoundException("id", userId.toString()));
+
+        boolean valid = user.getTransactionPinHash() != null && passwordEncoder.matches(request.getPin(), user.getTransactionPinHash());
+        java.util.Map<String, Boolean> result = new java.util.HashMap<>();
+        result.put("valid", valid);
+        return result;
+    }
+
+    @Override
+    @Transactional
+    public com.maelcolium.telepesa.user.dto.TransactionPinResponse changeTransactionPin(Long userId, com.maelcolium.telepesa.user.dto.ChangePinRequest request) {
+        User user = userRepository.findById(userId)
+            .orElseThrow(() -> new UserNotFoundException("id", userId.toString()));
+
+        if (user.getTransactionPinHash() == null) {
+            throw new IllegalStateException("Transaction PIN not set");
+        }
+
+        if (!passwordEncoder.matches(request.getCurrentPin(), user.getTransactionPinHash())) {
+            throw new BadCredentialsException("Current PIN is incorrect");
+        }
+
+        user.setTransactionPinHash(passwordEncoder.encode(request.getNewPin()));
+        if (user.getPinSetAt() == null) {
+            user.setPinSetAt(LocalDateTime.now());
+        }
+        user.setPinUpdatedAt(LocalDateTime.now());
+        userRepository.save(user);
+
+        return toPinResponse(user);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public com.maelcolium.telepesa.user.dto.TransactionPinResponse getTransactionPinStatus(Long userId) {
+        User user = userRepository.findById(userId)
+            .orElseThrow(() -> new UserNotFoundException("id", userId.toString()));
+
+        return toPinResponse(user);
+    }
+
+    private com.maelcolium.telepesa.user.dto.TransactionPinResponse toPinResponse(User user) {
+        boolean isSet = user.getTransactionPinHash() != null;
+        DateTimeFormatter fmt = DateTimeFormatter.ISO_LOCAL_DATE_TIME;
+        String createdAt = user.getPinSetAt() != null ? user.getPinSetAt().format(fmt) : null;
+        String updatedAt = user.getPinUpdatedAt() != null ? user.getPinUpdatedAt().format(fmt) : null;
+        return com.maelcolium.telepesa.user.dto.TransactionPinResponse.builder()
+            .id(user.getId())
+            .userId(user.getId())
+            .isSet(isSet)
+            .createdAt(createdAt)
+            .updatedAt(updatedAt)
+            .build();
     }
 
     @Override

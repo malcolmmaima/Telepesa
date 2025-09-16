@@ -3,6 +3,7 @@ package com.maelcolium.telepesa.user.model;
 import com.maelcolium.telepesa.models.BaseEntity;
 import com.maelcolium.telepesa.models.enums.UserStatus;
 import jakarta.persistence.*;
+import java.time.LocalDateTime;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -77,6 +78,16 @@ public class User extends BaseEntity {
 
     @Column(name = "date_of_birth")
     private String dateOfBirth;
+
+    // Transaction PIN fields
+    @Column(name = "transaction_pin_hash")
+    private String transactionPinHash;
+
+    @Column(name = "pin_set_at")
+    private LocalDateTime pinSetAt;
+
+    @Column(name = "pin_updated_at")
+    private LocalDateTime pinUpdatedAt;
 
     /**
      * Check if the user account is active and verified

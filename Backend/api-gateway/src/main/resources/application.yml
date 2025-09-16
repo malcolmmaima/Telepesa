@@ -61,6 +61,17 @@ spring:
                 retries: 3
                 statuses: BAD_GATEWAY,SERVICE_UNAVAILABLE
                 methods: GET,POST,PUT,DELETE
+        # Security Routes -> User Service
+        - id: security-endpoints
+          uri: lb://user-service
+          predicates:
+            - Path=/api/v1/security/**
+          filters:
+            - name: Retry
+              args:
+                retries: 3
+                statuses: BAD_GATEWAY,SERVICE_UNAVAILABLE
+                methods: GET,POST,PUT,DELETE
         # Account Service Routes
         - id: account-service
           uri: lb://account-service
