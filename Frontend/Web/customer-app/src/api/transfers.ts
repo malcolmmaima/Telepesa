@@ -120,11 +120,11 @@ export const transfersApi = {
   // Create transfer
   createTransfer: async (
     request: CreateTransferRequest,
-    fromAccountId: string
+    fromAccountNumber: string
   ): Promise<Transfer> => {
     const response = await api.post('/transfers', request, {
       headers: {
-        'X-Account-Id': fromAccountId,
+        'X-Account-Id': fromAccountNumber,
       },
     })
     // Backend may return data in {data: Transfer} format, extract the transfer object

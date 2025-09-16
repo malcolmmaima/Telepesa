@@ -6,7 +6,7 @@ import { ProtectedLayout } from './views/ProtectedLayout'
 import { HomePage } from './views/HomePage'
 import { AccountsPage } from './views/AccountsPage'
 import { TransactionsPage } from './views/TransactionsPage'
-import { TransferPage } from './views/TransferPage'
+import { SimpleTransferPage } from './views/SimpleTransferPage'
 import { ProfilePage } from './views/ProfilePage'
 import { PaymentsPage } from './views/PaymentsPage'
 import { LoansPage } from './views/LoansPage'
@@ -23,7 +23,7 @@ export const router = createBrowserRouter(
         { index: true, element: <HomePage /> },
         { path: 'accounts', element: <AccountsPage /> },
         { path: 'transactions', element: <TransactionsPage /> },
-        { path: 'transfers', element: <TransferPage /> },
+        { path: 'transfers', element: <SimpleTransferPage /> },
         { path: 'payments', element: <PaymentsPage /> },
         { path: 'loans', element: <LoansPage /> },
         { path: 'profile', element: <ProfilePage /> },
@@ -36,10 +36,5 @@ export const router = createBrowserRouter(
     { path: '/forgot-password', element: <ForgotPasswordPage /> },
     { path: '*', element: <NotFoundPage /> },
   ],
-  {
-    future: {
-      v7_startTransition: true,
-      v7_relativeSplatPath: true,
-    },
-  }
+  {}
 )
