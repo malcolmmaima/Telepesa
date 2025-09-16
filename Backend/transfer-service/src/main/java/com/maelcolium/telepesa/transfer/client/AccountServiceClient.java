@@ -14,15 +14,15 @@ public interface AccountServiceClient {
     @GetMapping("/api/v1/accounts/{accountId}")
     AccountResponse getAccount(@PathVariable("accountId") String accountId);
     
-    @GetMapping("/api/v1/accounts/by-number/{accountNumber}")
+    @GetMapping("/api/v1/accounts/number/{accountNumber}")
     AccountResponse getAccountByNumber(@PathVariable("accountNumber") String accountNumber);
     
-    @PostMapping("/api/v1/accounts/{accountId}/debit")
-    TransactionResponse debitAccount(@PathVariable("accountId") String accountId, 
+    @PostMapping("/api/v1/accounts/number/{accountNumber}/debit")
+    TransactionResponse debitAccount(@PathVariable("accountNumber") String accountNumber, 
                                    @RequestBody DebitRequest request);
     
-    @PostMapping("/api/v1/accounts/{accountId}/credit")
-    TransactionResponse creditAccount(@PathVariable("accountId") String accountId, 
+    @PostMapping("/api/v1/accounts/number/{accountNumber}/credit")
+    TransactionResponse creditAccount(@PathVariable("accountNumber") String accountNumber, 
                                     @RequestBody CreditRequest request);
     
     // DTOs for Feign communication

@@ -102,6 +102,90 @@ public class AccountController {
         }
     }
 
+    @GetMapping("/number/{accountNumber}")
+    public ResponseEntity<AccountDto> getAccountByNumber(@PathVariable("accountNumber") String accountNumber) {
+        log.info("Fetching account by number: {}", accountNumber);
+        
+        Optional<AccountDto> account = accountService.getAccountByNumber(accountNumber);
+        
+        if (account.isPresent()) {
+            return ResponseEntity.ok(account.get());
+        } else {
+            log.warn("Account not found with number: {}", accountNumber);
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+    @PostMapping("/number/{accountNumber}/debit")
+    public ResponseEntity<Map<String, Object>> debitAccount(
+            @PathVariable("accountNumber") String accountNumber,
+            @RequestBody Map<String, Object> request) {
+        
+        log.info("Debiting account {} with request: {}", accountNumber, request);
+        
+        BigDecimal amount = new BigDecimal(request.get("amount").toString());
+        String reference = request.get("reference").toString();
+        String description = request.get("description").toString();
+        
+        Optional<AccountDto> account = accountService.getAccountByNumber(accountNumber);
+        if (account.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+        
+        AccountDto accountDto = account.get();
+        BigDecimal newBalance = accountDto.getBalance().subtract(amount);
+        
+        if (newBalance.compareTo(BigDecimal.ZERO) < 0) {
+            return ResponseEntity.badRequest().body(Map.of(
+                "error", "Insufficient balance",
+                "available", accountDto.getBalance(),
+                "requested", amount
+            ));
+        }
+        
+        Optional<AccountDto> updatedAccount = accountService.updateAccountBalance(accountNumber, newBalance);
+        
+        return ResponseEntity.ok(Map.of(
+            "transactionId", java.util.UUID.randomUUID().toString(),
+            "accountId", accountNumber,
+            "amount", amount,
+            "balanceAfter", newBalance,
+            "status", "COMPLETED",
+            "reference", reference
+        ));
+    }
+
+    @PostMapping("/number/{accountNumber}/credit")
+    public ResponseEntity<Map<String, Object>> creditAccount(
+            @PathVariable("accountNumber") String accountNumber,
+            @RequestBody Map<String, Object> request) {
+        
+        log.info("Crediting account {} with request: {}", accountNumber, request);
+        
+        BigDecimal amount = new BigDecimal(request.get("amount").toString());
+        String reference = request.get("reference").toString();
+        String description = request.get("description").toString();
+        
+        Optional<AccountDto> account = accountService.getAccountByNumber(accountNumber);
+        if (account.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+        
+        AccountDto accountDto = account.get();
+        BigDecimal newBalance = accountDto.getBalance().add(amount);
+        
+        Optional<AccountDto> updatedAccount = accountService.updateAccountBalance(accountNumber, newBalance);
+        
+        return ResponseEntity.ok(Map.of(
+            "transactionId", java.util.UUID.randomUUID().toString(),
+            "accountId", accountNumber,
+            "amount", amount,
+            "balanceAfter", newBalance,
+            "status", "COMPLETED",
+            "reference", reference
+        ));
+    }
+
     @GetMapping("/health")
     public ResponseEntity<Map<String, String>> health() {
         return ResponseEntity.ok(Map.of(

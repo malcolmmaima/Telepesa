@@ -38,13 +38,13 @@ public class TransferServiceImpl implements TransferService {
                 senderAccountId, request.getRecipientAccountId(), request.getAmount());
         
         // Validate sender account exists
-        AccountServiceClient.AccountResponse senderAccount = accountServiceClient.getAccount(senderAccountId);
+        AccountServiceClient.AccountResponse senderAccount = accountServiceClient.getAccountByNumber(senderAccountId);
         if ("UNAVAILABLE".equals(senderAccount.status())) {
             throw new IllegalArgumentException("Sender account not found or unavailable: " + senderAccountId);
         }
         
         // Validate recipient account exists
-        AccountServiceClient.AccountResponse recipientAccount = accountServiceClient.getAccount(request.getRecipientAccountId());
+        AccountServiceClient.AccountResponse recipientAccount = accountServiceClient.getAccountByNumber(request.getRecipientAccountId());
         if ("UNAVAILABLE".equals(recipientAccount.status())) {
             throw new IllegalArgumentException("Recipient account not found or unavailable: " + request.getRecipientAccountId());
         }
@@ -72,7 +72,7 @@ public class TransferServiceImpl implements TransferService {
         transfer.setReference(request.getReference());
         transfer.setTransferFee(transferFee);
         transfer.setTotalAmount(totalAmount);
-        transfer.setSenderName(senderAccount.userId()); // In real scenario, fetch user details
+        transfer.setSenderName(senderAccount.accountName() != null ? senderAccount.accountName() : "Account Holder");
         transfer.setRecipientName(request.getRecipientName());
         transfer.setRecipientPhoneNumber(request.getRecipientPhoneNumber());
         

@@ -209,7 +209,7 @@ services:
 
   account-service:
     build:
-      context: ../account-service
+      context: ./account-service
       dockerfile: Dockerfile
     container_name: telepesa-account-service
     ports:
@@ -370,8 +370,8 @@ services:
 
   transfer-service:
     build:
-      context: ../transfer-service
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: transfer-service/Dockerfile
     container_name: telepesa-transfer-service
     ports:
       - "8086:8086"
