@@ -1,5 +1,7 @@
 package com.maelcolium.telepesa.loan.security;
 
+import com.maelcolium.telepesa.loan.service.UserService;
+import com.maelcolium.telepesa.models.dto.UserDto;
 import com.maelcolium.telepesa.security.JwtTokenUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
@@ -18,6 +20,9 @@ public class SecurityUtils {
 
     @Autowired
     private JwtTokenUtil jwtTokenUtil;
+    
+    @Autowired
+    private UserService userService;
 
     /**
      * Get the current authenticated username
@@ -31,36 +36,18 @@ public class SecurityUtils {
     }
 
     /**
-     * Extract user ID from JWT token in the current request
-     * This assumes the user ID is stored as a claim in the JWT token
+     * Extract user ID from the authenticated user context
+     * Calls user service to get user ID by username
      */
     public Long getCurrentUserId() {
-        HttpServletRequest request = getCurrentRequest();
-        if (request == null) {
+        String username = getCurrentUsername();
+        if (username == null) {
             return null;
         }
-
-        String authHeader = request.getHeader("Authorization");
-        if (authHeader != null && authHeader.startsWith("Bearer ")) {
-            String token = authHeader.substring(7);
-            try {
-                // Extract user ID from token claims
-                return jwtTokenUtil.getClaimFromToken(token, claims -> {
-                    Object userIdClaim = claims.get("userId");
-                    if (userIdClaim instanceof Number) {
-                        return ((Number) userIdClaim).longValue();
-                    } else if (userIdClaim instanceof String) {
-                        return Long.parseLong((String) userIdClaim);
-                    }
-                    return null;
-                });
-            } catch (Exception e) {
-                // If userId claim is not present, try to derive from username
-                // This is a fallback - in production, user ID should be in the token
-                return null;
-            }
-        }
-        return null;
+        
+        // Call user service to get user details by username
+        UserDto user = userService.getUserByUsername(username);
+        return user != null ? user.getId() : null;
     }
 
     /**

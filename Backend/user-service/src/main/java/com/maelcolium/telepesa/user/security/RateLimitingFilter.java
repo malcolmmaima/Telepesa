@@ -92,6 +92,7 @@ public class RateLimitingFilter implements Filter {
                requestUri.contains("/swagger-ui") || 
                requestUri.contains("/api-docs") ||
                requestUri.contains("/avatar") ||  // Skip rate limiting for avatar uploads
+               requestUri.contains("/internal/") ||  // Skip rate limiting for internal service endpoints
                requestUri.endsWith(".css") ||
                requestUri.endsWith(".js") ||
                requestUri.endsWith(".ico");

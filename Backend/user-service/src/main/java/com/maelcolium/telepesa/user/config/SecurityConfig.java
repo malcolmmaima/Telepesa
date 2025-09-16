@@ -87,6 +87,9 @@ public class SecurityConfig {
                 .requestMatchers("/api/v1/users/verify-email", "/api/v1/users/resend-verification").permitAll()
                 .requestMatchers("/api/v1/users/forgot-password", "/api/v1/users/reset-password").permitAll()
                 
+                // Internal service-to-service endpoints
+                .requestMatchers("/api/v1/users/internal/**").permitAll()
+                
                 // Actuator endpoints
                 .requestMatchers("/actuator/health", "/actuator/info").permitAll()
                 .requestMatchers("/actuator/**").hasRole("ADMIN")

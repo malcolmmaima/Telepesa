@@ -15,7 +15,7 @@ spring:
     gateway:
       discovery:
         locator:
-          enabled: true
+          enabled: false
           lower-case-service-id: true
       routes:
         # Explicit pass-through for public auth endpoints
@@ -97,10 +97,6 @@ spring:
           predicates:
             - Path=/api/v1/loans/**
           filters:
-            - name: RewritePath
-              args:
-                regexp: /api/v1/loans/(?<remaining>.*)
-                replacement: /api/v1/loans/${remaining}
             - name: Retry
               args:
                 retries: 3

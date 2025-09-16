@@ -206,6 +206,19 @@ public class UserController {
         return ResponseEntity.ok(user);
     }
 
+    @Operation(summary = "Get user by username (internal service call)")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "User found"),
+        @ApiResponse(responseCode = "404", description = "User not found")
+    })
+    @GetMapping("/internal/username/{username}")
+    public ResponseEntity<UserDto> getUserByUsernameInternal(
+            @Parameter(description = "Username") @PathVariable String username) {
+        log.debug("Internal service call - Get user request for username: {}", username);
+        UserDto user = userService.getUserByUsername(username);
+        return ResponseEntity.ok(user);
+    }
+
     @Operation(summary = "Get user by ID")
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "User found"),

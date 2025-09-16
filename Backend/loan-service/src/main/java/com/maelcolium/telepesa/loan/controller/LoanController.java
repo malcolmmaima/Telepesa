@@ -126,8 +126,13 @@ public class LoanController {
     )
     @PostMapping
     public ResponseEntity<LoanDto> createLoan(@Valid @RequestBody CreateLoanRequest request) {
+        String username = securityUtils.getCurrentUsername();
         Long userId = securityUtils.getCurrentUserId();
+        
+        log.info("POST /api/v1/loans - Username: {}, UserId: {}", username, userId);
+        
         if (userId == null) {
+            log.warn("User ID is null for username: {}", username);
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
         
@@ -135,6 +140,7 @@ public class LoanController {
         request.setUserId(userId);
         
         log.info("Creating loan application for authenticated user: {}", userId);
+        
         LoanDto loan = loanService.createLoan(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(loan);
     }
@@ -210,6 +216,42 @@ public class LoanController {
         
         Page<LoanDto> loans = loanService.getAllLoans(pageable);
         return ResponseEntity.ok(loans);
+    }
+
+    @Operation(
+        summary = "Get loans by user",
+        description = "Retrieve all loans for a specific user",
+        responses = {
+            @ApiResponse(responseCode = "200", description = "User loans retrieved successfully")
+        }
+    )
+    @GetMapping("/user/{userId}")
+    public ResponseEntity<Page<LoanDto>> getUserLoansByUserId(
+        @Parameter(description = "User ID", example = "4")
+        @PathVariable("userId") Long userId,
+        @RequestParam(name = "page", defaultValue = "0") int page,
+        @RequestParam(name = "size", defaultValue = "20") int size) {
+        
+        log.info("Getting loans for user: {} with page: {}, size: {}", userId, page, size);
+        
+        // Validate pagination parameters
+        if (page < 0) page = 0;
+        if (size <= 0 || size > 100) size = 20;
+        
+        try {
+            Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
+            Page<LoanDto> loans = loanService.getUserLoansWithPagination(userId, pageable);
+            
+            log.info("Successfully retrieved {} loans for user: {}", loans.getTotalElements(), userId);
+            return ResponseEntity.ok(loans);
+            
+        } catch (Exception e) {
+            log.error("Error getting loans for user {}: {}", userId, e.getMessage(), e);
+            // Return empty page on error
+            Page<LoanDto> emptyPage = new PageImpl<>(Collections.emptyList(), 
+                PageRequest.of(page, size), 0);
+            return ResponseEntity.ok(emptyPage);
+        }
     }
 
     @Operation(

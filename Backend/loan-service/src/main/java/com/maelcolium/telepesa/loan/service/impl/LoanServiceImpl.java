@@ -123,11 +123,17 @@ public class LoanServiceImpl implements LoanService {
             request.getTermMonths()
         );
 
+        // Generate account number if not provided
+        String accountNumber = request.getAccountNumber();
+        if (accountNumber == null && request.getAccountId() != null) {
+            accountNumber = "ACC" + String.format("%06d", request.getAccountId());
+        }
+        
         // Create loan entity
         Loan loan = Loan.builder()
             .loanNumber(loanNumber)
             .userId(request.getUserId())
-            .accountNumber(request.getAccountNumber())
+            .accountNumber(accountNumber)
             .loanType(request.getLoanType())
             .status(LoanStatus.PENDING)
             .principalAmount(request.getPrincipalAmount())

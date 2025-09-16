@@ -15,7 +15,7 @@ import java.math.BigDecimal;
 @AllArgsConstructor
 public class CreateLoanRequest {
     
-    @NotNull(message = "User ID is required")
+    // User ID will be set by the controller from authenticated user context
     private Long userId;
     
     @NotNull(message = "Account ID is required")
@@ -42,6 +42,11 @@ public class CreateLoanRequest {
     private BigDecimal interestRate;
     
     private Integer termMonths; // Alias for termInMonths
+    
+    // Getter that returns termInMonths if termMonths is null
+    public Integer getTermMonths() {
+        return termMonths != null ? termMonths : termInMonths;
+    }
     
     private String accountNumber;
     

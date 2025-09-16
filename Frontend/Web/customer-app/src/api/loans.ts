@@ -141,21 +141,31 @@ export const loansApi = {
 
   // Apply for loan
   applyForLoan: async (application: LoanApplication): Promise<Loan> => {
+    // Map loan type to product ID based on the loan products we know exist
+    const getLoanProductId = (loanType: string): number => {
+      switch (loanType) {
+        case 'PERSONAL': return 1
+        case 'BUSINESS': return 2
+        case 'EMERGENCY': return 3
+        default: return 1
+      }
+    }
+
     // Convert frontend LoanApplication to backend CreateLoanRequest format
     const createLoanRequest = {
-      userId: application.accountId, // Will be updated to correct user ID
-      accountNumber: `ACC${String(application.accountId).padStart(12, '0')}`,
+      userId: application.accountId, // Will be set by backend from JWT token
+      accountId: application.accountId,
+      loanProductId: getLoanProductId(application.loanType),
       loanType: application.loanType,
       principalAmount: application.requestedAmount,
-      interestRate: 12.5, // Default rate, should be calculated based on product
-      termMonths: application.termMonths,
+      termInMonths: application.termMonths,
+      interestRate: 12.5, // Default rate, will be calculated by backend
       purpose: application.purpose,
       monthlyIncome: application.monthlyIncome,
-      employmentStatus: application.employmentStatus,
-      employerName: application.employerName,
-      collateral: application.collateral,
-      collateralValue: application.collateralValue,
-      notes: `Employment: ${application.employmentStatus}${application.employerName ? `, Employer: ${application.employerName}` : ''}`,
+      collateralDescription: application.collateral || '',
+      collateralValue: application.collateralValue || 0,
+      additionalNotes: `Employment: ${application.employmentStatus}${application.employerName ? `, Employer: ${application.employerName}` : ''}`,
+      agreeToTerms: true,
     }
 
     const response = await api.post('/loans', createLoanRequest)

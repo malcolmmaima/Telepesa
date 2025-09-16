@@ -168,7 +168,7 @@ services:
   # Microservices
   user-service:
     build:
-      context: ../user-service
+      context: ./user-service
       dockerfile: Dockerfile
     container_name: telepesa-user-service
     ports:
@@ -306,6 +306,7 @@ services:
       SPRING_DATA_REDIS_PASSWORD: telepesa_redis_password
       KAFKA_BOOTSTRAP_SERVERS: kafka:9092
       JWT_SECRET: myVerySecretJWTKeyForTelepesaUserService123!@#ExtraLongSecureKeyPart456ForHMACCompatibility789
+      APP_SERVICES_USER_SERVICE_URL: http://user-service:8081
     depends_on:
       postgres:
         condition: service_healthy
