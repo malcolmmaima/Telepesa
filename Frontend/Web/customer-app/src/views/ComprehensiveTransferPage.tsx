@@ -151,10 +151,13 @@ export function ComprehensiveTransferPage() {
   const checkPinStatus = async () => {
     try {
       const pinStatus = await securityApi.getTransactionPinStatus()
-      setHasPinSet(pinStatus.isSet)
-    } catch (err) {
-      console.log('PIN status check failed, assuming no PIN set')
-      setHasPinSet(false)
+      console.log('PIN status response:', pinStatus)
+      setHasPinSet(pinStatus.set)
+    } catch (err: any) {
+      console.error('PIN status check failed:', err)
+      console.error('Error details:', err.response?.data || err.message)
+      // Don't assume no PIN set on error - keep current state
+      console.log('Keeping current PIN status due to API error')
     } finally {
       setCheckingPin(false)
     }
@@ -211,16 +214,9 @@ export function ComprehensiveTransferPage() {
       return
     }
 
-    // Ensure we have the latest PIN status before deciding the modal
+    // PIN status should already be loaded from useEffect, but double-check if still loading
     if (checkingPin) {
-      await checkPinStatus()
-    }
-
-    // Check if PIN is required
-    if (!hasPinSet) {
-      // Prompt user to create PIN first
-      setPinMode('create')
-      setShowPinModal(true)
+      setError('Please wait while we verify your security settings...')
       return
     }
 
@@ -241,7 +237,16 @@ export function ComprehensiveTransferPage() {
       mpesaNumber: form.mpesaNumber || undefined
     }
 
-    // Store pending transfer and show PIN modal
+    // Check if PIN is required
+    if (!hasPinSet) {
+      // Prompt user to create PIN first
+      setPendingTransfer(transferRequest)
+      setPinMode('create')
+      setShowPinModal(true)
+      return
+    }
+
+    // Always require PIN verification for transfers
     setPendingTransfer(transferRequest)
     setPinMode('verify')
     setShowPinModal(true)

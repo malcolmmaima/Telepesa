@@ -152,19 +152,23 @@ public class TransferServiceImpl implements TransferService {
     @Override
     @CacheEvict(value = {"transfers", "accountTransfers", "sentTransfers", "receivedTransfers"}, allEntries = true)
     public TransferResponse processTransfer(String transferId) {
+        log.info("Processing transfer with ID: {}", transferId);
         Transfer transfer = transferRepository.findById(transferId)
                 .orElseThrow(() -> new IllegalArgumentException("Transfer not found: " + transferId));
         
+        log.info("Transfer found with status: {}", transfer.getStatus());
         if (transfer.getStatus() != Transfer.TransferStatus.PENDING) {
             throw new IllegalStateException("Transfer is not in PENDING status: " + transfer.getStatus());
         }
         
+        log.info("Setting transfer status to PROCESSING");
         transfer.setStatus(Transfer.TransferStatus.PROCESSING);
         transfer.setProcessedAt(LocalDateTime.now());
         transferRepository.save(transfer);
         
         try {
             // Debit sender account
+            log.info("Debiting sender account: {} with amount: {}", transfer.getSenderAccountId(), transfer.getTotalAmount());
             AccountServiceClient.DebitRequest debitRequest = new AccountServiceClient.DebitRequest(
                 transfer.getTotalAmount(),
                 transfer.getCurrency(),
@@ -175,12 +179,14 @@ public class TransferServiceImpl implements TransferService {
             AccountServiceClient.TransactionResponse debitResponse = 
                 accountServiceClient.debitAccount(transfer.getSenderAccountId(), debitRequest);
             
+            log.info("Debit response status: {}", debitResponse.status());
             if (!"COMPLETED".equals(debitResponse.status())) {
                 throw new RuntimeException("Failed to debit sender account: " + debitResponse.status());
             }
             
             // Credit recipient account (only for INTERNAL transfers)
             if (transfer.getTransferType() == Transfer.TransferType.INTERNAL) {
+                log.info("Crediting recipient account: {} with amount: {}", transfer.getRecipientAccountId(), transfer.getAmount());
                 AccountServiceClient.CreditRequest creditRequest = new AccountServiceClient.CreditRequest(
                     transfer.getAmount(), // Don't include fee for recipient
                     transfer.getCurrency(),
@@ -191,6 +197,7 @@ public class TransferServiceImpl implements TransferService {
                 AccountServiceClient.TransactionResponse creditResponse = 
                     accountServiceClient.creditAccount(transfer.getRecipientAccountId(), creditRequest);
                 
+                log.info("Credit response status: {}", creditResponse.status());
                 if (!"COMPLETED".equals(creditResponse.status())) {
                     // Reverse the debit transaction
                     log.error("Failed to credit recipient account. Reversing debit transaction.");
@@ -203,9 +210,14 @@ public class TransferServiceImpl implements TransferService {
             }
             
             // Mark as completed
+            log.info("Marking transfer as COMPLETED");
             transfer.setStatus(Transfer.TransferStatus.COMPLETED);
             transfer.setProcessedBy("SYSTEM");
             transfer.setProcessedAt(LocalDateTime.now());
+            
+            // Create transaction records for completed transfer
+            log.info("About to create transaction records for transfer: {}", transfer.getId());
+            createTransactionRecords(transfer);
             
         } catch (Exception e) {
             log.error("Transfer processing failed for {}: {}", transferId, e.getMessage(), e);
@@ -331,6 +343,8 @@ public class TransferServiceImpl implements TransferService {
             // Debit sender account
             accountServiceClient.debitAccount(transfer.getSenderAccountId(), 
                 new AccountServiceClient.DebitRequest(transfer.getTotalAmount(), 
+                    transfer.getCurrency(),
+                    transfer.getTransferReference(),
                     "PesaLink transfer to " + transfer.getRecipientName()));
             
             // TODO: Integrate with PesaLink API
@@ -338,6 +352,9 @@ public class TransferServiceImpl implements TransferService {
             transfer.setStatus(Transfer.TransferStatus.COMPLETED);
             transfer.setProcessedAt(LocalDateTime.now());
             transfer.setProcessedBy("PESALINK_GATEWAY");
+            
+            // Create transaction records for completed transfer
+            createTransactionRecords(transfer);
             
             Transfer savedTransfer = transferRepository.save(transfer);
             return mapToResponse(savedTransfer);
@@ -355,6 +372,8 @@ public class TransferServiceImpl implements TransferService {
             // Debit sender account
             accountServiceClient.debitAccount(transfer.getSenderAccountId(), 
                 new AccountServiceClient.DebitRequest(transfer.getTotalAmount(), 
+                    transfer.getCurrency(),
+                    transfer.getTransferReference(),
                     "M-Pesa transfer to " + transfer.getMpesaNumber()));
             
             // TODO: Integrate with M-Pesa API (Daraja API)
@@ -362,6 +381,9 @@ public class TransferServiceImpl implements TransferService {
             transfer.setStatus(Transfer.TransferStatus.COMPLETED);
             transfer.setProcessedAt(LocalDateTime.now());
             transfer.setProcessedBy("MPESA_GATEWAY");
+            
+            // Create transaction records for completed transfer
+            createTransactionRecords(transfer);
             
             Transfer savedTransfer = transferRepository.save(transfer);
             return mapToResponse(savedTransfer);
@@ -379,6 +401,8 @@ public class TransferServiceImpl implements TransferService {
             // Credit recipient account
             accountServiceClient.creditAccount(transfer.getRecipientAccountId(), 
                 new AccountServiceClient.CreditRequest(transfer.getAmount(), 
+                    transfer.getCurrency(),
+                    transfer.getTransferReference(),
                     "Transfer from " + transfer.getSenderName()));
             
             transfer.setStatus(Transfer.TransferStatus.COMPLETED);
@@ -404,12 +428,17 @@ public class TransferServiceImpl implements TransferService {
             // Debit sender account
             accountServiceClient.debitAccount(transfer.getSenderAccountId(), 
                 new AccountServiceClient.DebitRequest(transfer.getTotalAmount(), 
+                    transfer.getCurrency(),
+                    transfer.getTransferReference(),
                     "SWIFT transfer to " + transfer.getRecipientBankName()));
             
             // TODO: Integrate with SWIFT network
             // For now, mark as processing (SWIFT takes 1-3 business days)
             transfer.setStatus(Transfer.TransferStatus.PROCESSING);
             transfer.setProcessedBy("SWIFT_GATEWAY");
+            
+            // Create transaction records for processed transfer
+            createTransactionRecords(transfer);
             
             Transfer savedTransfer = transferRepository.save(transfer);
             return mapToResponse(savedTransfer);
@@ -423,43 +452,49 @@ public class TransferServiceImpl implements TransferService {
     }
     
     private void createTransactionRecords(Transfer transfer) {
+        log.info("Creating transaction records for transfer {}", transfer.getId());
         try {
             // Create debit transaction for sender
-            transactionServiceClient.createTransaction(
-                new TransactionServiceClient.CreateTransactionRequest(
-                    Long.parseLong(transfer.getSenderAccountId()),
-                    transfer.getAmount().negate(), // Negative for debit
-                    "TRANSFER",
-                    "Transfer to " + transfer.getRecipientName(),
-                    Long.parseLong(transfer.getRecipientAccountId()),
-                    transfer.getRecipientAccountId(),
-                    transfer.getTransferReference(),
-                    transfer.getTransferFee(),
-                    transfer.getTotalAmount().negate(),
-                    transfer.getCurrency()
-                )
+            log.info("Creating debit transaction for sender account: {}", transfer.getSenderAccountId());
+            TransactionServiceClient.CreateTransactionRequest debitRequest = new TransactionServiceClient.CreateTransactionRequest(
+                Long.parseLong(transfer.getSenderAccountId()),
+                transfer.getAmount().negate(), // Negative for debit
+                "TRANSFER",
+                "Transfer to " + transfer.getRecipientName(),
+                Long.parseLong(transfer.getRecipientAccountId()),
+                transfer.getRecipientAccountId(),
+                transfer.getTransferReference(),
+                transfer.getTransferFee(),
+                transfer.getTotalAmount().negate(),
+                transfer.getCurrency()
             );
+            
+            TransactionServiceClient.TransactionResponse debitResponse = transactionServiceClient.createTransaction(debitRequest);
+            log.info("Created debit transaction with ID: {}", debitResponse.transactionId());
             
             // Create credit transaction for recipient (only for internal transfers)
             if (transfer.getTransferType() == Transfer.TransferType.INTERNAL) {
-                transactionServiceClient.createTransaction(
-                    new TransactionServiceClient.CreateTransactionRequest(
-                        Long.parseLong(transfer.getRecipientAccountId()),
-                        transfer.getAmount(), // Positive for credit
-                        "TRANSFER",
-                        "Transfer from " + transfer.getSenderName(),
-                        Long.parseLong(transfer.getSenderAccountId()),
-                        transfer.getSenderAccountId(),
-                        transfer.getTransferReference(),
-                        BigDecimal.ZERO,
-                        transfer.getAmount(),
-                        transfer.getCurrency()
-                    )
+                log.info("Creating credit transaction for recipient account: {}", transfer.getRecipientAccountId());
+                TransactionServiceClient.CreateTransactionRequest creditRequest = new TransactionServiceClient.CreateTransactionRequest(
+                    Long.parseLong(transfer.getRecipientAccountId()),
+                    transfer.getAmount(), // Positive for credit
+                    "TRANSFER",
+                    "Transfer from " + transfer.getSenderName(),
+                    Long.parseLong(transfer.getSenderAccountId()),
+                    transfer.getSenderAccountId(),
+                    transfer.getTransferReference(),
+                    BigDecimal.ZERO,
+                    transfer.getAmount(),
+                    transfer.getCurrency()
                 );
+                
+                TransactionServiceClient.TransactionResponse creditResponse = transactionServiceClient.createTransaction(creditRequest);
+                log.info("Created credit transaction with ID: {}", creditResponse.transactionId());
             }
+            log.info("Successfully created transaction records for transfer {}", transfer.getId());
         } catch (Exception e) {
-            log.warn("Failed to create transaction records for transfer {}: {}", 
-                transfer.getId(), e.getMessage());
+            log.error("Failed to create transaction records for transfer {}: {}", 
+                transfer.getId(), e.getMessage(), e);
             // Don't fail the transfer if transaction recording fails
         }
     }

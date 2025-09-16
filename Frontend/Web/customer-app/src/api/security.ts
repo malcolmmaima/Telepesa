@@ -3,7 +3,7 @@ import { api } from './client'
 export interface TransactionPin {
   id: number
   userId: number
-  isSet: boolean
+  set: boolean
   createdAt: string
   updatedAt: string
 }
