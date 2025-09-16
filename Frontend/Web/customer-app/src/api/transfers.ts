@@ -18,7 +18,7 @@ export interface Transfer {
   fee: number
   totalAmount: number
   currency: string
-  transferType: 'INTERNAL' | 'EXTERNAL' | 'BANK_TRANSFER' | 'MOBILE_MONEY'
+  transferType: 'INTERNAL' | 'SWIFT' | 'RTGS' | 'PESALINK' | 'MPESA' | 'BANK_TRANSFER' | 'MOBILE_MONEY'
   status: 'PENDING' | 'PROCESSING' | 'COMPLETED' | 'FAILED' | 'CANCELLED'
   description: string
   reference?: string
@@ -39,6 +39,17 @@ export interface CreateTransferRequest {
   currency?: string
   recipientName?: string
   recipientPhoneNumber?: string
+  // SWIFT specific fields
+  swiftCode?: string
+  recipientBankName?: string
+  recipientBankAddress?: string
+  intermediaryBankSwift?: string
+  // RTGS specific fields
+  sortCode?: string
+  // PesaLink specific fields
+  pesalinkBankCode?: string
+  // M-Pesa specific fields
+  mpesaNumber?: string
 }
 
 // Frontend form interface (separate from API request)
@@ -55,6 +66,17 @@ export interface TransferFormData {
   transferType: Transfer['transferType']
   description: string
   saveRecipient?: boolean
+  // SWIFT specific fields
+  swiftCode?: string
+  recipientBankName?: string
+  recipientBankAddress?: string
+  intermediaryBankSwift?: string
+  // RTGS specific fields
+  sortCode?: string
+  // PesaLink specific fields
+  pesalinkBankCode?: string
+  // M-Pesa specific fields
+  mpesaNumber?: string
 }
 
 export interface SavedRecipient {

@@ -76,6 +76,21 @@ public class Transfer {
     private String senderPhoneNumber;
     private String recipientPhoneNumber;
     
+    // SWIFT specific fields
+    private String swiftCode;
+    private String recipientBankName;
+    private String recipientBankAddress;
+    private String intermediaryBankSwift;
+    
+    // RTGS specific fields
+    private String sortCode;
+    
+    // PesaLink specific fields
+    private String pesalinkBankCode;
+    
+    // M-Pesa specific fields
+    private String mpesaNumber;
+    
     @CreatedDate
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
@@ -86,8 +101,12 @@ public class Transfer {
     
     public enum TransferType {
         INTERNAL,      // Within Telepesa accounts
-        MOBILE_MONEY,  // To M-Pesa, Airtel Money, etc.
-        BANK_TRANSFER, // To bank accounts
+        SWIFT,         // International bank transfer via SWIFT
+        RTGS,          // Real-time gross settlement
+        PESALINK,      // Instant bank transfers in Kenya
+        MPESA,         // M-Pesa mobile money
+        MOBILE_MONEY,  // Other mobile money providers
+        BANK_TRANSFER, // General bank transfers
         PEER_TO_PEER   // Direct user-to-user
     }
     

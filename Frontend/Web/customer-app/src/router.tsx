@@ -6,7 +6,7 @@ import { ProtectedLayout } from './views/ProtectedLayout'
 import { HomePage } from './views/HomePage'
 import { AccountsPage } from './views/AccountsPage'
 import { TransactionsPage } from './views/TransactionsPage'
-import { SimpleTransferPage } from './views/SimpleTransferPage'
+import { ComprehensiveTransferPage } from './views/ComprehensiveTransferPage'
 import { ProfilePage } from './views/ProfilePage'
 import { PaymentsPage } from './views/PaymentsPage'
 import { LoansPage } from './views/LoansPage'
@@ -23,7 +23,7 @@ export const router = createBrowserRouter(
         { index: true, element: <HomePage /> },
         { path: 'accounts', element: <AccountsPage /> },
         { path: 'transactions', element: <TransactionsPage /> },
-        { path: 'transfers', element: <SimpleTransferPage /> },
+        { path: 'transfers', element: <ComprehensiveTransferPage /> },
         { path: 'payments', element: <PaymentsPage /> },
         { path: 'loans', element: <LoansPage /> },
         { path: 'profile', element: <ProfilePage /> },

@@ -61,30 +61,53 @@ public class TransferServiceImpl implements TransferService {
         
         // Create transfer entity
         Transfer transfer = new Transfer();
-        transfer.setTransferReference(generateTransferReference());
         transfer.setSenderAccountId(senderAccountId);
         transfer.setRecipientAccountId(request.getRecipientAccountId());
         transfer.setAmount(request.getAmount());
         transfer.setCurrency(request.getCurrency());
         transfer.setTransferType(request.getTransferType());
-        transfer.setStatus(Transfer.TransferStatus.PENDING);
         transfer.setDescription(request.getDescription());
         transfer.setReference(request.getReference());
-        transfer.setTransferFee(transferFee);
-        transfer.setTotalAmount(totalAmount);
+        transfer.setStatus(Transfer.TransferStatus.PENDING);
         transfer.setSenderName(senderAccount.accountName() != null ? senderAccount.accountName() : "Account Holder");
         transfer.setRecipientName(request.getRecipientName());
         transfer.setRecipientPhoneNumber(request.getRecipientPhoneNumber());
+        transfer.setTransferReference(generateTransferReference());
+        
+        // Set transfer type specific fields
+        transfer.setSwiftCode(request.getSwiftCode());
+        transfer.setRecipientBankName(request.getRecipientBankName());
+        transfer.setRecipientBankAddress(request.getRecipientBankAddress());
+        transfer.setIntermediaryBankSwift(request.getIntermediaryBankSwift());
+        transfer.setSortCode(request.getSortCode());
+        transfer.setPesalinkBankCode(request.getPesalinkBankCode());
+        transfer.setMpesaNumber(request.getMpesaNumber());
+        
+        // Use the already calculated fee
+        transfer.setTransferFee(transferFee);
+        transfer.setTotalAmount(totalAmount);
         
         // Save transfer
         Transfer savedTransfer = transferRepository.save(transfer);
         
-        // Process transfer immediately for INTERNAL transfers
-        if (request.getTransferType() == Transfer.TransferType.INTERNAL) {
-            return processTransfer(savedTransfer.getId());
+        // Process transfer based on type
+        switch (request.getTransferType()) {
+            case INTERNAL:
+                return processTransfer(savedTransfer.getId());
+            case PESALINK:
+                return processPesaLinkTransfer(savedTransfer);
+            case MPESA:
+                return processMpesaTransfer(savedTransfer);
+            case RTGS:
+                return processRTGSTransfer(savedTransfer);
+            case SWIFT:
+                return processSWIFTTransfer(savedTransfer);
+            default:
+                // For other types, mark as processing and return
+                savedTransfer.setStatus(Transfer.TransferStatus.PROCESSING);
+                transferRepository.save(savedTransfer);
+                return mapToResponse(savedTransfer);
         }
-        
-        return mapToResponse(savedTransfer);
     }
     
     @Override
@@ -263,6 +286,14 @@ public class TransferServiceImpl implements TransferService {
         switch (transferType) {
             case INTERNAL:
                 return BigDecimal.ZERO; // No fee for internal transfers
+            case PESALINK:
+                return new BigDecimal("25.00"); // Fixed fee for PesaLink
+            case MPESA:
+                return new BigDecimal("15.00"); // Fixed fee for M-Pesa
+            case RTGS:
+                return new BigDecimal("500.00"); // Fixed fee for RTGS
+            case SWIFT:
+                return new BigDecimal("25.00"); // Fixed fee for SWIFT (USD)
             case MOBILE_MONEY:
                 feePercentage = new BigDecimal("0.01"); // 1%
                 minimumFee = new BigDecimal("10.00");
@@ -290,6 +321,100 @@ public class TransferServiceImpl implements TransferService {
             return maximumFee;
         } else {
             return calculatedFee;
+        }
+    }
+    
+    private TransferResponse processPesaLinkTransfer(Transfer transfer) {
+        try {
+            // Debit sender account
+            accountServiceClient.debitAccount(transfer.getSenderAccountId(), 
+                new AccountServiceClient.DebitRequest(transfer.getTotalAmount(), 
+                    "PesaLink transfer to " + transfer.getRecipientName()));
+            
+            // TODO: Integrate with PesaLink API
+            // For now, simulate successful processing
+            transfer.setStatus(Transfer.TransferStatus.COMPLETED);
+            transfer.setProcessedAt(LocalDateTime.now());
+            transfer.setProcessedBy("PESALINK_GATEWAY");
+            
+            Transfer savedTransfer = transferRepository.save(transfer);
+            return mapToResponse(savedTransfer);
+            
+        } catch (Exception e) {
+            transfer.setStatus(Transfer.TransferStatus.FAILED);
+            transfer.setFailureReason("PesaLink processing failed: " + e.getMessage());
+            transferRepository.save(transfer);
+            throw new RuntimeException("PesaLink transfer failed", e);
+        }
+    }
+    
+    private TransferResponse processMpesaTransfer(Transfer transfer) {
+        try {
+            // Debit sender account
+            accountServiceClient.debitAccount(transfer.getSenderAccountId(), 
+                new AccountServiceClient.DebitRequest(transfer.getTotalAmount(), 
+                    "M-Pesa transfer to " + transfer.getMpesaNumber()));
+            
+            // TODO: Integrate with M-Pesa API (Daraja API)
+            // For now, simulate successful processing
+            transfer.setStatus(Transfer.TransferStatus.COMPLETED);
+            transfer.setProcessedAt(LocalDateTime.now());
+            transfer.setProcessedBy("MPESA_GATEWAY");
+            
+            Transfer savedTransfer = transferRepository.save(transfer);
+            return mapToResponse(savedTransfer);
+            
+        } catch (Exception e) {
+            transfer.setStatus(Transfer.TransferStatus.FAILED);
+            transfer.setFailureReason("M-Pesa processing failed: " + e.getMessage());
+            transferRepository.save(transfer);
+            throw new RuntimeException("M-Pesa transfer failed", e);
+        }
+    }
+    
+    private TransferResponse processRTGSTransfer(Transfer transfer) {
+        try {
+            // Debit sender account
+            accountServiceClient.debitAccount(transfer.getSenderAccountId(), 
+                new AccountServiceClient.DebitRequest(transfer.getTotalAmount(), 
+                    "RTGS transfer to " + transfer.getRecipientName()));
+            
+            // TODO: Integrate with Central Bank RTGS system
+            // For now, mark as processing (RTGS takes 2-4 hours)
+            transfer.setStatus(Transfer.TransferStatus.PROCESSING);
+            transfer.setProcessedBy("RTGS_GATEWAY");
+            
+            Transfer savedTransfer = transferRepository.save(transfer);
+            return mapToResponse(savedTransfer);
+            
+        } catch (Exception e) {
+            transfer.setStatus(Transfer.TransferStatus.FAILED);
+            transfer.setFailureReason("RTGS processing failed: " + e.getMessage());
+            transferRepository.save(transfer);
+            throw new RuntimeException("RTGS transfer failed", e);
+        }
+    }
+    
+    private TransferResponse processSWIFTTransfer(Transfer transfer) {
+        try {
+            // Debit sender account
+            accountServiceClient.debitAccount(transfer.getSenderAccountId(), 
+                new AccountServiceClient.DebitRequest(transfer.getTotalAmount(), 
+                    "SWIFT transfer to " + transfer.getRecipientBankName()));
+            
+            // TODO: Integrate with SWIFT network
+            // For now, mark as processing (SWIFT takes 1-3 business days)
+            transfer.setStatus(Transfer.TransferStatus.PROCESSING);
+            transfer.setProcessedBy("SWIFT_GATEWAY");
+            
+            Transfer savedTransfer = transferRepository.save(transfer);
+            return mapToResponse(savedTransfer);
+            
+        } catch (Exception e) {
+            transfer.setStatus(Transfer.TransferStatus.FAILED);
+            transfer.setFailureReason("SWIFT processing failed: " + e.getMessage());
+            transferRepository.save(transfer);
+            throw new RuntimeException("SWIFT transfer failed", e);
         }
     }
     
