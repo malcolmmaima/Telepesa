@@ -78,10 +78,8 @@ export const transactionsApi = {
 
   // Get all transactions with pagination
   getTransactions: async (page = 0, size = 20): Promise<PageResponse<Transaction>> => {
-    const response = await api.get('/transactions', {
-      params: { page, size },
-    })
-    return response.data
+    const response = await api.get('/transactions', { params: { page, size } })
+    return normalizePageResponse<Transaction>(response.data)
   },
 
   // Get user transactions with filters
@@ -100,10 +98,8 @@ export const transactionsApi = {
     if (startDate) params.startDate = startDate
     if (endDate) params.endDate = endDate
 
-    const response = await api.get(`/transactions/user/${userId}`, {
-      params,
-    })
-    return response.data
+    const response = await api.get(`/transactions/user/${userId}`, { params })
+    return normalizePageResponse<Transaction>(response.data)
   },
 
   // Search transactions
@@ -112,10 +108,8 @@ export const transactionsApi = {
     page = 0,
     size = 20
   ): Promise<PageResponse<Transaction>> => {
-    const response = await api.get('/transactions/search', {
-      params: { query, page, size },
-    })
-    return response.data
+    const response = await api.get('/transactions/search', { params: { query, page, size } })
+    return normalizePageResponse<Transaction>(response.data)
   },
 
   // Get account transactions
@@ -124,16 +118,18 @@ export const transactionsApi = {
     page = 0,
     size = 20
   ): Promise<PageResponse<Transaction>> => {
-    const response = await api.get(`/transactions/account/${accountId}`, {
-      params: { page, size },
-    })
-    return response.data
+    const response = await api.get(`/transactions/account/${accountId}`, { params: { page, size } })
+    return normalizePageResponse<Transaction>(response.data)
   },
 
   // Get account transaction history (all transactions for an account)
   getAccountTransactionHistory: async (accountId: number): Promise<Transaction[]> => {
     const response = await api.get(`/transactions/account/${accountId}/history`)
-    return response.data
+    const data = response.data
+    if (Array.isArray(data)) return data
+    if (Array.isArray(data?.data)) return data.data
+    if (Array.isArray(data?.content)) return data.content
+    return []
   },
 
   // Get transactions by status
@@ -142,10 +138,8 @@ export const transactionsApi = {
     page = 0,
     size = 20
   ): Promise<PageResponse<Transaction>> => {
-    const response = await api.get(`/transactions/status/${status}`, {
-      params: { page, size },
-    })
-    return response.data
+    const response = await api.get(`/transactions/status/${status}`, { params: { page, size } })
+    return normalizePageResponse<Transaction>(response.data)
   },
 
   // Get transactions by type
@@ -154,10 +148,8 @@ export const transactionsApi = {
     page = 0,
     size = 20
   ): Promise<PageResponse<Transaction>> => {
-    const response = await api.get(`/transactions/type/${type}`, {
-      params: { page, size },
-    })
-    return response.data
+    const response = await api.get(`/transactions/type/${type}`, { params: { page, size } })
+    return normalizePageResponse<Transaction>(response.data)
   },
 
   // Get transactions by date range
@@ -171,7 +163,7 @@ export const transactionsApi = {
     const response = await api.get(`/transactions/user/${userId}/date-range`, {
       params: { startDate, endDate, page, size },
     })
-    return response.data
+    return normalizePageResponse<Transaction>(response.data)
   },
 
   // Update transaction status
@@ -309,11 +301,36 @@ export const transactionsApi = {
   // Recent transactions (last 10)
   getRecentTransactions: async (userId: number): Promise<Transaction[]> => {
     const response = await transactionsApi.getUserTransactions(userId, 0, 10)
-    return response.content
+    return Array.isArray(response.content) ? response.content : []
   },
 
   // Pending transactions count
   getPendingTransactionsCount: async (userId: number): Promise<number> => {
     return await transactionsApi.getTransactionCount(userId, 'PENDING')
   },
+}
+
+// Helpers
+function normalizePageResponse<T>(data: any): PageResponse<T> {
+  const d = data?.data ?? data
+  if (Array.isArray(d)) {
+    return {
+      content: d,
+      totalElements: d.length,
+      totalPages: 1,
+      size: d.length,
+      number: 0,
+      first: true,
+      last: true,
+    }
+  }
+  return {
+    content: d?.content ?? d?.items ?? [],
+    totalElements: d?.totalElements ?? d?.total ?? d?.count ?? 0,
+    totalPages: d?.totalPages ?? d?.pages ?? 1,
+    size: d?.size ?? d?.pageSize ?? (Array.isArray(d?.content) ? d.content.length : 0),
+    number: d?.number ?? d?.currentPage ?? 0,
+    first: d?.first ?? (d?.hasPrevious !== undefined ? !d.hasPrevious : true),
+    last: d?.last ?? (d?.hasNext !== undefined ? !d.hasNext : true),
+  }
 }

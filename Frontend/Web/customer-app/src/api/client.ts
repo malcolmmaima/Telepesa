@@ -1,6 +1,7 @@
 import axios, { AxiosError, AxiosRequestConfig, AxiosResponse } from 'axios'
 import type { ApiResponse, ApiError } from '../types'
 import { useAuth } from '../store/auth'
+import { toast } from '../store/toast'
 
 // Create axios instance with default configuration
 export const api = axios.create({
@@ -32,6 +33,11 @@ let queue: Array<() => void> = []
 
 api.interceptors.response.use(
   (response: AxiosResponse<ApiResponse>) => {
+    // Surface success messages if present
+    const message = (response.data as any)?.message
+    if (message) {
+      toast.success('Success', message, 3000)
+    }
     return response
   },
   async (error: AxiosError<ApiResponse>) => {
@@ -105,6 +111,11 @@ api.interceptors.response.use(
       message: apiError.message,
       timestamp: new Date().toISOString(),
     })
+
+    // Global error toast (skip for 401 handled elsewhere)
+    if (error.response?.status !== 401) {
+      toast.error('Error', apiError.message)
+    }
 
     return Promise.reject(apiError)
   }

@@ -6,7 +6,7 @@ export interface Account {
   accountNumber: string
   userId: number
   accountType: 'SAVINGS' | 'CHECKING' | 'FIXED_DEPOSIT' | 'BUSINESS'
-  accountName: string
+  accountName?: string
   balance: number
   availableBalance: number
   minimumBalance: number
@@ -58,10 +58,14 @@ export interface PageResponse<T> {
   content: T[]
   totalElements: number
   totalPages: number
-  size: number
-  number: number
-  first: boolean
-  last: boolean
+  size?: number
+  number?: number
+  first?: boolean
+  last?: boolean
+  pageSize?: number
+  currentPage?: number
+  hasNext?: boolean
+  hasPrevious?: boolean
 }
 
 // Account API Service
@@ -77,8 +81,13 @@ export const accountsApi = {
     const response = await api.get(`/accounts/user/${userId}`, {
       params: { page, size, sortBy, sortDir },
     })
-    // Backend returns paginated response with content array
-    return Array.isArray(response.data?.content) ? response.data.content : []
+    const data = response.data
+    // Support multiple pagination shapes and direct arrays
+    if (Array.isArray(data)) return data
+    if (Array.isArray(data?.data)) return data.data
+    if (Array.isArray(data?.content)) return data.content
+    if (Array.isArray(data?.result)) return data.result
+    return []
   },
 
   // Get account by ID

@@ -3,6 +3,7 @@ import { useAuth } from '../store/auth'
 import { transfersApi, type CreateTransferRequest } from '../api/transfers'
 import { accountsApi, type Account } from '../api/accounts'
 import { securityApi } from '../api/security'
+import { toast } from '../store/toast'
 import { Card } from '../components/ui/Card'
 import { Button } from '../components/ui/Button'
 import { Input } from '../components/ui/Input'
@@ -172,11 +173,10 @@ export function ComprehensiveTransferPage() {
     try {
       const userAccounts = await accountsApi.getUserAccounts(user!.id, 0, 50)
       const accountsArray = Array.isArray(userAccounts) ? userAccounts : []
-      const activeAccounts = accountsArray.filter(account => account.status === 'ACTIVE')
-      setAccounts(activeAccounts)
-      
-      if (activeAccounts.length > 0 && !form.fromAccountId) {
-        setForm(prev => ({ ...prev, fromAccountId: activeAccounts[0].id }))
+      setAccounts(accountsArray)
+      const preferred = accountsArray.find(a => a.status === 'ACTIVE') || accountsArray[0]
+      if (preferred && !form.fromAccountId) {
+        setForm(prev => ({ ...prev, fromAccountId: preferred.id }))
       }
     } catch (err: any) {
       console.error('Failed to load accounts:', err)
@@ -211,6 +211,11 @@ export function ComprehensiveTransferPage() {
       return
     }
 
+    // Ensure we have the latest PIN status before deciding the modal
+    if (checkingPin) {
+      await checkPinStatus()
+    }
+
     // Check if PIN is required
     if (!hasPinSet) {
       // Prompt user to create PIN first
@@ -236,7 +241,7 @@ export function ComprehensiveTransferPage() {
       mpesaNumber: form.mpesaNumber || undefined
     }
 
-    // Store pending transfer and show PIN verification
+    // Store pending transfer and show PIN modal
     setPendingTransfer(transferRequest)
     setPinMode('verify')
     setShowPinModal(true)
@@ -248,12 +253,21 @@ export function ComprehensiveTransferPage() {
         await securityApi.createTransactionPin({ pin })
         setHasPinSet(true)
         setError(null)
+        toast.success('PIN Created', 'Your transaction PIN was set successfully')
         // After creating PIN, proceed with transfer if there's a pending one
         if (pendingTransfer) {
           await executeTransfer(pendingTransfer)
         }
       } catch (err: any) {
-        setError('Failed to create PIN: ' + err.message)
+        if (typeof err?.message === 'string' && err.message.toLowerCase().includes('already set')) {
+          setHasPinSet(true)
+          setError(null)
+          setPinMode('verify')
+          setShowPinModal(true)
+        } else {
+          setError('Failed to create PIN: ' + err.message)
+          toast.error('PIN Creation Failed', err.message || 'Unable to create PIN')
+        }
       }
     } else if (pinMode === 'verify' && pendingTransfer) {
       try {
@@ -262,9 +276,11 @@ export function ComprehensiveTransferPage() {
           await executeTransfer(pendingTransfer)
         } else {
           setError('Invalid PIN. Please try again.')
+          toast.error('Invalid PIN', 'Please try again')
         }
       } catch (err: any) {
         setError('PIN verification failed: ' + err.message)
+        toast.error('PIN Verification Failed', err.message || 'Unable to verify PIN')
       }
     }
   }
@@ -530,7 +546,7 @@ export function ComprehensiveTransferPage() {
                         {account.accountType} Account
                       </div>
                       <div className="text-sm text-financial-gray">
-                        •••• {account.accountNumber.slice(-4)}
+                        {account.accountNumber ? `•••• ${account.accountNumber.slice(-4)}` : `ID #${account.id}`}
                       </div>
                     </div>
                     <div className="text-right">
