@@ -329,9 +329,18 @@ export function HomePage() {
             <div className="space-y-3">
               {recentTransactions &&
                 recentTransactions.map(transaction => {
-                  const isIncoming = ['DEPOSIT', 'LOAN_DISBURSEMENT'].includes(
-                    transaction.transactionType
-                  )
+                  // Treat deposits/loan disbursements as incoming.
+                  // For transfers, incoming if toAccountId is mine and fromAccountId is not.
+                  const userAccountIds = accounts.map(a => a.id)
+                  const isTransferIncoming =
+                    transaction.transactionType === 'TRANSFER' &&
+                    userAccountIds.includes(Number((transaction as any).toAccountId)) &&
+                    !userAccountIds.includes(Number((transaction as any).fromAccountId))
+
+                  const isIncoming =
+                    ['DEPOSIT', 'LOAN_DISBURSEMENT'].includes(transaction.transactionType) ||
+                    isTransferIncoming
+
                   const amountColor = isIncoming ? 'text-green-600' : 'text-red-600'
                   const amountPrefix = isIncoming ? '+' : '-'
 

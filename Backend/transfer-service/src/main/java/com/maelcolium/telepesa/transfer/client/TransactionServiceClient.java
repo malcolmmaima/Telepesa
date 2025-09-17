@@ -3,6 +3,8 @@ package com.maelcolium.telepesa.transfer.client;
 import com.maelcolium.telepesa.models.enums.TransactionType;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 
 import java.math.BigDecimal;
@@ -12,6 +14,9 @@ public interface TransactionServiceClient {
 
     @PostMapping("/api/v1/transactions/internal")
     TransactionResponse createTransaction(@RequestBody CreateTransactionRequest request);
+
+    @PutMapping("/api/v1/transactions/{id}/status")
+    Void updateTransactionStatus(@PathVariable("id") Long id, @RequestBody String status);
 
     record CreateTransactionRequest(
         Long fromAccountId,

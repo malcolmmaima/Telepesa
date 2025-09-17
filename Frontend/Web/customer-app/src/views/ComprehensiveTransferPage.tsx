@@ -112,6 +112,9 @@ export function ComprehensiveTransferPage() {
   const [accounts, setAccounts] = useState<Account[]>([])
   const [hasPinSet, setHasPinSet] = useState(false)
   const [checkingPin, setCheckingPin] = useState(true)
+  // Cache keys
+  const PIN_SET_CACHE_KEY = 'tp_has_pin'
+  const PIN_VERIFIED_UNTIL_KEY = 'tp_pin_verified_until'
   
   // Security states
   const [showPinModal, setShowPinModal] = useState(false)
@@ -144,6 +147,11 @@ export function ComprehensiveTransferPage() {
   useEffect(() => {
     if (user?.id) {
       loadUserAccounts()
+      // Optimistically hydrate PIN status from cache while we confirm with API
+      const cachedHasPin = localStorage.getItem(PIN_SET_CACHE_KEY)
+      if (cachedHasPin !== null) {
+        setHasPinSet(cachedHasPin === 'true')
+      }
       checkPinStatus()
     }
   }, [user?.id])
@@ -151,10 +159,18 @@ export function ComprehensiveTransferPage() {
   const checkPinStatus = async () => {
     try {
       const pinStatus = await securityApi.getTransactionPinStatus()
-      setHasPinSet(pinStatus.isSet)
+      const isSet = Boolean((pinStatus as any).isSet ?? (pinStatus as any).set)
+      setHasPinSet(isSet)
+      // Persist to cache to avoid re-prompting on transient errors
+      localStorage.setItem(PIN_SET_CACHE_KEY, String(isSet))
     } catch (err) {
-      console.log('PIN status check failed, assuming no PIN set')
-      setHasPinSet(false)
+      console.log('PIN status check failed; using cached value if present')
+      const cachedHasPin = localStorage.getItem(PIN_SET_CACHE_KEY)
+      if (cachedHasPin !== null) {
+        setHasPinSet(cachedHasPin === 'true')
+      } else {
+        setHasPinSet(false)
+      }
     } finally {
       setCheckingPin(false)
     }
@@ -216,6 +232,29 @@ export function ComprehensiveTransferPage() {
       await checkPinStatus()
     }
 
+    // Skip prompt if PIN was verified very recently (grace window)
+    const verifiedUntil = Number(localStorage.getItem(PIN_VERIFIED_UNTIL_KEY) || 0)
+    const now = Date.now()
+    if (verifiedUntil && verifiedUntil > now) {
+      // Proceed directly
+      setPendingTransfer(null)
+      return executeTransfer({
+        recipientAccountId: form.transferType === 'MPESA' ? form.mpesaNumber : form.recipientAccountNumber,
+        amount: form.amount,
+        transferType: form.transferType,
+        description: form.description,
+        recipientName: form.recipientName,
+        currency: form.currency,
+        swiftCode: form.swiftCode || undefined,
+        recipientBankName: form.recipientBankName || undefined,
+        recipientBankAddress: form.recipientBankAddress || undefined,
+        intermediaryBankSwift: form.intermediaryBankSwift || undefined,
+        sortCode: form.sortCode || undefined,
+        pesalinkBankCode: form.pesalinkBankCode || undefined,
+        mpesaNumber: form.mpesaNumber || undefined
+      })
+    }
+
     // Check if PIN is required
     if (!hasPinSet) {
       // Prompt user to create PIN first
@@ -252,6 +291,7 @@ export function ComprehensiveTransferPage() {
       try {
         await securityApi.createTransactionPin({ pin })
         setHasPinSet(true)
+        localStorage.setItem(PIN_SET_CACHE_KEY, 'true')
         setError(null)
         toast.success('PIN Created', 'Your transaction PIN was set successfully')
         // After creating PIN, proceed with transfer if there's a pending one
@@ -261,6 +301,7 @@ export function ComprehensiveTransferPage() {
       } catch (err: any) {
         if (typeof err?.message === 'string' && err.message.toLowerCase().includes('already set')) {
           setHasPinSet(true)
+          localStorage.setItem(PIN_SET_CACHE_KEY, 'true')
           setError(null)
           setPinMode('verify')
           setShowPinModal(true)
@@ -273,6 +314,9 @@ export function ComprehensiveTransferPage() {
       try {
         const verification = await securityApi.verifyTransactionPin({ pin })
         if (verification.valid) {
+          // Set a short-lived grace window (e.g., 5 minutes) to avoid re-prompting
+          const fiveMinutes = 5 * 60 * 1000
+          localStorage.setItem(PIN_VERIFIED_UNTIL_KEY, String(Date.now() + fiveMinutes))
           await executeTransfer(pendingTransfer)
         } else {
           setError('Invalid PIN. Please try again.')

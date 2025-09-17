@@ -114,9 +114,34 @@ export function TransactionsPage() {
         )
       }
 
-      setTransactions(response.content)
+      // Include both debits (from my accounts) and credits (to my accounts),
+      // but de-duplicate self-transfers by preferring the debit side.
+      const userAccountIds = accounts.map(a => a.id)
+      const relevant = Array.isArray(response.content)
+        ? response.content.filter(
+            t =>
+              userAccountIds.includes(Number(t.fromAccountId)) ||
+              userAccountIds.includes(Number(t.toAccountId))
+          )
+        : []
+
+      // For self-transfers (both ends are my accounts), keep only the debit entry.
+      const selfTransferFiltered = relevant.filter(t => {
+        const fromMine = userAccountIds.includes(Number((t as any).fromAccountId))
+        const toMine = userAccountIds.includes(Number((t as any).toAccountId))
+        if ((t as any).transactionType === 'TRANSFER' && fromMine && toMine) {
+          // Debit side carries a non-zero fee; credit side fee is zero
+          const fee = Number((t as any).feeAmount ?? 0)
+          return fee > 0
+        }
+        return true
+      })
+
+      const deduped = selfTransferFiltered
+
+      setTransactions(deduped)
       setTotalPages(response.totalPages)
-      setTotalElements(response.totalElements)
+      setTotalElements(deduped.length)
     } catch (err: any) {
       setError(err.message || 'Failed to load transactions')
     } finally {
@@ -142,14 +167,21 @@ export function TransactionsPage() {
   }
 
   const getTransactionAmountDisplay = (transaction: Transaction) => {
-    const isIncoming = ['DEPOSIT', 'LOAN_DISBURSEMENT'].includes(transaction.transactionType)
+    const userAccountIds = accounts.map(a => a.id)
+    const isTransferIncoming =
+      transaction.transactionType === 'TRANSFER' &&
+      userAccountIds.includes(Number((transaction as any).toAccountId)) &&
+      !userAccountIds.includes(Number((transaction as any).fromAccountId))
+
+    const isIncoming =
+      ['DEPOSIT', 'LOAN_DISBURSEMENT'].includes(transaction.transactionType) || isTransferIncoming
     const prefix = isIncoming ? '+' : '-'
     const colorClass = isIncoming ? 'text-green-600' : 'text-red-600'
 
     return (
       <span className={cn('font-semibold', colorClass)}>
         {prefix}
-        {formatCurrency(transaction.amount)}
+        {formatCurrency((transaction as any).amount)}
       </span>
     )
   }

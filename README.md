@@ -185,30 +185,6 @@ Postman collection: `Backend/Telepesa_API_Collection_Complete.postman_collection
 
 ## CI/CD Pipeline Overview
 
-### 🔄 Automated Pipelines
-
-| Pipeline | Status | Coverage | Security | Docker |
-|----------|---------|----------|----------|---------|
-| **Backend Services** | [![Backend CI](https://github.com/malcolmmiyare/Telepesa/actions/workflows/ci.yml/badge.svg)](https://github.com/malcolmmiyare/Telepesa/actions/workflows/ci.yml) | JaCoCo Reports | Security Audit | ✅ Multi-service |
-| **Web Frontend** | [![Frontend CI](https://github.com/malcolmmiyare/Telepesa/actions/workflows/web-frontend.yml/badge.svg)](https://github.com/malcolmmiyare/Telepesa/actions/workflows/web-frontend.yml) | Vitest Coverage | npm audit | ✅ Nginx + SPA |
-
-### 📊 Pipeline Statistics
-
-#### Backend CI (`ci.yml`)
-- **Services Tested**: 7 microservices + API Gateway + Eureka + Transfer Service
-- **Test Types**: Unit, Integration, E2E Infrastructure
-- **Quality Gates**: Code coverage, security audit, dependency check
-- **Deployment**: Docker multi-service build and push (includes transfer-service)
-- **Triggers**: Push to `main`/`develop`, PRs
-
-#### Frontend CI (`web-frontend.yml`)
-- **Framework**: React 18 + TypeScript 5 + Vite
-- **Test Suite**: ESLint, Prettier, Vitest unit tests
-- **Coverage**: HTML/LCOV reports with Codecov integration
-- **Bundle Analysis**: Size limits and optimization checks
-- **Deployment**: Nginx-based Docker container
-- **Triggers**: Changes to `Frontend/Web/**`
-
 
 ### 🚀 Container Registry Setup
 
@@ -249,15 +225,6 @@ CODECOV_TOKEN=<your-codecov-upload-token>
 - **Bundle Size**: Frontend <5MB JavaScript bundle limit
 - **Build Time**: Average <10 minutes per pipeline
 - **Deployment**: Zero-downtime with health checks
-
-## End-to-End Testing Status
-
-✅ **Infrastructure**: All core services healthy and accessible  
-✅ **Service Discovery**: All services registered with Eureka  
-✅ **Authentication**: User login/JWT working (tested with valid credentials)  
-✅ **Account Management**: Account creation and retrieval working  
-✅ **API Gateway**: CORS fixed, routing functional, security working  
-✅ **Frontend**: Complete web UI with all features implemented  
 
 ## Web Application Screenshots
 

@@ -539,6 +539,13 @@ public class TransferServiceImpl implements TransferService {
             TransactionServiceClient.TransactionResponse debitResponse = transactionServiceClient.createTransaction(debitRequest);
             log.info("=== DEBIT TRANSACTION CREATED SUCCESSFULLY ===");
             log.info("Created debit transaction with ID: {}", debitResponse.transactionId());
+            try {
+                // Mark debit transaction as COMPLETED after successful debit
+                transactionServiceClient.updateTransactionStatus(debitResponse.id(), "COMPLETED");
+                log.info("Marked debit transaction {} as COMPLETED", debitResponse.id());
+            } catch (Exception e) {
+                log.warn("Failed to update debit transaction status to COMPLETED: {}", e.getMessage());
+            }
             
             // Create credit transaction for recipient (only for internal transfers)
             if (transfer.getTransferType() == Transfer.TransferType.INTERNAL) {
@@ -560,6 +567,13 @@ public class TransferServiceImpl implements TransferService {
                 TransactionServiceClient.TransactionResponse creditResponse = transactionServiceClient.createTransaction(creditRequest);
                 log.info("=== CREDIT TRANSACTION CREATED SUCCESSFULLY ===");
                 log.info("Created credit transaction with ID: {}", creditResponse.transactionId());
+                try {
+                    // Mark credit transaction as COMPLETED after successful credit
+                    transactionServiceClient.updateTransactionStatus(creditResponse.id(), "COMPLETED");
+                    log.info("Marked credit transaction {} as COMPLETED", creditResponse.id());
+                } catch (Exception e) {
+                    log.warn("Failed to update credit transaction status to COMPLETED: {}", e.getMessage());
+                }
             } else {
                 log.info("Skipping credit transaction - Transfer type is: {}", transfer.getTransferType());
             }
