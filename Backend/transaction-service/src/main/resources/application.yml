@@ -19,7 +19,7 @@ spring:
     show-sql: false
 app:
   jwt:
-    secret: ${JWT_SECRET:your-secret-key-here}
+    secret: ${JWT_SECRET:myVerySecretJWTKeyForTelepesaUserService123!@#ExtraLongSecureKeyPart456ForHMACCompatibility789}
     expiration: 86400
   data:
     redis:
