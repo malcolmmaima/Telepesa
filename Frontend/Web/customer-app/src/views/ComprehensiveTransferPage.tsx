@@ -151,13 +151,10 @@ export function ComprehensiveTransferPage() {
   const checkPinStatus = async () => {
     try {
       const pinStatus = await securityApi.getTransactionPinStatus()
-      console.log('PIN status response:', pinStatus)
-      setHasPinSet(pinStatus.set)
-    } catch (err: any) {
-      console.error('PIN status check failed:', err)
-      console.error('Error details:', err.response?.data || err.message)
-      // Don't assume no PIN set on error - keep current state
-      console.log('Keeping current PIN status due to API error')
+      setHasPinSet(pinStatus.isSet)
+    } catch (err) {
+      console.log('PIN status check failed, assuming no PIN set')
+      setHasPinSet(false)
     } finally {
       setCheckingPin(false)
     }
@@ -214,9 +211,16 @@ export function ComprehensiveTransferPage() {
       return
     }
 
-    // PIN status should already be loaded from useEffect, but double-check if still loading
+    // Ensure we have the latest PIN status before deciding the modal
     if (checkingPin) {
-      setError('Please wait while we verify your security settings...')
+      await checkPinStatus()
+    }
+
+    // Check if PIN is required
+    if (!hasPinSet) {
+      // Prompt user to create PIN first
+      setPinMode('create')
+      setShowPinModal(true)
       return
     }
 
@@ -237,16 +241,7 @@ export function ComprehensiveTransferPage() {
       mpesaNumber: form.mpesaNumber || undefined
     }
 
-    // Check if PIN is required
-    if (!hasPinSet) {
-      // Prompt user to create PIN first
-      setPendingTransfer(transferRequest)
-      setPinMode('create')
-      setShowPinModal(true)
-      return
-    }
-
-    // Always require PIN verification for transfers
+    // Store pending transfer and show PIN modal
     setPendingTransfer(transferRequest)
     setPinMode('verify')
     setShowPinModal(true)
@@ -311,7 +306,6 @@ export function ComprehensiveTransferPage() {
 
       const result = await transfersApi.createTransfer(transferRequest, selectedAccount.accountNumber)
       
-      // Transfer is automatically processed during creation for most types
       setSuccess({
         id: result.id?.toString() || '',
         transferReference: result.transferId || '',
