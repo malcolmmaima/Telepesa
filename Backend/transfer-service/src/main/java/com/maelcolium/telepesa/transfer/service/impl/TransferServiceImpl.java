@@ -545,7 +545,7 @@ public class TransferServiceImpl implements TransferService {
             log.info("Created debit transaction with ID: {}", debitResponse.transactionId());
             try {
                 // Mark debit transaction as COMPLETED after successful debit
-                transactionServiceClient.updateTransactionStatus(debitResponse.id(), "COMPLETED");
+                transactionServiceClient.updateTransactionStatus(debitResponse.id(), com.maelcolium.telepesa.models.enums.TransactionStatus.COMPLETED);
                 log.info("Marked debit transaction {} as COMPLETED", debitResponse.id());
             } catch (Exception e) {
                 log.warn("Failed to update debit transaction status to COMPLETED: {}", e.getMessage());
@@ -573,7 +573,7 @@ public class TransferServiceImpl implements TransferService {
                 log.info("Created credit transaction with ID: {}", creditResponse.transactionId());
                 try {
                     // Mark credit transaction as COMPLETED after successful credit
-                    transactionServiceClient.updateTransactionStatus(creditResponse.id(), "COMPLETED");
+                    transactionServiceClient.updateTransactionStatus(creditResponse.id(), com.maelcolium.telepesa.models.enums.TransactionStatus.COMPLETED);
                     log.info("Marked credit transaction {} as COMPLETED", creditResponse.id());
                 } catch (Exception e) {
                     log.warn("Failed to update credit transaction status to COMPLETED: {}", e.getMessage());

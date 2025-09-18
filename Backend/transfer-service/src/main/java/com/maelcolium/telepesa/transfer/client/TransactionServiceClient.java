@@ -1,6 +1,7 @@
 package com.maelcolium.telepesa.transfer.client;
 
 import com.maelcolium.telepesa.models.enums.TransactionType;
+import com.maelcolium.telepesa.models.enums.TransactionStatus;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -16,7 +17,7 @@ public interface TransactionServiceClient {
     TransactionResponse createTransaction(@RequestBody CreateTransactionRequest request);
 
     @PutMapping("/api/v1/transactions/{id}/status")
-    Void updateTransactionStatus(@PathVariable("id") Long id, @RequestBody String status);
+    Void updateTransactionStatus(@PathVariable("id") Long id, @RequestBody TransactionStatus status);
 
     record CreateTransactionRequest(
         Long fromAccountId,

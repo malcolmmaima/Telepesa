@@ -40,12 +40,9 @@ EXPOSE 8086
 ENV SPRING_PROFILES_ACTIVE=docker
 ENV JAVA_OPTS="-Xmx512m -Xms256m"
 
-# Install curl for health check
-RUN apt-get update && apt-get install -y --fix-missing curl && rm -rf /var/lib/apt/lists/* && apt-get clean
-
-# Health check
+# Health check (use wget which is preinstalled in slim or skip external deps)
 HEALTHCHECK --interval=30s --timeout=3s --start-period=60s --retries=3 \
-    CMD curl -f http://localhost:8086/actuator/health || exit 1
+    CMD wget -qO- http://localhost:8086/actuator/health >/dev/null 2>&1 || exit 1
 
 # Run the application
 ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -Djava.security.egd=file:/dev/./urandom -jar transfer-service.jar"]

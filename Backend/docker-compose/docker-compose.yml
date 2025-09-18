@@ -390,6 +390,7 @@ services:
       SPRING_DATA_REDIS_PASSWORD: telepesa_redis_password
       KAFKA_BOOTSTRAP_SERVERS: kafka:9092
       JWT_SECRET: myVerySecretJWTKeyForTelepesaUserService123!@#ExtraLongSecureKeyPart456ForHMACCompatibility789
+      SERVICE_AUTH_SECRET: myUltraLongServiceSigningKeyForHS512-Telepesa-UseOnly-DoNotShare-2025-09-18-ABCDEFGH1234567890ijklmnopqrstuvwxYZ!@#$%^&*()_+[]{}|;:,.<>/?~myUltraLongServiceSigningKeyForHS512-ExtraPadding123
     depends_on:
       postgres:
         condition: service_healthy
