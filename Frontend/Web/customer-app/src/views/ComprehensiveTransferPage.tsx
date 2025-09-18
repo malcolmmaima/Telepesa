@@ -227,6 +227,14 @@ export function ComprehensiveTransferPage() {
       return
     }
 
+    const sourceAccount = accounts.find(a => a.id === form.fromAccountId)
+    if (sourceAccount && sourceAccount.accountNumber && form.recipientAccountNumber) {
+      if (sourceAccount.accountNumber === form.recipientAccountNumber) {
+        setError('Cannot transfer to the same account')
+        return
+      }
+    }
+
     // Ensure we have the latest PIN status before deciding the modal
     if (checkingPin) {
       await checkPinStatus()

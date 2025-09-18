@@ -50,6 +50,10 @@ public class TransferServiceImpl implements TransferService {
         if ("UNAVAILABLE".equals(recipientAccount.status())) {
             throw new IllegalArgumentException("Recipient account not found or unavailable: " + request.getRecipientAccountId());
         }
+
+        if (senderAccount.accountNumber() != null && senderAccount.accountNumber().equals(request.getRecipientAccountId())) {
+            throw new IllegalArgumentException("Cannot transfer to the same account (source and destination are identical)");
+        }
         
         // Calculate fees
         BigDecimal transferFee = calculateTransferFee(request.getAmount(), request.getTransferType());
