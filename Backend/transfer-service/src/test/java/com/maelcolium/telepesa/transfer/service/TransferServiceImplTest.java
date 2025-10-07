@@ -73,8 +73,8 @@ class TransferServiceImplTest {
     @Test
     void createTransfer_Success() {
         // Given
-        when(accountServiceClient.getAccount("sender-123")).thenReturn(senderAccount);
-        when(accountServiceClient.getAccount("recipient-123")).thenReturn(recipientAccount);
+        when(accountServiceClient.getAccountByNumber("sender-123")).thenReturn(senderAccount);
+        when(accountServiceClient.getAccountByNumber("recipient-123")).thenReturn(recipientAccount);
         when(transferRepository.save(any(Transfer.class))).thenReturn(transfer);
         when(transferRepository.findById("transfer-123")).thenReturn(Optional.of(transfer));
 
@@ -88,8 +88,8 @@ class TransferServiceImplTest {
         assertEquals("recipient-123", result.getRecipientAccountId());
         assertEquals(new BigDecimal("1000.00"), result.getAmount());
         
-        verify(accountServiceClient).getAccount("sender-123");
-        verify(accountServiceClient).getAccount("recipient-123");
+        verify(accountServiceClient).getAccountByNumber("sender-123");
+        verify(accountServiceClient).getAccountByNumber("recipient-123");
         verify(transferRepository, times(3)).save(any(Transfer.class)); // Called 3 times: create, process status update, completion
     }
 
@@ -101,8 +101,8 @@ class TransferServiceImplTest {
             "KES", "ACTIVE", "user-123", "SAVINGS", "Low Balance Account"
         );
         
-        when(accountServiceClient.getAccount("sender-123")).thenReturn(lowBalanceAccount);
-        when(accountServiceClient.getAccount("recipient-123")).thenReturn(recipientAccount);
+        when(accountServiceClient.getAccountByNumber("sender-123")).thenReturn(lowBalanceAccount);
+        when(accountServiceClient.getAccountByNumber("recipient-123")).thenReturn(recipientAccount);
 
         // When & Then
         IllegalArgumentException exception = assertThrows(
