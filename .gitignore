@@ -148,6 +148,8 @@ compliance-reports/
 *.pgp
 *.gpg
 
+Frontend/Android/ref
+
 # API Testing (Always track these for team collaboration)
 !**/*postman*.json
 !Backend/Telepesa_API_Collection.postman_collection.json

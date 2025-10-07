@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<full-backup-content>
+    <!-- Exclude sensitive data from backup -->
+    <exclude domain="sharedpref" path="telepesa_secure_prefs.xml"/>
+    <exclude domain="sharedpref" path="telepesa_user_prefs.xml"/>
+    <exclude domain="database" path="telepesa.db"/>
+    <exclude domain="database" path="telepesa.db-shm"/>
+    <exclude domain="database" path="telepesa.db-wal"/>
+</full-backup-content>
+
+

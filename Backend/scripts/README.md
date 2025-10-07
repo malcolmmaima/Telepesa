@@ -7,11 +7,11 @@ This directory contains consolidated scripts for the Telepesa backend services, 
 ### E2E Testing: `e2e-test.sh`
 
 **Single comprehensive E2E test script** that replaces all previous E2E test scripts:
-- `comprehensive-e2e-test.sh` ❌ (removed)
-- `comprehensive-e2e-test-fixed.sh` ❌ (removed)
-- `direct-e2e-test.sh` ❌ (removed)
-- `gateway-e2e-test.sh` ❌ (removed)
-- `simplified-e2e-test.sh` ❌ (removed)
+- `comprehensive-e2e-test.sh` (removed)
+- `comprehensive-e2e-test-fixed.sh` (removed)
+- `direct-e2e-test.sh` (removed)
+- `gateway-e2e-test.sh` (removed)
+- `simplified-e2e-test.sh` (removed)
 
 #### Usage
 
@@ -63,24 +63,24 @@ This directory contains consolidated scripts for the Telepesa backend services, 
 #### Output
 
 The script provides:
-- ✅ **Passed tests** (green)
-- ❌ **Failed tests** (red) with error details
-- ⏭️ **Skipped tests** (yellow) with reason
-- 📊 **Summary** with total counts
-- 🎉 **Success message** if all tests pass
+- **Passed tests** (green)
+- **Failed tests** (red) with error details
+- **Skipped tests** (yellow) with reason
+- **Summary** with total counts
+- **Success message** if all tests pass
 
 ## Script Management Rules
 
 Following the **ANTI-REPETITION RULE**:
 
-### ✅ DO:
+### DO:
 - Use the consolidated `e2e-test.sh` for all E2E testing
 - Add new features to existing scripts with flags
 - Keep scripts in the `scripts/` directory
 - Use descriptive names with kebab-case
 - Include help documentation
 
-### ❌ DON'T:
+### DON'T:
 - Create multiple scripts for the same purpose
 - Create service-specific test scripts unless absolutely necessary
 - Place scripts in root directory

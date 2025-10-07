@@ -4,12 +4,12 @@ The Transfer Service is responsible for handling money transfers between account
 
 ## Features
 
-- 💸 **Multiple Transfer Types**: Internal, Mobile Money, Bank Transfer, Peer-to-Peer
-- 💰 **Fee Calculation**: Automatic fee calculation based on transfer type
-- 🔄 **Transaction Processing**: Real-time processing with account service integration
-- 📊 **Transfer Statistics**: Detailed analytics for account transfer activity
-- ⚡ **Caching**: Redis-based caching for improved performance
-- 🔍 **Monitoring**: Health checks and metrics via Actuator
+- **Multiple Transfer Types**: Internal, Mobile Money, Bank Transfer, Peer-to-Peer
+- **Fee Calculation**: Automatic fee calculation based on transfer type
+- **Transaction Processing**: Real-time processing with account service integration
+- **Transfer Statistics**: Detailed analytics for account transfer activity
+- **Caching**: Redis-based caching for improved performance
+- **Monitoring**: Health checks and metrics via Actuator
 
 ## API Endpoints
 

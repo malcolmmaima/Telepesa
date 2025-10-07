@@ -1,6 +1,6 @@
 # Telepesa Backend Services
 
-## 🚀 Quick Start
+## Quick Start
 
 The Telepesa backend is built with Spring Boot microservices architecture, providing secure, scalable banking services for African financial institutions.
 
@@ -11,7 +11,7 @@ The Telepesa backend is built with Spring Boot microservices architecture, provi
 - **Docker** (optional, for containerized development)
 - **NVD API Key** (for faster OWASP security scans) - [Generate your own](https://nvd.nist.gov/developers/request-an-api-key)
 
-### 🏃‍♂️ Getting Started
+### Getting Started
 
 1. **Clone and Setup**
    ```bash
@@ -46,7 +46,7 @@ The Telepesa backend is built with Spring Boot microservices architecture, provi
    cd ../user-service
    mvn spring-boot:run
    ```
-   🌐 Service available at: http://localhost:8081
+   Service available at: http://localhost:8081
 
 6. **Test the API**
    ```bash
@@ -58,28 +58,28 @@ The Telepesa backend is built with Spring Boot microservices architecture, provi
    ./scripts/quick-api-test.sh
    ```
 
-## 🏗️ Services Overview
+## Services Overview
 
-### ✅ Active Services
+### Active Services
 | Service | Port | Status | Description |
 |---------|------|--------|-------------|
-| **User Service** | 8081 | 🟢 **LIVE** | Authentication, user management, security |
+| **User Service** | 8081 | **LIVE** | Authentication, user management, security |
 
-### 🚧 Planned Services  
+### Planned Services  
 | Service | Port | Status | Description |
 |---------|------|--------|-------------|
-| **Account Service** | 8082 | 🔨 Planned | Account creation and management |
-| **Transaction Service** | 8083 | 🔨 Planned | Payment processing and transfers |
-| **Loan Service** | 8084 | 🔨 Planned | Loan applications and management |
-| **Notification Service** | 8085 | 🔨 Planned | Email, SMS, and push notifications |
+| **Account Service** | 8082 | Planned | Account creation and management |
+| **Transaction Service** | 8083 | Planned | Payment processing and transfers |
+| **Loan Service** | 8084 | Planned | Loan applications and management |
+| **Notification Service** | 8085 | Planned | Email, SMS, and push notifications |
 
-## 🧪 Testing & Quality
+## Testing & Quality
 
-### Current Status ✅
+### Current Status
 - **Unit Tests**: 81/81 passing (100% success rate)
 - **Coverage**: 81% line coverage, 35% branch coverage  
 - **E2E Tests**: 24/25 passing (96% success rate)
-- **Overall**: **PRODUCTION READY** 🚀
+- **Overall**: **PRODUCTION READY**
 
 ### Quick Testing
 ```bash
@@ -94,45 +94,40 @@ cd .. && ./scripts/quick-api-test.sh
 # Environment: Telepesa_Development.postman_environment.json
 ```
 
-## 🔐 Security Features
+## Security Features
 
-✅ **JWT Authentication** - Stateless token-based auth  
-✅ **Rate Limiting** - Protection against abuse  
-✅ **Input Validation** - Comprehensive data validation  
-✅ **Audit Logging** - Complete action tracking  
-✅ **Device Fingerprinting** - Enhanced security  
-✅ **Password Security** - BCrypt + complexity rules  
-✅ **CORS Configuration** - Secure cross-origin requests  
-✅ **OWASP Security Scanning** - Automated vulnerability detection
+**JWT Authentication** - Stateless token-based auth  
+**Rate Limiting** - Protection against abuse  
+**Input Validation** - Comprehensive data validation  
+**Audit Logging** - Complete action tracking  
+**Device Fingerprinting** - Enhanced security  
+**Password Security** - BCrypt + complexity rules  
+**CORS Configuration** - Secure cross-origin requests  
+**OWASP Security Scanning** - Automated vulnerability detection
 
 ### Security Scanning Setup
 For faster OWASP dependency vulnerability scans, get your own NVD API key:
 
-**📋 Quick Setup:**
+**Quick Setup:**
 1. **Setup Environment**: `./scripts/setup-env.sh`
 2. **Get API Key**: Visit https://nvd.nist.gov/developers/request-an-api-key
 3. **Configure**: Edit `.env.local` with your API key
 4. **Run Scan**: `mvn dependency-check:check -DnvdApiKey=$NVD_API_KEY`
 
 **Benefits:**
-- 🚀 **10x faster** vulnerability scanning (2-3 minutes vs 30+ minutes)
-- 🔄 **Reliable API access** without rate limiting
-- 📊 **Complete vulnerability database** access
-- ⚡ **Optimized CI/CD pipelines**
+- **10x faster** vulnerability scanning (2-3 minutes vs 30+ minutes)
+- **Reliable API access** without rate limiting
+- **Complete vulnerability database** access
+- **Optimized CI/CD pipelines**
 
-**📚 Detailed Guide**: See [NVD API Setup Guide](docs/NVD_API_SETUP.md) for complete instructions.
-
-**Per-Service Setup:**
-- **Transaction Service**: Use `./scripts/setup-local-dev.sh` for automated setup
-- **Other Services**: Export NVD_API_KEY before running security scans- 📊 **Complete vulnerability database** access
-- ⚡ **Optimized CI/CD pipelines**
+**Detailed Guide**: See [NVD API Setup Guide](docs/NVD_API_SETUP.md) for complete instructions.
 
 **Per-Service Setup:**
 - **Transaction Service**: Use `./scripts/setup-local-dev.sh` for automated setup
 - **User Service**: Export NVD_API_KEY before running security scans
 - **Other Services**: Add NVD_API_KEY to environment before Maven commands
 
-## 📊 API Documentation
+## API Documentation
 
 ### Interactive Documentation
 - **User Service**: http://localhost:8081/swagger-ui.html
@@ -143,7 +138,7 @@ For faster OWASP dependency vulnerability scans, get your own NVD API key:
 - **Test Environment**: `Telepesa_Development.postman_environment.json`
 - **Quick Test Script**: `scripts/quick-api-test.sh`
 
-## 🛠️ Development
+## Development
 
 ### Technology Stack
 - **Framework**: Spring Boot 3.2.0 + Java 17
@@ -156,7 +151,7 @@ For faster OWASP dependency vulnerability scans, get your own NVD API key:
 ```
 Backend/
 ├── README.md                     # This file - Overview & setup
-├── docs/                         # 📚 Detailed documentation
+├── docs/                         # Detailed documentation
 │   ├── API_TESTING_GUIDE.md      # Comprehensive testing guide
 │   ├── END_TO_END_TEST_REPORT.md # Test execution results
 │   └── SECURITY_*.md             # Security documentation
@@ -183,21 +178,21 @@ Backend/
 5. **Update Postman collection** with new endpoints
 6. **Update documentation** in docs folder
 
-## 📚 Documentation
+## Documentation
 
-### 📁 Detailed Documentation (in docs/)
+### Detailed Documentation (in docs/)
 - [API Testing Guide](docs/API_TESTING_GUIDE.md) - Comprehensive testing guide
 - [End-to-End Test Report](docs/END_TO_END_TEST_REPORT.md) - Latest test results
 - [Security Implementation](docs/SECURITY_IMPLEMENTATION.md) - Security details
 - [Security Features](docs/SECURITY_FEATURES.md) - Feature documentation
 - [NVD API Setup Guide](docs/NVD_API_SETUP.md) - Fast security scanning setup
-### 🔗 External Links
+### External Links
 - [User Service Testing Guide](user-service/README-TESTING.md)
 - [Transaction Service Setup](transaction-service/README.md) - Local development with NVD API
 - [Docker Compose Setup](docker-compose/docker-compose.yml)
 - [Shared Libraries](shared-libraries/)
 
-## 🤝 Contributing
+## Contributing
 
 ### Development Workflow
 1. **Create feature branch** from main
@@ -208,13 +203,13 @@ Backend/
 6. **Submit pull request** with tests passing
 
 ### Quality Requirements
-- ✅ All tests must pass (100%)
-- ✅ Minimum 80% line coverage
-- ✅ OWASP security scans pass
-- ✅ API documentation updated
-- ✅ Postman collection updated
+- All tests must pass (100%)
+- Minimum 80% line coverage
+- OWASP security scans pass
+- API documentation updated
+- Postman collection updated
 
-## 🚀 Deployment
+## Deployment
 
 ### Local Development
 ```bash
@@ -234,7 +229,7 @@ cd user-service && mvn spring-boot:run
 
 ---
 
-## 📞 Support
+## Support
 
 ### Quick Help
 - **Setup Issues**: Check Prerequisites and Database connection
@@ -249,4 +244,4 @@ cd user-service && mvn spring-boot:run
 
 ---
 
-*🏦 Building the future of African banking, one microservice at a time.* 
+*Building the future of African banking, one microservice at a time.* 

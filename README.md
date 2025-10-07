@@ -186,7 +186,7 @@ Postman collection: `Backend/Telepesa_API_Collection_Complete.postman_collection
 ## CI/CD Pipeline Overview
 
 
-### 🚀 Container Registry Setup
+### Container Registry Setup
 
 **Docker Hub** (Recommended):
 ```bash
@@ -202,7 +202,7 @@ GHCR_PAT=<github-personal-access-token>
 # Token needs: write:packages, read:packages
 ```
 
-### 📊 Codecov Integration Setup
+### Codecov Integration Setup
 
 **Coverage Reports** (Optional but Recommended):
 ```bash
@@ -218,7 +218,7 @@ CODECOV_TOKEN=<your-codecov-upload-token>
 4. Add `CODECOV_TOKEN` to your GitHub repository secrets
 5. Coverage reports will be automatically uploaded on each CI run
 
-### 📈 Quality Metrics
+### Quality Metrics
 
 - **Code Coverage**: >80% target across all services
 - **Security Scanning**: Automated vulnerability detection
@@ -332,14 +332,14 @@ The Telepesa web application provides a modern, responsive interface for all ban
 
 ### Key Features Demonstrated
 
-- **🔐 Secure Authentication**: JWT-based login with session management
-- **📊 Real-time Dashboard**: Account balances, recent transactions, and quick actions
-- **💸 Money Transfers**: Internal and external transfers with real-time processing
-- **💳 Bill Payments**: Utility bills, telecom, and entertainment payments
-- **📱 Responsive Design**: Optimized for desktop, tablet, and mobile devices
-- **🔍 Transaction Search**: Advanced filtering and search capabilities
-- **🔔 Notifications**: Real-time alerts and notification management
-- **⚙️ Account Management**: Profile settings, security preferences, and preferences
+- **Secure Authentication**: JWT-based login with session management
+- **Real-time Dashboard**: Account balances, recent transactions, and quick actions
+- **Money Transfers**: Internal and external transfers with real-time processing
+- **Bill Payments**: Utility bills, telecom, and entertainment payments
+- **Responsive Design**: Optimized for desktop, tablet, and mobile devices
+- **Transaction Search**: Advanced filtering and search capabilities
+- **Notifications**: Real-time alerts and notification management
+- **Account Management**: Profile settings, security preferences, and preferences
 
 ## Documentation
 

@@ -2,7 +2,7 @@
 
 The Transaction Service is a core component of the Telepesa banking platform, responsible for processing financial transactions, managing transaction history, and providing transaction-related APIs.
 
-## 🚀 Quick Start
+## Quick Start
 
 ### Prerequisites
 - Java 17+
@@ -69,14 +69,14 @@ JWT_EXPIRATION=86400000
 4. Export: `export NVD_API_KEY="your-key-here"`
 5. Add to `~/.bashrc` or `~/.zshrc` for persistence
 
-## 📊 Service Information
+## Service Information
 
 - **Port**: 8083
 - **Health Check**: http://localhost:8083/actuator/health
 - **API Documentation**: http://localhost:8083/swagger-ui.html
 - **H2 Console**: http://localhost:8083/h2-console (local development only)
 
-## 🧪 Testing
+## Testing
 
 ### Running Tests
 ```bash
@@ -91,8 +91,8 @@ open target/site/jacoco/index.html
 ```
 
 ### Test Coverage Requirements
-- **Line Coverage**: ≥ 80% ✅
-- **Branch Coverage**: ≥ 54% ✅
+- **Line Coverage**: ≥ 80%
+- **Branch Coverage**: ≥ 54%
 - **Current Status**: 104/104 tests passing (100% success rate)
 
 ### Test Categories
@@ -100,7 +100,7 @@ open target/site/jacoco/index.html
 - **Integration Tests**: Repository layer, controller endpoints
 - **Security Tests**: Authentication, authorization, input validation
 
-## 🔒 Security
+## Security
 
 ### OWASP Dependency Check
 ```bash
@@ -119,7 +119,7 @@ mvn dependency-check:check -DnvdApiKey=$NVD_API_KEY -DfailBuildOnCVSS=7
 - Rate limiting support
 - Audit logging
 
-## 📦 Build & Deployment
+## Build & Deployment
 
 ### Local Build
 ```bash
@@ -142,7 +142,7 @@ docker build -t telepesa/transaction-service:latest .
 docker run -p 8083:8083 telepesa/transaction-service:latest
 ```
 
-## 🔧 Configuration
+## Configuration
 
 ### Application Profiles
 
@@ -188,7 +188,7 @@ spring:
     driver-class-name: org.postgresql.Driver
 ```
 
-## 🚦 API Endpoints
+## API Endpoints
 
 ### Transaction Management
 - `POST /api/v1/transactions` - Create transaction
@@ -205,7 +205,7 @@ spring:
 - `GET /api/v1/transactions/stats/user/{userId}` - User transaction statistics
 - `GET /api/v1/transactions/stats/account/{accountId}` - Account statistics
 
-## 📈 Monitoring
+## Monitoring
 
 ### Health Endpoints
 - `/actuator/health` - Service health status
@@ -223,7 +223,7 @@ grep "ERROR" logs/transaction-service.log
 grep "Transaction created" logs/transaction-service.log
 ```
 
-## 🐛 Troubleshooting
+## Troubleshooting
 
 ### Common Issues
 
@@ -272,7 +272,7 @@ source scripts/env-local.sh
 rm -rf ~/.m2/repository/org/owasp/dependency-check-data
 ```
 
-## 🔗 Dependencies
+## Dependencies
 
 ### Shared Libraries
 - `common-models` - Shared entity models and enums
@@ -289,7 +289,7 @@ rm -rf ~/.m2/repository/org/owasp/dependency-check-data
 - JaCoCo (code coverage)
 - OWASP Dependency Check
 
-## 📝 Development Guidelines
+## Development Guidelines
 
 ### Code Style
 - Follow Spring Boot best practices
@@ -309,7 +309,7 @@ rm -rf ~/.m2/repository/org/owasp/dependency-check-data
 - Implement proper error handling
 - Log security-relevant events
 
-## 🤝 Contributing
+## Contributing
 
 1. Create a feature branch
 2. Write comprehensive tests

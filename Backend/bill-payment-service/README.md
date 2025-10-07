@@ -4,13 +4,13 @@ The Bill Payment Service handles utility bill payments for various service provi
 
 ## Features
 
-- 💡 **Multiple Bill Types**: Electricity, Water, Internet, TV, Mobile, Insurance, School Fees, Government services
-- ⚡ **Provider Integration**: Extensible provider pattern for different utility companies
-- 💰 **Smart Fee Calculation**: Provider-specific fee structures
-- 🔄 **Real-time Processing**: Immediate bill validation and payment processing
-- 📊 **Payment History**: Comprehensive payment tracking and analytics
-- 🏢 **KPLC Integration**: Kenya Power electricity bill payments (with mock API)
-- ⚡ **Caching**: Redis-based caching for improved performance
+- **Multiple Bill Types**: Electricity, Water, Internet, TV, Mobile, Insurance, School Fees, Government services
+- **Provider Integration**: Extensible provider pattern for different utility companies
+- **Smart Fee Calculation**: Provider-specific fee structures
+- **Real-time Processing**: Immediate bill validation and payment processing
+- **Payment History**: Comprehensive payment tracking and analytics
+- **KPLC Integration**: Kenya Power electricity bill payments (with mock API)
+- **Caching**: Redis-based caching for improved performance
 
 ## Supported Bill Types
 
