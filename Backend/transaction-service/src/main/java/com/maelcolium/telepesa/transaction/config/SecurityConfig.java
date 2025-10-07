@@ -2,7 +2,7 @@ package com.maelcolium.telepesa.transaction.config;
 
 import com.maelcolium.telepesa.transaction.security.JwtAuthenticationFilter;
 import com.maelcolium.telepesa.transaction.security.ServiceAuthenticationFilter;
-import com.maelcolium.telepesa.transaction.util.JwtTokenUtil;
+import com.maelcolium.telepesa.security.JwtTokenUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

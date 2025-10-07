@@ -20,8 +20,26 @@ public class InternalTransactionController {
     @PostMapping
     @PreAuthorize("hasAuthority('SERVICE_TRANSACTION_WRITE')")
     public ResponseEntity<TransactionResponse> createTransaction(@Valid @RequestBody CreateTransactionRequest request) {
-        TransactionResponse transaction = transactionService.createTransaction(request);
-        return ResponseEntity.ok(transaction);
+        var transactionDto = transactionService.createTransaction(request);
+        // Convert TransactionDto to TransactionResponse
+        TransactionResponse response = TransactionResponse.builder()
+                .id(transactionDto.getId())
+                .transactionId(transactionDto.getTransactionId())
+                .fromAccountId(transactionDto.getFromAccountId())
+                .toAccountId(transactionDto.getToAccountId())
+                .amount(transactionDto.getAmount())
+                .description(transactionDto.getDescription())
+                .status(transactionDto.getStatus().name())
+                .transactionType(transactionDto.getTransactionType().name())
+                .createdAt(transactionDto.getCreatedAt())
+                .updatedAt(transactionDto.getUpdatedAt())
+                .referenceNumber(transactionDto.getReferenceNumber())
+                .processedAt(transactionDto.getProcessedAt())
+                .userId(transactionDto.getUserId())
+                .feeAmount(transactionDto.getFeeAmount())
+                .totalAmount(transactionDto.getTotalAmount())
+                .build();
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/health")
