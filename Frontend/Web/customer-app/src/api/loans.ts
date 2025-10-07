@@ -144,10 +144,14 @@ export const loansApi = {
     // Map loan type to product ID based on the loan products we know exist
     const getLoanProductId = (loanType: string): number => {
       switch (loanType) {
-        case 'PERSONAL': return 1
-        case 'BUSINESS': return 2
-        case 'EMERGENCY': return 3
-        default: return 1
+        case 'PERSONAL':
+          return 1
+        case 'BUSINESS':
+          return 2
+        case 'EMERGENCY':
+          return 3
+        default:
+          return 1
       }
     }
 

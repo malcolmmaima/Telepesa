@@ -51,7 +51,7 @@ export function RegisterPage() {
 
     try {
       const { confirmPassword: _confirmPassword, ...regData } = data
-      
+
       // Store registration data and show security questions setup
       setRegistrationData(regData)
       setShowSecurityQuestions(true)

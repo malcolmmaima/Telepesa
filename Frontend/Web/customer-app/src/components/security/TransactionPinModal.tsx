@@ -18,7 +18,7 @@ export function TransactionPinModal({
   onSuccess,
   mode,
   title,
-  description
+  description,
 }: TransactionPinModalProps) {
   const [pin, setPin] = useState('')
   const [confirmPin, setConfirmPin] = useState('')
@@ -71,7 +71,7 @@ export function TransactionPinModal({
 
       // Simulate API call delay
       await new Promise(resolve => setTimeout(resolve, 1000))
-      
+
       onSuccess(mode === 'change' ? `${currentPin}:${pin}` : pin)
       handleClose()
     } catch (err: any) {
@@ -93,20 +93,28 @@ export function TransactionPinModal({
   const getTitle = () => {
     if (title) return title
     switch (mode) {
-      case 'create': return '🔐 Create Transaction PIN'
-      case 'change': return '🔄 Change Transaction PIN'
-      case 'verify': return '🔒 Enter Transaction PIN'
-      default: return 'Transaction PIN'
+      case 'create':
+        return '🔐 Create Transaction PIN'
+      case 'change':
+        return '🔄 Change Transaction PIN'
+      case 'verify':
+        return '🔒 Enter Transaction PIN'
+      default:
+        return 'Transaction PIN'
     }
   }
 
   const getDescription = () => {
     if (description) return description
     switch (mode) {
-      case 'create': return 'Create a 4-digit PIN to secure your transactions'
-      case 'change': return 'Enter your current PIN and create a new one'
-      case 'verify': return 'Enter your 4-digit PIN to authorize this transaction'
-      default: return ''
+      case 'create':
+        return 'Create a 4-digit PIN to secure your transactions'
+      case 'change':
+        return 'Enter your current PIN and create a new one'
+      case 'verify':
+        return 'Enter your 4-digit PIN to authorize this transaction'
+      default:
+        return ''
     }
   }
 
@@ -117,12 +125,8 @@ export function TransactionPinModal({
       <Card className="w-full max-w-md">
         <div className="p-6">
           <div className="text-center mb-6">
-            <h2 className="text-xl font-bold text-financial-navy mb-2">
-              {getTitle()}
-            </h2>
-            <p className="text-financial-gray text-sm">
-              {getDescription()}
-            </p>
+            <h2 className="text-xl font-bold text-financial-navy mb-2">{getTitle()}</h2>
+            <p className="text-financial-gray text-sm">{getDescription()}</p>
           </div>
 
           {error && (
@@ -152,7 +156,13 @@ export function TransactionPinModal({
 
             <div>
               <Input
-                label={mode === 'verify' ? 'Transaction PIN' : mode === 'change' ? 'New PIN' : 'Create PIN'}
+                label={
+                  mode === 'verify'
+                    ? 'Transaction PIN'
+                    : mode === 'change'
+                      ? 'New PIN'
+                      : 'Create PIN'
+                }
                 type="password"
                 value={pin}
                 onChange={e => setPin(e.target.value.replace(/\D/g, '').slice(0, 4))}
@@ -188,21 +198,36 @@ export function TransactionPinModal({
               >
                 Cancel
               </Button>
-              <Button
-                type="submit"
-                disabled={loading}
-                className="flex-1"
-              >
+              <Button type="submit" disabled={loading} className="flex-1">
                 {loading ? (
                   <>
-                    <svg className="animate-spin -ml-1 mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    <svg
+                      className="animate-spin -ml-1 mr-2 h-4 w-4"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      ></circle>
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      ></path>
                     </svg>
                     Processing...
                   </>
+                ) : mode === 'verify' ? (
+                  'Authorize'
+                ) : mode === 'create' ? (
+                  'Create PIN'
                 ) : (
-                  mode === 'verify' ? 'Authorize' : mode === 'create' ? 'Create PIN' : 'Change PIN'
+                  'Change PIN'
                 )}
               </Button>
             </div>

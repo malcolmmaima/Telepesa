@@ -19,7 +19,7 @@ export function SecurityQuestionsModal({
   onSuccess,
   mode,
   title,
-  description
+  description,
 }: SecurityQuestionsModalProps) {
   const [questions, setQuestions] = useState<SecurityQuestion[]>([])
   const [selectedQuestions, setSelectedQuestions] = useState<number[]>([])
@@ -95,8 +95,8 @@ export function SecurityQuestionsModal({
         const request = {
           questions: selectedQuestions.map(id => ({
             questionId: id,
-            answer: answers[id].trim().toLowerCase()
-          }))
+            answer: answers[id].trim().toLowerCase(),
+          })),
         }
 
         if (mode === 'setup') {
@@ -114,8 +114,8 @@ export function SecurityQuestionsModal({
         const request = {
           answers: userQuestions.map(q => ({
             questionId: q.questionId,
-            answer: answers[q.questionId].trim().toLowerCase()
-          }))
+            answer: answers[q.questionId].trim().toLowerCase(),
+          })),
         }
 
         const result = await securityApi.verifySecurityQuestions(request)
@@ -147,20 +147,28 @@ export function SecurityQuestionsModal({
   const getTitle = () => {
     if (title) return title
     switch (mode) {
-      case 'setup': return '🛡️ Setup Security Questions'
-      case 'update': return '🔄 Update Security Questions'
-      case 'verify': return '🔐 Verify Identity'
-      default: return 'Security Questions'
+      case 'setup':
+        return '🛡️ Setup Security Questions'
+      case 'update':
+        return '🔄 Update Security Questions'
+      case 'verify':
+        return '🔐 Verify Identity'
+      default:
+        return 'Security Questions'
     }
   }
 
   const getDescription = () => {
     if (description) return description
     switch (mode) {
-      case 'setup': return 'Choose 3 security questions to help protect your account'
-      case 'update': return 'Update your security questions for better account protection'
-      case 'verify': return 'Answer your security questions to verify your identity'
-      default: return ''
+      case 'setup':
+        return 'Choose 3 security questions to help protect your account'
+      case 'update':
+        return 'Update your security questions for better account protection'
+      case 'verify':
+        return 'Answer your security questions to verify your identity'
+      default:
+        return ''
     }
   }
 
@@ -171,21 +179,15 @@ export function SecurityQuestionsModal({
       <Card className="w-full max-w-2xl max-h-[90vh] overflow-y-auto">
         <div className="p-6">
           <div className="text-center mb-6">
-            <h2 className="text-xl font-bold text-financial-navy mb-2">
-              {getTitle()}
-            </h2>
-            <p className="text-financial-gray text-sm">
-              {getDescription()}
-            </p>
+            <h2 className="text-xl font-bold text-financial-navy mb-2">{getTitle()}</h2>
+            <p className="text-financial-gray text-sm">{getDescription()}</p>
             {(mode === 'setup' || mode === 'update') && step === 1 && (
               <p className="text-financial-gray text-xs mt-2">
                 Step 1 of 2: Select 3 questions ({selectedQuestions.length}/3 selected)
               </p>
             )}
             {(mode === 'setup' || mode === 'update') && step === 2 && (
-              <p className="text-financial-gray text-xs mt-2">
-                Step 2 of 2: Provide your answers
-              </p>
+              <p className="text-financial-gray text-xs mt-2">Step 2 of 2: Provide your answers</p>
             )}
           </div>
 
@@ -217,20 +219,32 @@ export function SecurityQuestionsModal({
                     }`}
                   >
                     <div className="flex items-center">
-                      <div className={`w-5 h-5 rounded-full border-2 mr-3 flex items-center justify-center ${
-                        selectedQuestions.includes(question.id)
-                          ? 'border-financial-blue bg-financial-blue'
-                          : 'border-gray-300'
-                      }`}>
+                      <div
+                        className={`w-5 h-5 rounded-full border-2 mr-3 flex items-center justify-center ${
+                          selectedQuestions.includes(question.id)
+                            ? 'border-financial-blue bg-financial-blue'
+                            : 'border-gray-300'
+                        }`}
+                      >
                         {selectedQuestions.includes(question.id) && (
-                          <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
-                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                          <svg
+                            className="w-3 h-3 text-white"
+                            fill="currentColor"
+                            viewBox="0 0 20 20"
+                          >
+                            <path
+                              fillRule="evenodd"
+                              d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                              clipRule="evenodd"
+                            />
                           </svg>
                         )}
                       </div>
                       <div>
                         <p className="font-medium text-financial-navy">{question.question}</p>
-                        <p className="text-xs text-financial-gray capitalize">{question.category}</p>
+                        <p className="text-xs text-financial-gray capitalize">
+                          {question.category}
+                        </p>
                       </div>
                     </div>
                   </div>
@@ -298,25 +312,39 @@ export function SecurityQuestionsModal({
                   Next
                 </Button>
               )}
-              {((mode === 'setup' || mode === 'update') && step === 2) || mode === 'verify' && (
-                <Button
-                  type="submit"
-                  disabled={loading}
-                  className="flex-1"
-                >
-                  {loading ? (
-                    <>
-                      <svg className="animate-spin -ml-1 mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                      </svg>
-                      Processing...
-                    </>
-                  ) : (
-                    mode === 'verify' ? 'Verify' : 'Save Questions'
-                  )}
-                </Button>
-              )}
+              {((mode === 'setup' || mode === 'update') && step === 2) ||
+                (mode === 'verify' && (
+                  <Button type="submit" disabled={loading} className="flex-1">
+                    {loading ? (
+                      <>
+                        <svg
+                          className="animate-spin -ml-1 mr-2 h-4 w-4"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                        >
+                          <circle
+                            className="opacity-25"
+                            cx="12"
+                            cy="12"
+                            r="10"
+                            stroke="currentColor"
+                            strokeWidth="4"
+                          ></circle>
+                          <path
+                            className="opacity-75"
+                            fill="currentColor"
+                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                          ></path>
+                        </svg>
+                        Processing...
+                      </>
+                    ) : mode === 'verify' ? (
+                      'Verify'
+                    ) : (
+                      'Save Questions'
+                    )}
+                  </Button>
+                ))}
             </div>
           </form>
 

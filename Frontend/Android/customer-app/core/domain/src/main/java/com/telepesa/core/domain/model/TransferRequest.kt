@@ -31,4 +31,3 @@ data class TransferResponse(
     val status: TransactionStatus,
     val message: String,
 )
-

@@ -81,4 +81,3 @@ val TelepesaQRForeground = Color(0xFF000000) // Black
 val TelepesaBiometric = Color(0xFF2E7D32) // Primary Green
 val TelepesaBiometricSuccess = Color(0xFF4CAF50) // Success Green
 val TelepesaBiometricError = Color(0xFFE53935) // Error Red
-

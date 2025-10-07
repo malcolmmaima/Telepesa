@@ -49,7 +49,7 @@ const TRANSFER_TYPES = [
     icon: '🏦',
     description: 'Send to other Telepesa accounts',
     fee: 'FREE',
-    processingTime: 'Instant'
+    processingTime: 'Instant',
   },
   {
     id: 'PESALINK' as TransferType,
@@ -57,7 +57,7 @@ const TRANSFER_TYPES = [
     icon: '🇰🇪',
     description: 'Send to any Kenyan bank account',
     fee: 'KES 25',
-    processingTime: 'Instant'
+    processingTime: 'Instant',
   },
   {
     id: 'MPESA' as TransferType,
@@ -65,7 +65,7 @@ const TRANSFER_TYPES = [
     icon: '📱',
     description: 'Send to M-Pesa mobile number',
     fee: 'KES 15',
-    processingTime: 'Instant'
+    processingTime: 'Instant',
   },
   {
     id: 'RTGS' as TransferType,
@@ -73,7 +73,7 @@ const TRANSFER_TYPES = [
     icon: '🏛️',
     description: 'Real-time gross settlement',
     fee: 'KES 500',
-    processingTime: '2-4 hours'
+    processingTime: '2-4 hours',
   },
   {
     id: 'SWIFT' as TransferType,
@@ -81,8 +81,8 @@ const TRANSFER_TYPES = [
     icon: '🌍',
     description: 'International bank transfer',
     fee: 'USD 25',
-    processingTime: '1-3 business days'
-  }
+    processingTime: '1-3 business days',
+  },
 ]
 
 const KENYAN_BANKS = [
@@ -99,7 +99,7 @@ const KENYAN_BANKS = [
   { code: '25', name: 'National Bank of Kenya' },
   { code: '31', name: 'Postbank' },
   { code: '63', name: 'Diamond Trust Bank' },
-  { code: '68', name: 'Sidian Bank' }
+  { code: '68', name: 'Sidian Bank' },
 ]
 
 export function ComprehensiveTransferPage() {
@@ -107,7 +107,7 @@ export function ComprehensiveTransferPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<TransferResult | null>(null)
-  
+
   // Data states
   const [accounts, setAccounts] = useState<Account[]>([])
   const [hasPinSet, setHasPinSet] = useState(false)
@@ -115,12 +115,12 @@ export function ComprehensiveTransferPage() {
   // Cache keys
   const PIN_SET_CACHE_KEY = 'tp_has_pin'
   const PIN_VERIFIED_UNTIL_KEY = 'tp_pin_verified_until'
-  
+
   // Security states
   const [showPinModal, setShowPinModal] = useState(false)
   const [pinMode, setPinMode] = useState<'verify' | 'create'>('verify')
   const [pendingTransfer, setPendingTransfer] = useState<CreateTransferRequest | null>(null)
-  
+
   // Form state
   const [form, setForm] = useState<TransferForm>({
     fromAccountId: 0,
@@ -140,7 +140,7 @@ export function ComprehensiveTransferPage() {
     // PesaLink fields
     pesalinkBankCode: '',
     // M-Pesa fields
-    mpesaNumber: ''
+    mpesaNumber: '',
   })
 
   // Load user accounts and check PIN status on mount
@@ -220,7 +220,7 @@ export function ComprehensiveTransferPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError(null)
-    
+
     // Validation based on transfer type
     if (!form.recipientName || form.amount <= 0) {
       setError('Please fill in all required fields')
@@ -247,7 +247,8 @@ export function ComprehensiveTransferPage() {
       // Proceed directly
       setPendingTransfer(null)
       return executeTransfer({
-        recipientAccountId: form.transferType === 'MPESA' ? form.mpesaNumber : form.recipientAccountNumber,
+        recipientAccountId:
+          form.transferType === 'MPESA' ? form.mpesaNumber : form.recipientAccountNumber,
         amount: form.amount,
         transferType: form.transferType,
         description: form.description,
@@ -259,7 +260,7 @@ export function ComprehensiveTransferPage() {
         intermediaryBankSwift: form.intermediaryBankSwift || undefined,
         sortCode: form.sortCode || undefined,
         pesalinkBankCode: form.pesalinkBankCode || undefined,
-        mpesaNumber: form.mpesaNumber || undefined
+        mpesaNumber: form.mpesaNumber || undefined,
       })
     }
 
@@ -273,7 +274,8 @@ export function ComprehensiveTransferPage() {
 
     // Prepare transfer request
     const transferRequest: CreateTransferRequest = {
-      recipientAccountId: form.transferType === 'MPESA' ? form.mpesaNumber : form.recipientAccountNumber,
+      recipientAccountId:
+        form.transferType === 'MPESA' ? form.mpesaNumber : form.recipientAccountNumber,
       amount: form.amount,
       transferType: form.transferType,
       description: form.description,
@@ -285,7 +287,7 @@ export function ComprehensiveTransferPage() {
       intermediaryBankSwift: form.intermediaryBankSwift || undefined,
       sortCode: form.sortCode || undefined,
       pesalinkBankCode: form.pesalinkBankCode || undefined,
-      mpesaNumber: form.mpesaNumber || undefined
+      mpesaNumber: form.mpesaNumber || undefined,
     }
 
     // Store pending transfer and show PIN modal
@@ -356,15 +358,18 @@ export function ComprehensiveTransferPage() {
         return
       }
 
-      const result = await transfersApi.createTransfer(transferRequest, selectedAccount.accountNumber)
-      
+      const result = await transfersApi.createTransfer(
+        transferRequest,
+        selectedAccount.accountNumber
+      )
+
       setSuccess({
         id: result.id?.toString() || '',
         transferReference: result.transferId || '',
         amount: result.amount || form.amount,
         recipientName: result.recipientName || form.recipientName,
         status: result.status || 'PROCESSING',
-        fee: fee
+        fee: fee,
       })
 
       // Reset form
@@ -382,12 +387,11 @@ export function ComprehensiveTransferPage() {
         intermediaryBankSwift: '',
         sortCode: '',
         pesalinkBankCode: '',
-        mpesaNumber: ''
+        mpesaNumber: '',
       })
-      
+
       // Reload accounts to update balances
       await loadUserAccounts()
-      
     } catch (err: any) {
       console.error('Transfer failed:', err)
       setError(err.message || 'Transfer failed. Please try again.')
@@ -598,7 +602,9 @@ export function ComprehensiveTransferPage() {
                         {account.accountType} Account
                       </div>
                       <div className="text-sm text-financial-gray">
-                        {account.accountNumber ? `•••• ${account.accountNumber.slice(-4)}` : `ID #${account.id}`}
+                        {account.accountNumber
+                          ? `•••• ${account.accountNumber.slice(-4)}`
+                          : `ID #${account.id}`}
                       </div>
                     </div>
                     <div className="text-right">
@@ -656,7 +662,7 @@ export function ComprehensiveTransferPage() {
           </h3>
           <div className="space-y-4">
             {renderTransferTypeSpecificFields()}
-            
+
             <Input
               label="Recipient Name"
               value={form.recipientName}
@@ -737,8 +743,8 @@ export function ComprehensiveTransferPage() {
         <Button
           type="submit"
           disabled={
-            loading || 
-            !form.recipientName || 
+            loading ||
+            !form.recipientName ||
             form.amount <= 0 ||
             !selectedAccount ||
             totalAmount > selectedAccount.balance
@@ -749,8 +755,19 @@ export function ComprehensiveTransferPage() {
           {loading ? (
             <>
               <svg className="animate-spin -ml-1 mr-3 h-5 w-5" fill="none" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                <circle
+                  className="opacity-25"
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  strokeWidth="4"
+                ></circle>
+                <path
+                  className="opacity-75"
+                  fill="currentColor"
+                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                ></path>
               </svg>
               Processing Transfer...
             </>
@@ -771,7 +788,7 @@ export function ComprehensiveTransferPage() {
         mode={pinMode}
         title={pinMode === 'create' ? '🔐 Create Transaction PIN' : '🔒 Enter Transaction PIN'}
         description={
-          pinMode === 'create' 
+          pinMode === 'create'
             ? 'Create a 4-digit PIN to secure your transactions. This PIN will be required for all future transfers.'
             : 'Enter your 4-digit transaction PIN to authorize this transfer.'
         }

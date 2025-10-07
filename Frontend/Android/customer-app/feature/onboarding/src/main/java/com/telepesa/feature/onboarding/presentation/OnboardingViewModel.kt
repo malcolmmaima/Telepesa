@@ -111,4 +111,3 @@ data class OnboardingUiState(
     val isOnboardingCompleted: Boolean = false,
     val error: String? = null,
 )
-

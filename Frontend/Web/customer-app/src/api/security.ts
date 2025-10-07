@@ -79,7 +79,9 @@ export const securityApi = {
     return response.data
   },
 
-  setSecurityQuestions: async (request: SetSecurityQuestionsRequest): Promise<UserSecurityQuestion[]> => {
+  setSecurityQuestions: async (
+    request: SetSecurityQuestionsRequest
+  ): Promise<UserSecurityQuestion[]> => {
     const response = await api.post('/security/questions/user', request)
     return response.data
   },
@@ -89,12 +91,16 @@ export const securityApi = {
     return response.data
   },
 
-  verifySecurityQuestions: async (request: VerifySecurityQuestionsRequest): Promise<{ valid: boolean }> => {
+  verifySecurityQuestions: async (
+    request: VerifySecurityQuestionsRequest
+  ): Promise<{ valid: boolean }> => {
     const response = await api.post('/security/questions/verify', request)
     return response.data
   },
 
-  updateSecurityQuestions: async (request: SetSecurityQuestionsRequest): Promise<UserSecurityQuestion[]> => {
+  updateSecurityQuestions: async (
+    request: SetSecurityQuestionsRequest
+  ): Promise<UserSecurityQuestion[]> => {
     const response = await api.put('/security/questions/user', request)
     return response.data
   },
@@ -105,27 +111,33 @@ export const securityApi = {
     return response.data
   },
 
-  verifyRecoveryCode: async (email: string, code: string): Promise<{ valid: boolean; token?: string }> => {
+  verifyRecoveryCode: async (
+    email: string,
+    code: string
+  ): Promise<{ valid: boolean; token?: string }> => {
     const response = await api.post('/security/recovery/verify', { email, code })
     return response.data
   },
 
-  resetPasswordWithRecovery: async (token: string, newPassword: string): Promise<{ message: string }> => {
+  resetPasswordWithRecovery: async (
+    token: string,
+    newPassword: string
+  ): Promise<{ message: string }> => {
     const response = await api.post('/security/recovery/reset-password', { token, newPassword })
     return response.data
-  }
+  },
 }
 
 // Default security questions
 export const DEFAULT_SECURITY_QUESTIONS: SecurityQuestion[] = [
-  { id: 1, question: "What was the name of your first pet?", category: "personal" },
-  { id: 2, question: "What is your mother's maiden name?", category: "family" },
-  { id: 3, question: "What was the name of your first school?", category: "education" },
-  { id: 4, question: "In what city were you born?", category: "location" },
-  { id: 5, question: "What is the name of your favorite teacher?", category: "education" },
-  { id: 6, question: "What was your childhood nickname?", category: "personal" },
-  { id: 7, question: "What is the name of the street you grew up on?", category: "location" },
-  { id: 8, question: "What was the make of your first car?", category: "personal" },
-  { id: 9, question: "What is your favorite book?", category: "interests" },
-  { id: 10, question: "What was the name of your first employer?", category: "career" }
+  { id: 1, question: 'What was the name of your first pet?', category: 'personal' },
+  { id: 2, question: "What is your mother's maiden name?", category: 'family' },
+  { id: 3, question: 'What was the name of your first school?', category: 'education' },
+  { id: 4, question: 'In what city were you born?', category: 'location' },
+  { id: 5, question: 'What is the name of your favorite teacher?', category: 'education' },
+  { id: 6, question: 'What was your childhood nickname?', category: 'personal' },
+  { id: 7, question: 'What is the name of the street you grew up on?', category: 'location' },
+  { id: 8, question: 'What was the make of your first car?', category: 'personal' },
+  { id: 9, question: 'What is your favorite book?', category: 'interests' },
+  { id: 10, question: 'What was the name of your first employer?', category: 'career' },
 ]

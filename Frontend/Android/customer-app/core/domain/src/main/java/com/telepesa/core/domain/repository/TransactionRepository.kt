@@ -77,4 +77,3 @@ interface TransactionRepository {
         category: com.telepesa.core.domain.model.TransactionCategory,
     ): Flow<Result<List<Transaction>>>
 }
-

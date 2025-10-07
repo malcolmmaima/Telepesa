@@ -18,7 +18,14 @@ export interface Transfer {
   fee: number
   totalAmount: number
   currency: string
-  transferType: 'INTERNAL' | 'SWIFT' | 'RTGS' | 'PESALINK' | 'MPESA' | 'BANK_TRANSFER' | 'MOBILE_MONEY'
+  transferType:
+    | 'INTERNAL'
+    | 'SWIFT'
+    | 'RTGS'
+    | 'PESALINK'
+    | 'MPESA'
+    | 'BANK_TRANSFER'
+    | 'MOBILE_MONEY'
   status: 'PENDING' | 'PROCESSING' | 'COMPLETED' | 'FAILED' | 'CANCELLED'
   description: string
   reference?: string

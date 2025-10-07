@@ -278,4 +278,3 @@ object TelepesaTextStyles {
         letterSpacing = 0.5.sp,
     )
 }
-
